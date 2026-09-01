@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full light" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light" />
+    <title>SYNAPSE-Ω</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      window.SYNAPSE_THEME_KEY = "synapse_theme_v2";
+      (function () {
+        var stored;
+        try { stored = localStorage.getItem(window.SYNAPSE_THEME_KEY); } catch (e) {}
+        var mode = stored === "dark" || stored === "light" ? stored : "light";
+        document.documentElement.setAttribute("data-theme", mode);
+        document.documentElement.classList.add(mode);
+        var scheme = document.querySelector('meta[name="color-scheme"]');
+        if (scheme) scheme.setAttribute("content", mode);
+      })();
+    </script>
+  </head>
+  <body class="h-full">
+    <div id="root" class="h-full"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

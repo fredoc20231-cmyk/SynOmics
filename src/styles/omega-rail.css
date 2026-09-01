@@ -1,0 +1,271 @@
+.omega-glyph {
+  width: 22px;
+  height: 22px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: currentColor;
+}
+
+.omega-glyph svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.workspace-rail .rail-heading {
+  font-size: 10px;
+  font-weight: 720;
+  letter-spacing: 0.115em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--muted-foreground) 86%, transparent);
+}
+
+.workspace-rail .rail-section {
+  position: relative;
+}
+
+.workspace-rail .rail-section + .rail-section {
+  border-top: 1px solid color-mix(in srgb, var(--border) 64%, transparent);
+  padding-top: 14px;
+}
+
+.rail-new-chat.omega-initialize {
+  min-height: 43px;
+  justify-content: flex-start;
+  gap: 10px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 18%, var(--border));
+  background:
+    radial-gradient(circle at 14% 20%, color-mix(in srgb, var(--foreground) 7%, transparent), transparent 42%),
+    var(--background);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--foreground) 5%, transparent);
+  font-weight: 690;
+  letter-spacing: -0.012em;
+}
+
+.rail-new-chat.omega-initialize:hover {
+  border-color: color-mix(in srgb, var(--foreground) 30%, var(--border));
+  background: color-mix(in srgb, var(--muted) 55%, var(--background));
+}
+
+.rail-new-chat.omega-initialize .omega-glyph {
+  width: 24px;
+  height: 24px;
+}
+
+.mode-selector-rail {
+  display: grid;
+  gap: 4px;
+}
+
+.rail-mode-row {
+  position: relative;
+  min-height: 49px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 6px 9px;
+  text-align: left;
+  transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
+}
+
+.rail-mode-row::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 11px;
+  bottom: 11px;
+  width: 2px;
+  border-radius: 99px;
+  background: transparent;
+}
+
+.rail-mode-row:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--muted) 62%, transparent);
+  border-color: color-mix(in srgb, var(--border) 62%, transparent);
+}
+
+.rail-mode-row.active {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--foreground) 7%, transparent), transparent 72%),
+    color-mix(in srgb, var(--muted) 45%, var(--background));
+  border-color: color-mix(in srgb, var(--foreground) 12%, var(--border));
+}
+
+.rail-mode-row.active::before {
+  background: var(--foreground);
+}
+
+.rail-mode-row:disabled {
+  opacity: 0.46;
+  cursor: not-allowed;
+}
+
+.rail-mode-icon {
+  width: 25px;
+  height: 25px;
+  padding: 2px;
+  border-radius: 8px;
+  color: color-mix(in srgb, var(--foreground) 80%, var(--muted-foreground));
+}
+
+.rail-mode-row.active .rail-mode-icon {
+  color: var(--foreground);
+}
+
+.rail-mode-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.rail-mode-label {
+  font-size: 13px;
+  line-height: 1.15;
+  font-weight: 665;
+  letter-spacing: -0.008em;
+}
+
+.rail-mode-help {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10.5px;
+  line-height: 1.25;
+  color: var(--muted-foreground);
+}
+
+.rail-mode-help-mobile {
+  display: none;
+}
+
+.mode-selector-trigger {
+  gap: 7px;
+}
+
+.mode-selector-glyph,
+.mode-menu-glyph {
+  width: 18px;
+  height: 18px;
+}
+
+.mode-selector-menu button {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+}
+
+.mode-menu-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.omega-nav-stack {
+  display: grid;
+  gap: 4px;
+}
+
+.omega-nav-row {
+  width: 100%;
+  min-height: 42px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 9px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: var(--foreground);
+  background: transparent;
+  text-align: left;
+}
+
+.omega-nav-row:hover {
+  background: color-mix(in srgb, var(--muted) 62%, transparent);
+  border-color: color-mix(in srgb, var(--border) 58%, transparent);
+}
+
+.omega-nav-row .omega-glyph {
+  width: 23px;
+  height: 23px;
+  color: color-mix(in srgb, var(--foreground) 76%, var(--muted-foreground));
+}
+
+.omega-nav-copy {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+
+.omega-nav-copy strong {
+  font-size: 12.5px;
+  font-weight: 660;
+  letter-spacing: -0.006em;
+}
+
+.omega-nav-copy span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10.5px;
+  color: var(--muted-foreground);
+}
+
+.omega-nav-meta {
+  font-size: 10px;
+  color: var(--muted-foreground);
+}
+
+.rail-search.omega-session-search {
+  margin-top: 3px;
+}
+
+.rail-search.omega-session-search .omega-glyph {
+  width: 17px;
+  height: 17px;
+  color: var(--muted-foreground);
+}
+
+.rail-vault-project .omega-glyph {
+  width: 19px;
+  height: 19px;
+}
+
+.capability-catalog-copy .workspace-info-lead {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--foreground);
+}
+
+.capability-catalog-copy ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.capability-catalog-copy li + li {
+  margin-top: 5px;
+}
+
+@media (max-width: 860px) {
+  .rail-mode-help-full {
+    display: none;
+  }
+
+  .rail-mode-help-mobile {
+    display: inline;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail-mode-row,
+  .omega-nav-row {
+    transition: none;
+  }
+}

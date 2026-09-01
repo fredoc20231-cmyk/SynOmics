@@ -1,0 +1,11 @@
+{
+  "verdict": "ACCEPTANCE_INVALID",
+  "note": "Reachable 3020 process is heuristic with empty git_sha and is not the integrated candidate. Docker unavailable. Live Chat credentials unset.",
+  "frontend_sha": "ed9d8de560135d02d608952a1d1b1dffecaf1023",
+  "backend_sha": "",
+  "provider": "",
+  "model": "",
+  "heuristic": true,
+  "docker": "unavailable",
+  "status": "ACCEPTANCE_INVALID"
+}

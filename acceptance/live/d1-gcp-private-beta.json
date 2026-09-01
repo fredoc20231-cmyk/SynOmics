@@ -1,0 +1,43 @@
+{
+  "schema_version": "synapse.d1-gcp-acceptance.v1",
+  "verdict": "LIVE_ACCEPTANCE_INVALID",
+  "commit_sha": "609642a329e1b47c5cdaea39928194b0e2f8b9ab",
+  "codex_closeout_sha": "b5db206691d0e975a09bb857cac8777bf80e9101",
+  "branch": "cursor/synapse-main-integration-v1",
+  "pr": "https://github.com/fredoc20231-cmyk/synapse/pull/28",
+  "generated_at": "2026-08-26T02:34:00Z",
+  "gcp_staging_url": null,
+  "staging_frontend_sha": null,
+  "staging_backend_sha": null,
+  "model": null,
+  "heuristic_local_3020": true,
+  "local_3020_git_sha": "",
+  "release_qualification": "BLOCKED",
+  "release_label": "Private Research Beta",
+  "gates": {
+    "frontend_npm_ci": "PASS",
+    "typecheck": "PASS",
+    "frontend_tests": "PASS",
+    "frontend_test_count": 138,
+    "build": "PASS",
+    "npm_audit_high": "PASS",
+    "check_all": "PASS",
+    "backend_pytest": "654 passed, 8 skipped"
+  },
+  "live": {
+    "taro": "NOT_RUN",
+    "rtl": "NOT_RUN",
+    "science_first": "NOT_RUN",
+    "casual": "NOT_RUN",
+    "science": "NOT_RUN",
+    "deep": "NOT_RUN",
+    "analyze": "NOT_RUN",
+    "compute": "NOT_RUN",
+    "archive": "NOT_RUN",
+    "voice": "NOT_RUN",
+    "portal": "NOT_RUN",
+    "security": "NOT_RUN",
+    "runtime_identity": "INVALID"
+  },
+  "not_run_reason": "No identified GCP staging URL or credentials in this environment. docs/GCP_PRIVATE_BETA_DEPLOYMENT.md uses a placeholder URL only."
+}
