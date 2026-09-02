@@ -1297,6 +1297,17 @@ app.post(['/api/synomics/adversarial-validate', '/api/biomni/adversarial-validat
   }
 });
 
+// 4a2c. Adversarial swarm: ensemble falsification with per-gene survival rate.
+app.post(['/api/synomics/adversarial-swarm', '/api/biomni/adversarial-swarm'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/swarm.py', req.body);
+    const code = result?.status === 'success' ? 200 : result?.status === 'error' ? 400 : 501;
+    res.status(code).json(result);
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 // 4a2b. Enhanced ML adversary: classifier overfit test + covariate confounder
 // check. Requires scikit-learn; honest 'unavailable' otherwise.
 app.post(['/api/synomics/adversarial-ml', '/api/biomni/adversarial-ml'], async (req, res) => {

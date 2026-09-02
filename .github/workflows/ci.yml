@@ -76,6 +76,9 @@ jobs:
       - name: Enhanced adversary gate (classifier overfit + confounder check)
         run: python tests/adversary_ml_smoke.py
 
+      - name: Adversarial swarm gate (ensemble falsification, FDR<0.01)
+        run: python tests/swarm_smoke.py
+
       - name: Report generator gate (HTML + DOCX from real content)
         run: |
           python -m pip install --quiet jinja2 python-docx

@@ -194,6 +194,19 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     },
   },
   {
+    name: 'adversarial_swarm',
+    category: 'Verifiable AI / validation',
+    description: 'Evolutionary falsification swarm: an ensemble of statistical models (Welch t, Mann-Whitney U, exact permutation). Only genes significant under EVERY model at strict FDR<0.01 survive; each is tagged with its swarm survival rate. Requires scipy.',
+    handler: (i) => runPythonScript('server/swarm.py', i),
+    parameters: {
+      counts: { type: 'object', description: 'Map gene -> per-sample counts.', required: true },
+      conditions: { type: 'array', description: 'Group label per sample (exactly two groups).', required: true },
+      fdr: { type: 'number', description: 'FDR threshold (default 0.01).' },
+      nResamples: { type: 'number', description: 'Monte-Carlo resamples if exact permutation is infeasible.' },
+      seed: { type: 'number', description: 'Random seed (default 1337).' },
+    },
+  },
+  {
     name: 'adversarial_ml',
     category: 'Verifiable AI / validation',
     description: 'ML adversary: a cross-validated classifier overfit test (sklearn permutation_test_score) plus a PCA-vs-covariate batch-confounder check. VALIDATED/INVALIDATED/INCONCLUSIVE + veto. Requires scikit-learn.',
