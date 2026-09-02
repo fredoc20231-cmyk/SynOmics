@@ -1,8 +1,8 @@
-# SYNAPSE-O production frontend
+# SynOmics production frontend
 
 The production frontend is a Vite/React conversation shell over the FastAPI HTTP/SSE API.
 
-SYNAPSE-Ω is science-first scientific intelligence for research, biomedicine and biotechnology — Built for science. Capable beyond it. General chat is a capability. Science is the identity.
+SynOmics is science-first scientific intelligence for research, biomedicine and biotechnology — Built for science. Capable beyond it. General chat is a capability. Science is the identity.
 
 ## Product surfaces
 

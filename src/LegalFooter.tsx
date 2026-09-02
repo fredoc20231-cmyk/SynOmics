@@ -1,8 +1,8 @@
 export const LEGAL_NOTICE =
-  "SYNAPSE-O™ · Private Research Beta · Designed to verify, challenge, and trace claims—not just generate them · Research & educational use only · Not medical advice · Terms";
+  "SynOmics™ · Private Research Beta · Designed to verify, challenge, and trace claims—not just generate them · Research & educational use only · Not medical advice · Terms";
 
 export const LEGAL_NOTICE_NARROW =
-  "SYNAPSE-O™ · Designed for verifiable answers · Research & educational use only · Not medical advice · Terms";
+  "SynOmics™ · Designed for verifiable answers · Research & educational use only · Not medical advice · Terms";
 
 const FORBIDDEN_FOOTER_CLAIMS = [
   "All other AI tools make mistakes; we don't.",
@@ -26,7 +26,7 @@ export function LegalFooter({
 }) {
   return (
     <footer className="legal-footer" role="contentinfo">
-      <span>SYNAPSE-O™</span>
+      <span>SynOmics™</span>
       <span aria-hidden="true">·</span>
       <span>Private Research Beta</span>
       <span aria-hidden="true">·</span>

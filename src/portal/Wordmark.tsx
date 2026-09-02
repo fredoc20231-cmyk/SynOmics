@@ -6,8 +6,8 @@ export function SynapseWordmark({
   testId?: string;
 }) {
   return (
-    <a className="app-wordmark synapse-wordmark-link" href={href} data-testid={testId} aria-label="SYNAPSE-Ω researcher portal">
-      SYNAPSE-Ω
+    <a className="app-wordmark synapse-wordmark-link" href={href} data-testid={testId} aria-label="SynOmics researcher portal">
+      SynOmics
     </a>
   );
 }

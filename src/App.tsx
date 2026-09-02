@@ -735,7 +735,7 @@ export function App() {
     }
     return (
       <div className="auth-gate">
-        <p className="text-sm text-[var(--muted-foreground)]">Loading SYNAPSE-Ω…</p>
+        <p className="text-sm text-[var(--muted-foreground)]">Loading SynOmics…</p>
         <LegalFooter onOpen={(target) => { window.location.hash = `#/legal/${target}`; }} />
         {legalOverlay}
       </div>

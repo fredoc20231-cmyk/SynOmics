@@ -209,7 +209,7 @@ describe("frontend acceptance matrix", () => {
     const footer = renderToStaticMarkup(<LegalFooter />);
     const legal = renderToStaticMarkup(<LegalPage page="terms" onClose={() => undefined} />);
     const info = renderToStaticMarkup(<WorkspaceInfoDialog page="research" onClose={() => undefined} />);
-    expect(footer).toContain("SYNAPSE-O™");
+    expect(footer).toContain("SynOmics™");
     expect(footer).toContain("Not medical advice");
     expect(legal).toContain("No professional advice");
     expect(info).toContain("Research &amp; Educational Use");
