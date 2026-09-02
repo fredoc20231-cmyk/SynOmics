@@ -231,6 +231,22 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     },
   },
   {
+    name: 'generate_report',
+    category: 'Reporting',
+    description: 'Render a 6-section publication-grade report (Title/Summary/Introduction/Methods/Results/Interpretations) to HTML + DOCX from REAL provided content. Renders only what is passed; missing sections marked "not provided". Requires jinja2/python-docx.',
+    handler: (i) => runPythonScript('server/report_generator.py', i),
+    parameters: {
+      title: { type: 'string', description: 'Report title.', required: true },
+      summary: { type: 'string', description: 'Executive summary.' },
+      introduction: { type: 'string', description: 'Biological context / hypothesis.' },
+      methods: { type: 'string', description: 'Exact tools, params, tests.' },
+      results: { type: 'string', description: 'Objective findings (real, computed).' },
+      interpretations: { type: 'string', description: 'Significance, limitations, next steps.' },
+      tables: { type: 'array', description: 'Optional [{title, columns, rows}] of real results.' },
+      formats: { type: 'array', description: "Subset of ['html','docx'] (default both)." },
+    },
+  },
+  {
     name: 'edge_extraction',
     category: 'Verifiable AI / neuro-symbolic',
     description: 'Tier-1 grounding: partial-correlation (sparse inverse covariance, GraphicalLassoCV) edge extraction that separates direct from indirect associations. Not a neural network. Requires scikit-learn.',

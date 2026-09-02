@@ -1188,6 +1188,17 @@ app.post(['/api/synomics/tensor-compress', '/api/biomni/tensor-compress'], async
   }
 });
 
+// 4a-3. Module D: publication-grade report (HTML + DOCX) from real content only.
+app.post(['/api/synomics/report', '/api/biomni/report'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/report_generator.py', req.body);
+    const code = result?.status === 'success' ? 200 : result?.status === 'error' ? 400 : 501;
+    res.status(code).json(result);
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 // 4a-2. Neuro-symbolic Tier 1 (partial-correlation edges) + Tier 2 (Z3 formal
 // pathway proof). Honest 'unavailable' if scikit-learn / z3-solver are absent.
 app.post(['/api/synomics/edge-extraction', '/api/biomni/edge-extraction'], async (req, res) => {
