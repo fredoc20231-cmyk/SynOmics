@@ -77,7 +77,10 @@ commit.)
 - Compile validated results into a 6-section report (Title, Summary,
   Introduction, Methods, Results, Interpretations) exportable to PDF/DOCX/HTML.
 - Tech: `python-docx` (Word), WeasyPrint/ReportLab (PDF), Jinja2 + Plotly (HTML).
-- Status: to build. Reports must cite only real, computed figures/tables.
+- Status: HTML (Jinja2) + DOCX (python-docx) implemented in
+  `server/report_generator.py` (`POST /api/synomics/report`); renders only real
+  provided content, missing sections marked "not provided". PDF (WeasyPrint) and
+  live Plotly figures still to add.
 
 ### Module E — AI-Native Drug Discovery (CADD) & Virtual Validation
 Bridges omics findings into molecular design + rigorous in-silico validation.
@@ -135,6 +138,16 @@ Bridges omics findings into molecular design + rigorous in-silico validation.
     without numpy.
   - Tensor-Train compression (`/tensor-compress`): error-bounded compression
     utility with an honest 'approximate' flag. NOT a cell/digital-twin simulator.
+  - Enhanced ML adversary (`/adversarial-ml`): classifier overfit test
+    (sklearn permutation_test_score) + PCA-vs-covariate confounder check.
+  - Neuro-symbolic Tier 1 (`/edge-extraction`): partial-correlation (GraphicalLassoCV)
+    edges — direct vs indirect. Tier 2 (`/pathway-logic-z3`): Z3 SMT formal
+    SAT/UNSAT proof (in addition to the pure-Python `/pathway-logic`).
+  - Boolean attractor analysis (`/boolean-attractors`): exact state-space
+    attractors (phenotypes) + perturbation shifts — the deterministic
+    "digital twin" replacement (no ODE/PDE fabrication).
+  - Causal discovery (`/causal-discovery`): DirectLiNGAM + bootstrap gating.
+- Module D report generator (`/report`): 6-section HTML+DOCX from real content only.
 - Concordance: 7/7 engine statistics match scipy/statsmodels (VALIDATION_REPORT.md).
 - Everything marked "to build" / "not implemented" above must not be faked.
 
