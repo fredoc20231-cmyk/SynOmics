@@ -56,8 +56,8 @@ async function main() {
   const runNone = await runAgent({ query: 'do everything' });
   check('runAgent needs_input honest', runNone.status === 'needs_input' && /GEMINI_API_KEY|explicit/.test(runNone.message || ''));
 
-  // 7. Registry is non-trivial and every tool maps to an engine command.
-  check('registry populated', TOOL_REGISTRY.length >= 10 && TOOL_REGISTRY.every((t) => !!t.engineCommand));
+  // 7. Registry is non-trivial and every tool is executable (engine or handler).
+  check('registry populated', TOOL_REGISTRY.length >= 10 && TOOL_REGISTRY.every((t) => !!t.engineCommand || !!t.handler));
 
   console.log(`\nALL ${passed} AGENT SMOKE TESTS PASSED`);
 }
