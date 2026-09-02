@@ -42,3 +42,6 @@ jobs:
             | python server/synomics_engine.py gwas | python -c "import sys,json; d=json.load(sys.stdin); assert d['significantHits']==1; print('gwas OK', d['genomicInflationLambda'])"
           echo '{"samples":[{"sampleId":"H1","group":"H","abundances":{"a":50,"b":30,"c":2}},{"sampleId":"D1","group":"D","abundances":{"a":5,"b":20,"c":60}}]}' \
             | python server/synomics_engine.py microbiome | python -c "import sys,json; d=json.load(sys.stdin); assert d['sampleCount']==2; print('microbiome OK')"
+
+      - name: Engine test suite (real computation, no network)
+        run: python tests/engine_smoke.py

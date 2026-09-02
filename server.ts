@@ -1496,6 +1496,25 @@ app.post(['/api/synomics/microbiome', '/api/biomni/microbiome'], async (req, res
   }
 });
 
+// 19d. Real file ingestion — parse uploaded FASTA / FASTQ / VCF / CSV / TSV
+// server-side and return genuinely parsed content + honest routing suggestions.
+app.post(['/api/synomics/ingest-file', '/api/biomni/ingest-file'], async (req, res) => {
+  try {
+    const filename = req.body.filename || req.body.name || '';
+    const content = req.body.content ?? req.body.text ?? '';
+    if (typeof content !== 'string' || content.trim() === '') {
+      return res.status(400).json({ status: 'error', message: 'File content (string) is required.' });
+    }
+    const result = await runPythonEngine('ingest_file', { filename, content });
+    if (result && result.status && result.status !== 'success') {
+      return res.status(422).json(result);
+    }
+    res.json({ status: 'success', result, ...result });
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 // 20. Galaxy / Nextflow DAG Scientific Workflow Execution & Pipeline Code Generator API
 app.post(['/api/synomics/dag-workflow-execute', '/api/biomni/dag-workflow-execute'], async (req, res) => {
   try {

@@ -2202,6 +2202,272 @@ def run_microbiome(samples=None, method="bray_curtis"):
     }
 
 
+# ============================================================================
+# FILE INGESTION — real, dependency-free parsers for common bioinformatics
+# formats (FASTA / FASTQ / VCF / CSV-TSV expression matrix). Every parser
+# returns genuinely parsed content or an explicit error; nothing is fabricated.
+# ============================================================================
+
+def _sniff_delimiter(sample_line):
+    """Pick the most likely column delimiter from a header line."""
+    candidates = {"\t": sample_line.count("\t"), ",": sample_line.count(","), ";": sample_line.count(";")}
+    best = max(candidates, key=candidates.get)
+    return best if candidates[best] > 0 else ","
+
+
+def parse_fasta(text):
+    """Parse FASTA into records. Returns {format, count, records, summary}."""
+    records = []
+    header = None
+    seq_parts = []
+
+    def _flush():
+        if header is not None:
+            seq = "".join(seq_parts).replace(" ", "").upper()
+            rec_id = header.split()[0] if header.split() else header
+            records.append({
+                "id": rec_id,
+                "description": header,
+                "sequence": seq,
+                "length": len(seq),
+            })
+
+    for line in text.splitlines():
+        line = line.rstrip()
+        if not line:
+            continue
+        if line.startswith(">"):
+            _flush()
+            header = line[1:].strip()
+            seq_parts = []
+        else:
+            seq_parts.append(line)
+    _flush()
+
+    if not records:
+        return {"format": "fasta", "error": "No FASTA records found (expected '>' headers)."}
+
+    lengths = [r["length"] for r in records]
+    # Nucleotide vs protein heuristic from residue alphabet of the first record.
+    residues = set(records[0]["sequence"])
+    nuc = set("ACGTUN")
+    seq_type = "nucleotide" if residues and residues <= nuc else "protein"
+    return {
+        "format": "fasta",
+        "count": len(records),
+        "seqType": seq_type,
+        "records": records[:1000],
+        "summary": {
+            "sequences": len(records),
+            "minLength": min(lengths),
+            "maxLength": max(lengths),
+            "meanLength": round(sum(lengths) / len(lengths), 2),
+            "totalResidues": sum(lengths),
+        },
+    }
+
+
+def parse_fastq(text):
+    """Parse FASTQ (4 lines/record). Returns per-read length + mean Phred quality."""
+    lines = [ln.rstrip("\n") for ln in text.splitlines() if ln.strip() != ""]
+    if len(lines) < 4:
+        return {"format": "fastq", "error": "Incomplete FASTQ (need 4 lines per read)."}
+    records = []
+    qualities = []
+    i = 0
+    while i + 3 < len(lines) + 1 and i + 3 <= len(lines) - 1 + 1:
+        if i + 3 > len(lines) - 1:
+            break
+        head, seq, plus, qual = lines[i], lines[i + 1], lines[i + 2], lines[i + 3]
+        if not head.startswith("@") or not plus.startswith("+"):
+            i += 1
+            continue
+        phred = [ord(c) - 33 for c in qual]  # Sanger / Illumina 1.8+ (Phred+33)
+        mean_q = round(sum(phred) / len(phred), 3) if phred else 0.0
+        qualities.append(mean_q)
+        records.append({
+            "id": head[1:].split()[0] if head[1:].split() else head[1:],
+            "length": len(seq),
+            "meanQuality": mean_q,
+        })
+        i += 4
+    if not records:
+        return {"format": "fastq", "error": "No valid FASTQ reads parsed."}
+    lengths = [r["length"] for r in records]
+    return {
+        "format": "fastq",
+        "count": len(records),
+        "records": records[:1000],
+        "summary": {
+            "reads": len(records),
+            "meanReadLength": round(sum(lengths) / len(lengths), 2),
+            "minReadLength": min(lengths),
+            "maxReadLength": max(lengths),
+            "meanPhredQuality": round(sum(qualities) / len(qualities), 3),
+        },
+    }
+
+
+def parse_vcf(text):
+    """Parse VCF (v4.x). Returns variant records + per-chromosome counts."""
+    variants = []
+    samples = []
+    chrom_counts = defaultdict(int)
+    type_counts = defaultdict(int)
+    for line in text.splitlines():
+        if line.startswith("##"):
+            continue
+        if line.startswith("#CHROM"):
+            cols = line.lstrip("#").split("\t")
+            if len(cols) > 9:
+                samples = cols[9:]
+            continue
+        if not line.strip():
+            continue
+        f = line.split("\t")
+        if len(f) < 8:
+            continue
+        chrom, pos, vid, ref, alt = f[0], f[1], f[2], f[3], f[4]
+        qual = f[5] if len(f) > 5 else "."
+        filt = f[6] if len(f) > 6 else "."
+        chrom_counts[chrom] += 1
+        if len(ref) == 1 and all(len(a) == 1 for a in alt.split(",")):
+            vtype = "SNV"
+        elif len(ref) > max((len(a) for a in alt.split(",")), default=0):
+            vtype = "deletion"
+        else:
+            vtype = "insertion"
+        type_counts[vtype] += 1
+        variants.append({
+            "chrom": chrom, "pos": int(pos) if pos.isdigit() else pos,
+            "id": vid, "ref": ref, "alt": alt, "qual": qual, "filter": filt,
+            "type": vtype,
+        })
+    if not variants:
+        return {"format": "vcf", "error": "No VCF data rows parsed."}
+    return {
+        "format": "vcf",
+        "count": len(variants),
+        "sampleCount": len(samples),
+        "samples": samples,
+        "variants": variants[:2000],
+        "summary": {
+            "variants": len(variants),
+            "chromosomes": dict(chrom_counts),
+            "variantTypes": dict(type_counts),
+        },
+    }
+
+
+def parse_matrix_table(text, delimiter=None):
+    """Parse a CSV/TSV expression matrix: first column = feature id, header = samples."""
+    lines = [ln for ln in text.splitlines() if ln.strip() != ""]
+    if len(lines) < 2:
+        return {"format": "matrix", "error": "Need a header row and at least one data row."}
+    delim = delimiter or _sniff_delimiter(lines[0])
+    header = [h.strip() for h in lines[0].split(delim)]
+    samples = header[1:]
+    genes = []
+    matrix = []
+    for ln in lines[1:]:
+        cells = [c.strip() for c in ln.split(delim)]
+        if len(cells) < 2:
+            continue
+        genes.append(cells[0])
+        row = []
+        for c in cells[1:len(samples) + 1]:
+            try:
+                row.append(float(c))
+            except ValueError:
+                row.append(0.0)
+        while len(row) < len(samples):
+            row.append(0.0)
+        matrix.append(row)
+    if not genes:
+        return {"format": "matrix", "error": "No feature rows parsed."}
+    # Build a counts dict keyed by sample for direct routing into deseq2.
+    counts = {}
+    for j, s in enumerate(samples):
+        counts[s] = [matrix[i][j] for i in range(len(genes))]
+    return {
+        "format": "matrix",
+        "genes": genes[:5000],
+        "samples": samples,
+        "counts": counts,
+        "summary": {
+            "features": len(genes),
+            "samples": len(samples),
+            "shape": [len(genes), len(samples)],
+        },
+    }
+
+
+def ingest_file(filename, content):
+    """Detect format from extension/content and parse. Honest error if unknown."""
+    name = (filename or "").lower()
+    stripped = content.lstrip()
+    fmt = None
+    if name.endswith((".fasta", ".fa", ".fna", ".faa")):
+        fmt = "fasta"
+    elif name.endswith((".fastq", ".fq")):
+        fmt = "fastq"
+    elif name.endswith(".vcf"):
+        fmt = "vcf"
+    elif name.endswith((".csv", ".tsv", ".txt")):
+        fmt = "matrix"
+    else:
+        # Content sniffing when the extension is missing/unknown.
+        if stripped.startswith(">"):
+            fmt = "fasta"
+        elif stripped.startswith("@") and "\n+" in content:
+            fmt = "fastq"
+        elif stripped.startswith("##fileformat=VCF") or "\n#CHROM" in content:
+            fmt = "vcf"
+        elif ("," in stripped.split("\n", 1)[0]) or ("\t" in stripped.split("\n", 1)[0]):
+            fmt = "matrix"
+
+    if fmt == "fasta":
+        parsed = parse_fasta(content)
+    elif fmt == "fastq":
+        parsed = parse_fastq(content)
+    elif fmt == "vcf":
+        parsed = parse_vcf(content)
+    elif fmt == "matrix":
+        parsed = parse_matrix_table(content)
+    else:
+        return {
+            "status": "unsupported",
+            "error": "Could not detect a supported format (FASTA/FASTQ/VCF/CSV/TSV).",
+            "filename": filename,
+        }
+
+    if "error" in parsed:
+        return {"status": "error", "filename": filename, **parsed}
+
+    # Honest routing suggestions derived from what was actually parsed.
+    suggestions = []
+    if parsed["format"] == "fasta":
+        if parsed["count"] >= 2:
+            suggestions.append({"tool": "align_sequences", "reason": "Two or more sequences present."})
+        if parsed["count"] >= 3:
+            suggestions.append({"tool": "phylogenetic_tree", "reason": "Three or more sequences enable tree inference."})
+    elif parsed["format"] == "matrix":
+        if parsed["summary"]["samples"] >= 2:
+            suggestions.append({"tool": "deseq2", "reason": "A counts matrix with >=2 samples can be tested for differential expression (supply group labels)."})
+        suggestions.append({"tool": "scanpy_singlecell", "reason": "A features x cells matrix can run the single-cell pipeline."})
+    elif parsed["format"] == "vcf":
+        suggestions.append({"tool": "gwas", "reason": "Variant records can feed variant prioritization when association statistics are provided."})
+
+    return {
+        "status": "success",
+        "filename": filename,
+        "detectedFormat": parsed["format"],
+        "summary": parsed.get("summary", {}),
+        "suggestedAnalyses": suggestions,
+        "data": parsed,
+    }
+
+
 def main():
     if len(sys.argv) < 2:
         print(json.dumps({"error": "No command specified"}))
@@ -2342,6 +2608,12 @@ def main():
         samples = payload.get("samples") or payload.get("otuTable") or payload.get("otu_table")
         method = payload.get("method", "bray_curtis")
         result = run_microbiome(samples=samples, method=method)
+        print(json.dumps(result))
+
+    elif cmd == "ingest_file":
+        filename = payload.get("filename", "")
+        content = payload.get("content", "")
+        result = ingest_file(filename, content)
         print(json.dumps(result))
 
     else:
