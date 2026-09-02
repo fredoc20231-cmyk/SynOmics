@@ -159,9 +159,17 @@ Bridges omics findings into molecular design + rigorous in-silico validation.
     a correctness guard + measured speedup logged to the audit trail.
   - Cryptographic provenance (`/provenance`): SHA-256 manifest of inputs/scripts/
     outputs; the report footer embeds the manifest hash.
+- **Final-Frontier engines (all code-grounded, honest fallbacks, CI-gated):**
+  - MML model selection (`/mml-select`): parsimony via minimum two-part message length.
+  - Circuit verification (`/circuit-verify`): Gillespie SSA + temporal-property
+    VERIFIED/VIOLATED with a Wilson CI.
+  - PDE residual gate (`/pde-validate`): reaction-diffusion residual → PHYSICALLY
+    VALID/INVALID (PINN training itself needs torch/GPU; the enforcement runs here).
+  - Assay vision (`/assay-quantify`): deterministic OpenCV quantification (no LLM
+    eyeballing) + Bayesian posterior update (`/bayesian-update`).
 - Concordance: 7/7 engine statistics match scipy/statsmodels (VALIDATION_REPORT.md).
 - Lint gate: `ruff check server tests` (pyflakes/syntax/imports) runs in CI.
-- 33 real agent tools; 13 test suites in CI.
+- 38 real agent tools; 17 test suites in CI.
 - Everything marked "to build" / "not implemented" above must not be faked.
 
 ## 6. Commands
