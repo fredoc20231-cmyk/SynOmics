@@ -21,7 +21,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3000;
+// Respect the platform-injected port (Cloud Run, Heroku, Render, Fly, etc.);
+// fall back to 3000 for local development. Never hardcode — most PaaS require
+// the server to bind the port they provide via $PORT.
+const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json({ limit: '10mb' }));
 
