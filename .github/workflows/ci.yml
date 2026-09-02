@@ -71,6 +71,9 @@ jobs:
       - name: MML model-selection gate (parsimony)
         run: python tests/mml_smoke.py
 
+      - name: PDE residual gate (reaction-diffusion physics validity)
+        run: python tests/pde_smoke.py
+
       - name: Tensor-Train compression gate (error-bounded, honest approximate flag)
         run: |
           python -m pip install --quiet tensorly

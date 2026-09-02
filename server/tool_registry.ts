@@ -344,6 +344,20 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     },
   },
   {
+    name: 'pde_residual',
+    category: 'Verifiable AI / physics',
+    description: 'Physics-validity gate for spatiotemporal fields: compute the finite-difference reaction-diffusion PDE residual (du/dt - D u_xx - f(u)); reject as PHYSICALLY_INVALID if the max residual exceeds the threshold. numpy.',
+    handler: (i) => runPythonScript('server/pde_validate.py', i),
+    parameters: {
+      u: { type: 'array', description: '2-D field [n_t, n_x].', required: true },
+      D: { type: 'number', description: 'Diffusion coefficient.' },
+      dx: { type: 'number', description: 'Spatial step.' },
+      dt: { type: 'number', description: 'Time step.' },
+      reaction: { type: 'object', description: "{type:'none'|'linear'|'logistic', rate, carryingCapacity}." },
+      threshold: { type: 'number', description: 'Residual acceptance threshold (default 1e-4).' },
+    },
+  },
+  {
     name: 'mml_select',
     category: 'Verifiable AI / model selection',
     description: 'Minimum Message Length (MML) model selection: choose the model minimizing model complexity + encoded residual, so extra parameters are only kept when they genuinely shorten the data encoding. numpy.',
