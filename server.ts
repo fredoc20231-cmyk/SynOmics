@@ -1264,6 +1264,18 @@ app.post(['/api/synomics/adversarial-validate', '/api/biomni/adversarial-validat
   }
 });
 
+// 4a2b. Enhanced ML adversary: classifier overfit test + covariate confounder
+// check. Requires scikit-learn; honest 'unavailable' otherwise.
+app.post(['/api/synomics/adversarial-ml', '/api/biomni/adversarial-ml'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/adversary.py', req.body);
+    const code = result?.status === 'success' ? 200 : result?.status === 'error' ? 400 : 501;
+    res.status(code).json(result);
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 // 4b. Real tool registry discovery — the actual tools the agent can execute.
 app.get(['/api/synomics/agent-tools', '/api/biomni/agent-tools'], (_req, res) => {
   const tools = toolSchemasForLLM();

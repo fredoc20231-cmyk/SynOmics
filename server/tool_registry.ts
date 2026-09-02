@@ -194,6 +194,19 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     },
   },
   {
+    name: 'adversarial_ml',
+    category: 'Verifiable AI / validation',
+    description: 'ML adversary: a cross-validated classifier overfit test (sklearn permutation_test_score) plus a PCA-vs-covariate batch-confounder check. VALIDATED/INVALIDATED/INCONCLUSIVE + veto. Requires scikit-learn.',
+    handler: (i) => runPythonScript('server/adversary.py', i),
+    parameters: {
+      counts: { type: 'object', description: 'Map gene -> per-sample counts.', required: true },
+      conditions: { type: 'array', description: 'Group label per sample.', required: true },
+      covariates: { type: 'object', description: 'Optional map covariateName -> per-sample values (e.g. batch) for confounder testing.' },
+      nPermutations: { type: 'number', description: 'Permutations for the overfit test (default 1000).' },
+      seed: { type: 'number', description: 'Random seed (default 1337).' },
+    },
+  },
+  {
     name: 'boolean_attractors',
     category: 'Verifiable AI / state-space',
     description: 'Exact Boolean-network attractor analysis: enumerate the state space to find fixed-point phenotypes and cyclic attractors with basin sizes, and how they shift under node perturbations (drug knockout/activation). Deterministic state-space simulation, not a fabricated digital twin.',
