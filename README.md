@@ -123,11 +123,22 @@ Code-grounded, honest-fallback engines (manifest at `GET /api/synomics/idiscover
   observational data is not identifiable in general — stated honestly: discover
   returns a certified DAH, verify is the loop check.
 
+- **Federated ZKP** (`POST /api/synomics/idiscover/federated-zkp`) —
+  privacy-preserving federated biomarker discovery. Each site runs a real
+  stratified log-rank survival test on its *own* records; only the additive
+  `(O-E, V)` sufficient statistics leave the site (never raw rows). The aggregate
+  is secured with real Pedersen commitments (additively homomorphic, RFC-3526
+  2048-bit group) and Schnorr/Fiat–Shamir zero-knowledge proofs of knowledge —
+  contributions stay hidden and tamper-evident. Pure stdlib. Honest scope: a
+  commitment + Sigma-protocol system, *not* a general zk-SNARK over an arbitrary
+  predicate (that needs a proving backend not bundled).
+
 ```bash
 pip install numpy scipy pot rdkit
 python tests/optimal_transport_smoke.py   # exact Wasserstein recovered analytically
 python tests/gflownet_smoke.py            # every candidate RDKit-valid, real QED
 python tests/test_hyper_causal.py         # recovers Z=X*Y joint cause; rejects A→B→C→A loop
+python tests/federated_zkp_smoke.py       # cross-site log-rank + ZK proofs; forged proof rejected (stdlib)
 ```
 
 ### Engine smoke tests (no network, real math)

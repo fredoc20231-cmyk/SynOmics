@@ -2989,15 +2989,17 @@ def main():
         result = run_adversarial_validation(counts, conditions, n_permutations=n_perm, fdr_threshold=fdr, lfc_min=lfc, seed=seed)
         print(json.dumps(result))
 
-    elif cmd in ("cellular_reversion", "gflownet_sampling", "hyper_causal_discovery"):
-        # iDiscover frontiers. These require the scientific stack (numpy / scipy /
-        # POT / rdkit), so they live in dedicated, individually-tested modules and
-        # are delegated to here — a single source of truth, no duplicated math. The
-        # engine itself stays dependency-free (only subprocess is used).
+    elif cmd in ("cellular_reversion", "gflownet_sampling", "hyper_causal_discovery", "federated_zkp"):
+        # iDiscover frontiers. Some require the scientific stack (numpy / scipy /
+        # POT / rdkit); federated_zkp is pure stdlib. All live in dedicated,
+        # individually-tested modules and are delegated to here — a single source
+        # of truth, no duplicated math. The engine itself stays dependency-free
+        # (only subprocess is used).
         module = {
             "cellular_reversion": "optimal_transport.py",
             "gflownet_sampling": "gflownet.py",
             "hyper_causal_discovery": "hyper_causal.py",
+            "federated_zkp": "federated_zkp.py",
         }[cmd]
         script = os.path.join(os.path.dirname(os.path.abspath(__file__)), module)
         proc = subprocess.run(

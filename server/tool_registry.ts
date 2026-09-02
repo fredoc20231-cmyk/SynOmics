@@ -482,6 +482,17 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     },
   },
   {
+    name: 'federated_zkp',
+    category: 'iDiscover / privacy-preserving federation',
+    description: 'iDiscover federated biomarker discovery: each site runs a REAL stratified log-rank survival test on its own private records; only additive (O-E, V) sufficient statistics leave the site — never raw rows. The aggregate is secured with REAL Pedersen commitments (homomorphic) + Schnorr/Fiat–Shamir zero-knowledge proofs of knowledge, so contributions are hidden and tamper-evident. Pure stdlib. Scope: not a general zk-SNARK over arbitrary predicates (no proving backend bundled) — stated honestly.',
+    handler: (i) => runPythonScript('server/federated_zkp.py', i, 120000),
+    parameters: {
+      sites: { type: 'array', description: 'List of >=2 sites, each { name, durations[], events[0/1], groups[0/1] }.', required: true },
+      alpha: { type: 'number', description: 'Significance threshold to report (default 0.01).' },
+      scale: { type: 'number', description: 'Fixed-point scale for (O-E) integer commitments (default 1e6).' },
+    },
+  },
+  {
     name: 'hyper_causal_discovery',
     category: 'iDiscover / hypergraph causal discovery',
     description: 'iDiscover Hyper-NOTEARS: discover a Directed Acyclic Hypergraph of multi-way (joint) causes from data (finds e.g. [A,B]->C that pairwise methods miss), OR verify a proposed weighted adjacency for causal loops. Acyclicity is enforced/certified by the exact tr(exp(W∘W))-d gate; a detected loop is rejected with a strict error — no heuristic DAG. Requires numpy + scipy.',

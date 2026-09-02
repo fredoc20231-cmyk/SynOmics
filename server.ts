@@ -578,6 +578,19 @@ app.post(['/api/synomics/idiscover/hyper-causal-discovery', '/api/biomni/idiscov
   }
 });
 
+// iDiscover Frontier 3 — privacy-preserving federated biomarker discovery.
+// Real stratified log-rank across sites (raw records never shared) secured by
+// Pedersen commitments + Schnorr/Fiat–Shamir zero-knowledge proofs.
+app.post(['/api/synomics/idiscover/federated-zkp', '/api/biomni/idiscover/federated-zkp'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/federated_zkp.py', req.body, 120000);
+    const code = result?.status === 'success' ? 200 : result?.status === 'error' ? 400 : 501;
+    res.status(code).json(result);
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 // iDiscover — capability manifest for the monumental frontier engines.
 app.get(['/api/synomics/idiscover', '/api/biomni/idiscover'], (req, res) => {
   res.json({
@@ -604,6 +617,13 @@ app.get(['/api/synomics/idiscover', '/api/biomni/idiscover'], (req, res) => {
         title: 'Hyper-NOTEARS — hypergraph (multi-way) causal discovery',
         route: '/api/synomics/idiscover/hyper-causal-discovery',
         grounding: 'Discovers a Directed Acyclic Hypergraph of joint causes ([A,B]->C) via order-restricted continuous optimization; verify mode checks a proposed adjacency with the exact tr(exp(W∘W))-d acyclicity gate and rejects loops (no heuristic DAG).',
+        status: 'implemented',
+      },
+      {
+        id: 'federated_zkp',
+        title: 'Federated biomarker discovery with zero-knowledge verification',
+        route: '/api/synomics/idiscover/federated-zkp',
+        grounding: 'Real stratified log-rank across sites (raw records never shared) + Pedersen homomorphic commitments and Schnorr/Fiat–Shamir zero-knowledge proofs of knowledge. Not a general zk-SNARK (no proving backend bundled) — stated honestly.',
         status: 'implemented',
       },
     ],
