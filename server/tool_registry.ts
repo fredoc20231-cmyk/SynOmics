@@ -220,6 +220,17 @@ export const TOOL_REGISTRY: ToolSpec[] = [
       seed: { type: 'number', description: 'Random seed (default 1337).' },
     },
   },
+  {
+    name: 'tensor_compress',
+    category: 'Verifiable AI / compression',
+    description: 'Tensor-Train (MPS) compression of a high-dimensional array with measured, reported truncation error and an honest "approximate" flag. A compression utility — not a cell simulator. Requires numpy+tensorly.',
+    handler: (i) => runPythonScript('server/tensor_compression.py', i),
+    parameters: {
+      tensor: { type: 'array', description: 'Nested-list tensor (>=2 dims).', required: true },
+      rank: { type: 'number', description: 'TT internal rank (optional; adaptively chosen if omitted).' },
+      maxRelError: { type: 'number', description: 'Target relative reconstruction error (default 1e-4).' },
+    },
+  },
   // --- Real external-database grounding (live public APIs; honest errors) ---
   {
     name: 'db_ensembl_gene',

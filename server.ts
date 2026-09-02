@@ -1176,6 +1176,18 @@ Respond in strict JSON with the following structure:
   }
 });
 
+// 4a-1. Tensor-Train compression (Part 3B): honest compression utility with
+// measured truncation error. Not a cell simulator.
+app.post(['/api/synomics/tensor-compress', '/api/biomni/tensor-compress'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/tensor_compression.py', req.body);
+    const code = result?.status === 'success' ? 200 : result?.status === 'error' ? 400 : 501;
+    res.status(code).json(result);
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 // 4a0. Causal discovery (Part 3A): DirectLiNGAM directed causal graph with
 // bootstrap-stability gating. Honest 'unavailable' if numpy is absent.
 app.post(['/api/synomics/causal-discovery', '/api/biomni/causal-discovery'], async (req, res) => {
