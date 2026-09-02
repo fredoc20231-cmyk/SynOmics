@@ -8,6 +8,7 @@ scipy>=1.10.0
 scikit-learn>=1.2.0
 statsmodels>=0.14.0
 networkx>=3.0
+pot>=0.9.0               # Python Optimal Transport — exact EMD for iDiscover cellular reversion
 z3-solver>=4.12.0
 rdkit>=2023.3.1          # NOTE: use `rdkit` (the deprecated `rdkit-pypi` fails to build here)
 tigramite>=5.2.0         # PCMCI causal discovery (time-series)

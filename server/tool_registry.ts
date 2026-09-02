@@ -467,6 +467,35 @@ export const TOOL_REGISTRY: ToolSpec[] = [
       species: { type: 'string', description: "Species (default 'human')." },
     },
   },
+  // --- iDiscover: monumental frontier engines (all code-grounded, honest fallbacks) ---
+  {
+    name: 'cellular_reversion',
+    category: 'iDiscover / Optimal Transport',
+    description: 'iDiscover "Biological Git": compute the minimum-energy Optimal-Transport plan reverting a diseased single-cell distribution to a healthy reference. Returns the exact Wasserstein distance and the top per-gene perturbations (the "revert commits") from the transport coupling. Exact EMD via POT when available, else numpy Sinkhorn (flagged approximate); strict error if it fails to converge. Requires numpy.',
+    handler: (i) => runPythonScript('server/optimal_transport.py', i, 180000),
+    parameters: {
+      sourceMatrix: { type: 'array', description: 'Diseased cells x genes (rows = cells).', required: true },
+      targetMatrix: { type: 'array', description: 'Healthy reference cells x genes (same gene columns).', required: true },
+      genes: { type: 'array', description: 'Gene names (length = number of columns).' },
+      topK: { type: 'number', description: 'Number of perturbation commits to report (default 5).' },
+      reg: { type: 'number', description: 'Sinkhorn entropic regularization (fallback only; default 0.05).' },
+    },
+  },
+  {
+    name: 'gflownet_sample',
+    category: 'iDiscover / generative chemistry',
+    description: 'iDiscover GFlowNet: sample a diverse set of drug-like molecules proportionally to reward (Trajectory-Balance), not a single optimum. Tabular numpy GFlowNet; every returned molecule is RDKit-valid with a REAL computed QED reward — invalid samples are discarded, nothing fabricated. A deep neural GFlowNet (torch/GPU) is not claimed. Requires numpy + rdkit.',
+    handler: (i) => runPythonScript('server/gflownet.py', i, 300000),
+    parameters: {
+      objective: { type: 'string', description: "Reward property to maximize (currently 'qed')." },
+      maxLength: { type: 'number', description: 'Max fragments per molecule (default 4).' },
+      beta: { type: 'number', description: 'Reward exponent R^beta to sharpen the target distribution (default 4).' },
+      iterations: { type: 'number', description: 'Trajectory-Balance training steps (default 1500).' },
+      nSamples: { type: 'number', description: 'Molecules to sample from the trained policy (default 200).' },
+      topK: { type: 'number', description: 'Top candidates to return (default 10).' },
+      seed: { type: 'number', description: 'Random seed (default 1337).' },
+    },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));

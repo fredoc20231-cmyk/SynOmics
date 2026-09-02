@@ -1323,6 +1323,57 @@ app.post(['/api/synomics/causal-discovery', '/api/biomni/causal-discovery'], asy
   }
 });
 
+// iDiscover Frontier 2 — "Biological Git": cellular-state reversion via Optimal
+// Transport. Returns the exact Wasserstein "energy" and the top per-gene revert
+// commits from the transport coupling. Exact EMD (POT) or Sinkhorn fallback.
+app.post(['/api/synomics/idiscover/cellular-reversion', '/api/biomni/idiscover/cellular-reversion'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/optimal_transport.py', req.body, 180000);
+    const code = result?.status === 'success' ? 200 : result?.status === 'error' ? 400 : 501;
+    res.status(code).json(result);
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+// iDiscover Frontier 1 — GFlowNet generative molecular sampling (Trajectory
+// Balance). Samples diverse drug-like molecules proportionally to a REAL RDKit
+// reward; invalid molecules are discarded, nothing fabricated.
+app.post(['/api/synomics/idiscover/gflownet-sample', '/api/biomni/idiscover/gflownet-sample'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/gflownet.py', req.body, 300000);
+    const code = result?.status === 'success' ? 200 : result?.status === 'error' ? 400 : 501;
+    res.status(code).json(result);
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+// iDiscover — capability manifest for the monumental frontier engines.
+app.get(['/api/synomics/idiscover', '/api/biomni/idiscover'], (req, res) => {
+  res.json({
+    status: 'success',
+    name: 'iDiscover',
+    tagline: 'Monumental, code-grounded discovery frontiers for SynOmics.',
+    engines: [
+      {
+        id: 'cellular_reversion',
+        title: 'Biological Git — Optimal Transport cellular-state reversion',
+        route: '/api/synomics/idiscover/cellular-reversion',
+        grounding: 'Waddington-OT; exact EMD (POT) or numpy Sinkhorn; exact Wasserstein distance + barycentric-projection gene perturbations. Strict error on non-convergence.',
+        status: 'implemented',
+      },
+      {
+        id: 'gflownet_sample',
+        title: 'GFlowNet generative molecular sampling (Trajectory Balance)',
+        route: '/api/synomics/idiscover/gflownet-sample',
+        grounding: 'Tabular numpy GFlowNet; every candidate RDKit-valid with real computed QED. Deep neural GFlowNet (torch/GPU) not claimed.',
+        status: 'implemented',
+      },
+    ],
+  });
+});
+
 // 4a1c. Self-optimizing compilation: Cython-accelerate a numeric kernel and
 // report the measured speedup (correctness asserted vs pure Python).
 app.post(['/api/synomics/accelerate', '/api/biomni/accelerate'], async (req, res) => {

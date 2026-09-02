@@ -167,9 +167,24 @@ Bridges omics findings into molecular design + rigorous in-silico validation.
     VALID/INVALID (PINN training itself needs torch/GPU; the enforcement runs here).
   - Assay vision (`/assay-quantify`): deterministic OpenCV quantification (no LLM
     eyeballing) + Bayesian posterior update (`/bayesian-update`).
+- **iDiscover engines (monumental frontiers; code-grounded, honest fallbacks, CI-gated):**
+  - Biological Git — cellular reversion (`/idiscover/cellular-reversion`):
+    Waddington Optimal Transport. Exact EMD via POT (else numpy Sinkhorn, flagged
+    `approximate`) → exact Wasserstein "energy" + top per-gene revert commits from
+    the barycentric projection. Gene names are exact input columns; strict
+    "failed to converge" error on disjoint distributions (no heuristic fallback).
+    Verified: analytic 1-D W₂ recovered exactly; known diseased→healthy shifts recovered.
+  - GFlowNet generative chemistry (`/idiscover/gflownet-sample`): tabular numpy
+    GFlowNet trained with Trajectory Balance, sampling molecules ∝ reward. Every
+    candidate is RDKit-sanitizable with a REAL computed QED; invalid samples are
+    discarded, nothing fabricated. Tabular tier only — a deep neural GFlowNet needs
+    torch/GPU and is NOT claimed. Verified: trained policy concentrates above uniform
+    random; all reported QED values match RDKit.
+  - Manifest at `/idiscover`. Frontiers 3 (ZKP federated biomarkers) and 4
+    (Hyper-NOTEARS hypergraph causal discovery) are NOT built and must not be faked.
 - Concordance: 7/7 engine statistics match scipy/statsmodels (VALIDATION_REPORT.md).
 - Lint gate: `ruff check server tests` (pyflakes/syntax/imports) runs in CI.
-- 38 real agent tools; 17 test suites in CI.
+- 41 real agent tools; 21 test suites in CI.
 - Everything marked "to build" / "not implemented" above must not be faked.
 
 ## 6. Commands

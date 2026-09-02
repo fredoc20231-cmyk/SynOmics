@@ -114,6 +114,16 @@ jobs:
           python -m pip install --quiet rdkit
           python tests/drug_descriptors_smoke.py
 
+      - name: iDiscover — Optimal Transport cellular reversion (exact Wasserstein)
+        run: |
+          python -m pip install --quiet pot
+          python tests/optimal_transport_smoke.py
+
+      - name: iDiscover — GFlowNet molecular sampling (RDKit-valid, real reward)
+        run: |
+          python -m pip install --quiet rdkit
+          python tests/gflownet_smoke.py
+
       - name: Self-optimizing compilation gate (Cython speedup, correctness-guarded)
         run: |
           python -m pip install --quiet cython

@@ -79,6 +79,47 @@ npm run build   # vite build (frontend) + esbuild server → dist/server.mjs
 npm start       # node dist/server.mjs
 ```
 
+The server binds `process.env.PORT` (falling back to `3000`), so it drops
+straight into Cloud Run / Heroku / Render / Fly, which inject `$PORT`.
+
+### Container / cloud deployment
+
+A production `Dockerfile` (two-stage Node 22 + Python 3.11) is included:
+
+```bash
+# Lean image — the core compute engine is dependency-free:
+docker build -t synomics .
+# Full platform — also installs the scientific stack for the heavier modules:
+docker build -t synomics --build-arg INSTALL_SCIENCE_STACK=true .
+
+docker run -p 8080:8080 -e PORT=8080 -e GEMINI_API_KEY=... synomics
+```
+
+The image runs as a non-root user and defines a `HEALTHCHECK` that probes the
+real `/api/health` route.
+
+### iDiscover — monumental discovery frontiers
+
+Code-grounded, honest-fallback engines (manifest at `GET /api/synomics/idiscover`):
+
+- **Biological Git** (`POST /api/synomics/idiscover/cellular-reversion`) —
+  Optimal-Transport cellular-state reversion. Returns the exact Wasserstein
+  "energy" to move a diseased single-cell distribution back to a healthy
+  reference, plus the top per-gene *revert commits* from the transport coupling.
+  Exact EMD via POT (else numpy Sinkhorn, flagged `approximate`); a strict
+  "failed to converge" error on disjoint distributions — never a heuristic guess.
+- **GFlowNet** (`POST /api/synomics/idiscover/gflownet-sample`) — generative
+  molecular sampling trained with Trajectory Balance, sampling molecules ∝ reward
+  for diversity, not a single optimum. Every returned molecule is RDKit-valid
+  with a **real computed QED**; invalid samples are discarded. Tabular tier
+  (numpy) — a deep neural GFlowNet (torch/GPU) is not claimed.
+
+```bash
+pip install numpy pot rdkit
+python tests/optimal_transport_smoke.py   # exact Wasserstein recovered analytically
+python tests/gflownet_smoke.py            # every candidate RDKit-valid, real QED
+```
+
 ### Engine smoke tests (no network, real math)
 
 ```bash
