@@ -30,10 +30,17 @@ Each is a thin, cached server route to a public API; all real, no keys except wh
 > package registries — so they are deferred until they can be run against the
 > live endpoints, per the honesty guardrail (no shipping of unverified network
 > code claimed as working).
-- ⬜ **S** Ensembl REST (`rest.ensembl.org`) — gene → coordinates, transcripts,
-  exons → replace the synaptic `GENOMIC_LOCI` fallback and `get_genomic_locus_tracks`.
-- ⬜ **S** UniProt REST — protein metadata, sequence, domains (feeds alignment/ΔΔG).
-- ⬜ **S** MyGene.info / MyVariant.info — gene & variant annotation.
+- 🟡 **S** Ensembl REST (`rest.ensembl.org`) — gene → coordinates/biotype/assembly.
+  DRAFTED & real: `server/external_db.ts::ensemblGeneBySymbol`,
+  `GET /api/synomics/db/ensembl-gene`, agent tool `db_ensembl_gene`. Honest-error
+  path verified live (egress blocked → 502 + no data); happy path pending open egress.
+- 🟡 **S** UniProt REST — protein accession/name/length/gene names. DRAFTED & real:
+  `uniProtByGene`, `GET /api/synomics/db/protein`, tool `db_protein_uniprot`.
+- 🟡 **S** MyGene.info — gene annotation (Entrez/name/Ensembl/summary). DRAFTED &
+  real: `myGeneBySymbol`, `GET /api/synomics/db/gene-annotation`, tool
+  `db_gene_annotation`. Ensembl VEP (variant effect by rsID) also drafted:
+  `vepByRsId`, `GET /api/synomics/db/variant`, tool `db_variant_vep`.
+- ⬜ **S** MyVariant.info — variant annotation.
 - ⬜ **S** gnomAD GraphQL — population allele frequencies for variant panels.
 - ⬜ **M** ClinVar (NCBI E-utilities) — real clinical significance → replace the
   hardcoded ACMG list in `ClinicalGenomicsPanel`/`annotate_variants`.
@@ -112,8 +119,11 @@ invented multi-model consensus. That is the line that keeps this credible.
   input. (`InSilicoPerturbationLab` already runs the real ODE route.)
 
 ## Remaining (highest value first)
-- Phase 1 live external-database routes (need open outbound network to verify;
-  deferred rather than shipped unverified, per the honesty guardrail).
+- Verify the drafted Phase 1 DB routes (Ensembl/MyGene/UniProt/VEP) against the
+  live endpoints in an open-egress environment, then wire them into the frontend
+  panels (e.g. replace `ClinicalGenomicsPanel`/`DrugRepurposingEngine` curated
+  data with real ClinVar/Open Targets pulls). Remaining sources (gnomAD, ClinVar,
+  Open Targets, ChEMBL, g:Profiler/Enrichr) still to draft.
 - Harden `python-exec` into an isolated sandbox before agent-authored code.
 - Real docking/ADMET workers (AutoDock Vina / RDKit) — external infra.
 - `PlatformSupremacyBenchmark` is a marketing table, not a feature — consider
