@@ -2385,15 +2385,19 @@ def parse_matrix_table(text, delimiter=None):
         matrix.append(row)
     if not genes:
         return {"format": "matrix", "error": "No feature rows parsed."}
-    # Build a counts dict keyed by sample for direct routing into deseq2.
+    # counts: keyed by sample (values per gene) — useful for sample-wise views.
     counts = {}
     for j, s in enumerate(samples):
         counts[s] = [matrix[i][j] for i in range(len(genes))]
+    # geneCounts: keyed by gene (values per sample) — the exact orientation the
+    # differential_expression tool consumes, so ingest -> DE chains directly.
+    gene_counts = {genes[i]: matrix[i][:] for i in range(len(genes))}
     return {
         "format": "matrix",
         "genes": genes[:5000],
         "samples": samples,
         "counts": counts,
+        "geneCounts": gene_counts,
         "summary": {
             "features": len(genes),
             "samples": len(samples),

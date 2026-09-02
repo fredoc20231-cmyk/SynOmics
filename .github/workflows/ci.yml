@@ -45,3 +45,6 @@ jobs:
 
       - name: Engine test suite (real computation, no network)
         run: python tests/engine_smoke.py
+
+      - name: Agent tool-use loop test suite (real execution, no network)
+        run: npx tsx tests/agent_smoke.ts

@@ -9,6 +9,8 @@ import dotenv from 'dotenv';
 import { createServer as createViteServer } from 'vite';
 import { BIOLOGICAL_ENTITIES, GO_ONTOLOGY_TREE, BIOTOOLS_REGISTRY, PREBUILT_PROTOCOLS, SYNAPTIC_PROTEINS, SYNGO_ONTOLOGY_TREE, SYNOMICS_TOOLS } from './src/data/bioOmniDatabase.ts';
 import { generateGroundedMultiAgentRun } from './server/grounded_multi_agent.ts';
+import { runAgent } from './server/agent_executor.ts';
+import { toolSchemasForLLM } from './server/tool_registry.ts';
 
 dotenv.config();
 
@@ -1157,6 +1159,26 @@ Respond in strict JSON with the following structure:
   } catch (err: any) {
     console.error('Error running SynOmics agent:', err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+// 4b. Real tool registry discovery — the actual tools the agent can execute.
+app.get(['/api/synomics/agent-tools', '/api/biomni/agent-tools'], (_req, res) => {
+  const tools = toolSchemasForLLM();
+  res.json({ status: 'success', count: tools.length, tools });
+});
+
+// 4c. Real agent tool-use loop: plan -> execute REAL tools -> observe -> synthesize.
+// Observations are genuine engine outputs, not LLM-simulated. Planning may come
+// from an explicit `plan`, uploaded `files`, or Gemini (when a key is set).
+app.post(['/api/synomics/agent-execute', '/api/biomni/agent-execute'], async (req, res) => {
+  try {
+    const { query, plan, files } = req.body || {};
+    const result = await runAgent({ query, plan, files, ai: getGenAI() });
+    res.json(result);
+  } catch (err: any) {
+    console.error('agent-execute failed:', err);
+    res.status(500).json({ status: 'error', message: err.message });
   }
 });
 
