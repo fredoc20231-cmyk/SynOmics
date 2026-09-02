@@ -2406,6 +2406,115 @@ def parse_matrix_table(text, delimiter=None):
     }
 
 
+# ============================================================================
+# ADVERSARIAL VALIDATION ENGINE (Zero-Fake Tri-Agent, code-grounded)
+# The "decision" is made by cold statistics, not by an LLM. A proponent computes
+# the signal; an adversary attacks it with a label-permutation null (the standard
+# test that a small-sample DE signal is not a labelling artefact / overfit); a
+# deterministic arbiter renders VALIDATED / INVALIDATED / INCONCLUSIVE and can
+# VETO a debunked hypothesis. Fully reproducible via a logged random seed.
+# ============================================================================
+
+def _count_significant(results, fdr_threshold=0.05, lfc_min=0.5):
+    return sum(1 for r in results if r.get("fdr", 1.0) < fdr_threshold and abs(r.get("log2FoldChange", 0.0)) > lfc_min)
+
+
+def run_adversarial_validation(gene_counts, conditions, n_permutations=1000, fdr_threshold=0.05, lfc_min=0.5, seed=1337):
+    """Empirically validate a two-group differential-expression hypothesis by
+    testing whether the observed number of significant genes survives random
+    relabelling of the samples. Returns a deterministic verdict + confidence."""
+    if not gene_counts or not conditions:
+        return {"status": "error", "error": "gene_counts and conditions are required."}
+
+    distinct = []
+    for c in conditions:
+        n = str(c).strip().lower()
+        if n not in distinct:
+            distinct.append(n)
+    if len(distinct) < 2:
+        return {"status": "error", "error": "Adversarial validation needs at least two distinct condition groups."}
+
+    # --- Agent alpha (Proponent): the primary signal ---
+    proponent = run_differential_expression(gene_counts, conditions)
+    observed_sig = _count_significant(proponent, fdr_threshold, lfc_min)
+    significant_genes = [r["gene"] for r in proponent
+                         if r.get("fdr", 1.0) < fdr_threshold and abs(r.get("log2FoldChange", 0.0)) > lfc_min]
+
+    # --- Agent beta (Adversary): label-permutation null ---
+    rng = random.Random(seed)
+    n_perm = max(0, int(n_permutations))
+    labels = list(conditions)
+    null_counts = []
+    for _ in range(n_perm):
+        shuffled = labels[:]
+        rng.shuffle(shuffled)
+        # Skip degenerate shuffles that collapse to a single group.
+        if len({str(x).strip().lower() for x in shuffled}) < 2:
+            null_counts.append(0)
+            continue
+        perm_res = run_differential_expression(gene_counts, shuffled)
+        null_counts.append(_count_significant(perm_res, fdr_threshold, lfc_min))
+
+    if n_perm > 0:
+        ge = sum(1 for c in null_counts if c >= observed_sig)
+        empirical_p = (1 + ge) / (n_perm + 1)          # standard permutation p-value
+        mean_null = sum(null_counts) / n_perm          # expected false positives under H0
+        max_null = max(null_counts)
+    else:
+        empirical_p, mean_null, max_null = 1.0, 0.0, 0
+
+    snr = (observed_sig / mean_null) if mean_null > 0 else (float("inf") if observed_sig > 0 else 0.0)
+
+    # --- Agent gamma (Arbiter): deterministic verdict + veto ---
+    ALPHA = 0.05
+    if observed_sig == 0:
+        verdict = "INCONCLUSIVE"
+        reason = "No significant genes in the primary analysis; there is no signal to validate."
+    elif empirical_p <= ALPHA and observed_sig > mean_null:
+        verdict = "VALIDATED"
+        reason = ("Observed significant-gene count exceeds the label-permutation null "
+                  f"(empirical p={empirical_p:.4g}); the signal is unlikely to be a labelling artefact.")
+    elif empirical_p > ALPHA:
+        verdict = "INVALIDATED"
+        reason = ("Signal collapses under random relabelling "
+                  f"(empirical p={empirical_p:.4g} > {ALPHA}); consistent with overfitting / noise.")
+    else:
+        verdict = "INCONCLUSIVE"
+        reason = "Observed signal is not clearly separable from the permutation null."
+
+    veto = verdict == "INVALIDATED"
+    confidence = round(max(0.0, min(1.0, 1.0 - empirical_p)), 4)
+
+    return {
+        "status": "success",
+        "verdict": verdict,
+        "veto": veto,
+        "confidenceScore": confidence,
+        "reason": reason,
+        "proponent": {
+            "test": "welch_t_on_log2 + Benjamini-Hochberg FDR",
+            "genesTested": len(proponent),
+            "significantGenes": observed_sig,
+            "significantGeneNames": significant_genes[:100],
+            "fdrThreshold": fdr_threshold,
+            "log2fcMin": lfc_min,
+        },
+        "adversary": {
+            "attack": "sample-label permutation (negative control for overfitting / batch labelling)",
+            "permutations": n_perm,
+            "empiricalP": round(empirical_p, 6),
+            "expectedFalsePositives": round(mean_null, 3),
+            "maxNullSignificant": max_null,
+            "signalToNoise": (None if snr == float("inf") else round(snr, 3)),
+        },
+        "arbiter": {
+            "method": "deterministic permutation meta-analysis (no LLM)",
+            "alpha": ALPHA,
+            "seed": seed,
+        },
+    }
+
+
 def ingest_file(filename, content):
     """Detect format from extension/content and parse. Honest error if unknown."""
     name = (filename or "").lower()
@@ -2618,6 +2727,16 @@ def main():
         filename = payload.get("filename", "")
         content = payload.get("content", "")
         result = ingest_file(filename, content)
+        print(json.dumps(result))
+
+    elif cmd == "adversarial_validate":
+        counts = payload.get("counts") or payload.get("geneCounts") or {}
+        conditions = payload.get("conditions", [])
+        n_perm = int(payload.get("nPermutations", payload.get("n_permutations", 1000)))
+        fdr = float(payload.get("fdrThreshold", payload.get("fdr_threshold", 0.05)))
+        lfc = float(payload.get("lfcMin", payload.get("lfc_min", 0.5)))
+        seed = int(payload.get("seed", 1337))
+        result = run_adversarial_validation(counts, conditions, n_permutations=n_perm, fdr_threshold=fdr, lfc_min=lfc, seed=seed)
         print(json.dumps(result))
 
     else:

@@ -1175,6 +1175,20 @@ Respond in strict JSON with the following structure:
   }
 });
 
+// 4a2. Adversarial validation (Zero-Fake): permutation-null test of a DE
+// hypothesis with a deterministic verdict + veto. No LLM in the decision.
+app.post(['/api/synomics/adversarial-validate', '/api/biomni/adversarial-validate'], async (req, res) => {
+  try {
+    const result = await runPythonEngine('adversarial_validate', req.body);
+    if (result && result.status && result.status !== 'success') {
+      return res.status(422).json(result);
+    }
+    res.json({ status: 'success', result, ...result });
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 // 4b. Real tool registry discovery — the actual tools the agent can execute.
 app.get(['/api/synomics/agent-tools', '/api/biomni/agent-tools'], (_req, res) => {
   const tools = toolSchemasForLLM();

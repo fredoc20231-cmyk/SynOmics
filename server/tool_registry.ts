@@ -181,6 +181,19 @@ export const TOOL_REGISTRY: ToolSpec[] = [
       duration_ms: { type: 'number', description: 'Simulation duration in ms.' },
     },
   },
+  {
+    name: 'adversarial_validate',
+    category: 'Verifiable AI / validation',
+    description: 'Adversarially validate a two-group differential-expression hypothesis via a label-permutation null; returns a deterministic VALIDATED/INVALIDATED/INCONCLUSIVE verdict, confidence, and auto-veto. No LLM in the decision.',
+    engineCommand: 'adversarial_validate',
+    parameters: {
+      counts: { type: 'object', description: 'Map of gene -> per-sample counts.', required: true },
+      conditions: { type: 'array', description: 'Group label per sample.', required: true },
+      nPermutations: { type: 'number', description: 'Permutations for the null (default 1000).' },
+      fdrThreshold: { type: 'number', description: 'FDR cutoff for significance (default 0.05).' },
+      seed: { type: 'number', description: 'Random seed for reproducibility (default 1337).' },
+    },
+  },
   // --- Real external-database grounding (live public APIs; honest errors) ---
   {
     name: 'db_ensembl_gene',

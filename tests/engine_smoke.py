@@ -63,4 +63,26 @@ check("matrix -> counts by sample", mat["status"] == "success" and mat["data"]["
 bad = eng.ingest_file("x.bin", "\x00\x01 not a known format")
 check("unknown format -> honest unsupported", bad["status"] == "unsupported")
 
+# --- Adversarial validation engine (Zero-Fake): signal validated, noise never validated ---
+import random as _rnd
+_r = _rnd.Random(42)
+_conds = ["control"] * 6 + ["treated"] * 6
+_signal = {}
+for _g in range(12):
+    _b = _r.uniform(20, 50)
+    _signal[f"SIG{_g}"] = [max(0, _b + _r.gauss(0, 3)) for _ in range(6)] + [max(0, _b * 4 + _r.gauss(0, 3)) for _ in range(6)]
+for _g in range(12):
+    _b = _r.uniform(20, 50)
+    _signal[f"FLAT{_g}"] = [max(0, _b + _r.gauss(0, 3)) for _ in range(12)]
+_sig_res = eng.run_adversarial_validation(_signal, _conds, n_permutations=200, seed=7)
+check("adversarial: real signal VALIDATED", _sig_res["verdict"] == "VALIDATED" and _sig_res["confidenceScore"] > 0.9)
+
+_noise = {}
+for _g in range(30):
+    _b = _r.uniform(20, 50)
+    _noise[f"N{_g}"] = [max(0, _b + _r.gauss(0, 8)) for _ in range(12)]
+_noise_res = eng.run_adversarial_validation(_noise, _conds, n_permutations=200, seed=7)
+check("adversarial: pure noise NOT VALIDATED (anti-hallucination)", _noise_res["verdict"] != "VALIDATED")
+check("adversarial: reports empirical p + expected FP", "empiricalP" in _noise_res["adversary"] and "expectedFalsePositives" in _noise_res["adversary"])
+
 print(f"\nALL {passed} ENGINE SMOKE TESTS PASSED")
