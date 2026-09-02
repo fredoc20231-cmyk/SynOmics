@@ -10,3 +10,8 @@ coverage/
 # Python
 __pycache__/
 *.pyc
+
+# Cython build artifacts
+server/kernels/*.c
+server/kernels/*.so
+.pyxbld/

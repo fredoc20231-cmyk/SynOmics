@@ -1266,6 +1266,18 @@ app.post(['/api/synomics/causal-discovery', '/api/biomni/causal-discovery'], asy
   }
 });
 
+// 4a1c. Self-optimizing compilation: Cython-accelerate a numeric kernel and
+// report the measured speedup (correctness asserted vs pure Python).
+app.post(['/api/synomics/accelerate', '/api/biomni/accelerate'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/accelerate.py', req.body, 180000);
+    const code = result?.status === 'success' ? 200 : result?.status === 'error' ? 400 : 501;
+    res.status(code).json(result);
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 // 4a1b. Boolean attractor analysis: exact state-space attractors (phenotypes) +
 // perturbation shifts. Deterministic replacement for a "digital twin".
 app.post(['/api/synomics/boolean-attractors', '/api/biomni/boolean-attractors'], async (req, res) => {

@@ -220,6 +220,18 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     },
   },
   {
+    name: 'accelerate_kernel',
+    category: 'Performance / self-optimizing',
+    description: 'Compile a slow numeric kernel to C via Cython at runtime, run it, and report the measured speedup vs pure Python. Correctness is asserted against the reference before any speedup is claimed. Requires Cython + a C compiler.',
+    handler: (i) => runPythonScript('server/accelerate.py', i),
+    parameters: {
+      kernel: { type: 'string', description: "Kernel name (e.g. 'sum_sq_pairwise')." },
+      n: { type: 'number', description: 'Problem size (default 2000).' },
+      seed: { type: 'number', description: 'Random seed (default 1337).' },
+      thresholdSeconds: { type: 'number', description: 'Slowness threshold to flag (default 60).' },
+    },
+  },
+  {
     name: 'boolean_attractors',
     category: 'Verifiable AI / state-space',
     description: 'Exact Boolean-network attractor analysis: enumerate the state space to find fixed-point phenotypes and cyclic attractors with basin sizes, and how they shift under node perturbations (drug knockout/activation). Deterministic state-space simulation, not a fabricated digital twin.',
