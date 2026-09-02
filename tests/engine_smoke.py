@@ -102,4 +102,15 @@ check("pathway solver UNSATISFIABLE when data fails (no fabrication)", _pw["path
 check("pathway solver emits a proof trace", len(_pw["pathways"][0]["proofTrace"]) > 0)
 check("missing gene treated as neutral, not active", _pw["geneStates"].get("BAX") is None)
 
+# --- Boolean attractor analysis: known toggle switch ---
+_att = eng.boolean_attractors({
+    "nodes": ["A", "B"],
+    "rules": {"A": {"op": "NOT", "arg": {"node": "B"}}, "B": {"op": "NOT", "arg": {"node": "A"}}},
+    "perturbations": [{"fix": {"A": 1}}],
+})
+check("attractors: toggle switch has 3 attractors", _att["attractorCount"] == 3)
+check("attractors: two fixed-point phenotypes", sum(1 for a in _att["attractors"] if a["type"] == "fixed_point") == 2)
+check("attractors: basin fractions sum to 1", abs(sum(a["basinFraction"] for a in _att["attractors"]) - 1.0) < 1e-6)
+check("attractors: perturbation collapses to one attractor", _att["perturbations"][0]["attractorCount"] == 1)
+
 print(f"\nALL {passed} ENGINE SMOKE TESTS PASSED")

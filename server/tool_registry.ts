@@ -194,6 +194,17 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     },
   },
   {
+    name: 'boolean_attractors',
+    category: 'Verifiable AI / state-space',
+    description: 'Exact Boolean-network attractor analysis: enumerate the state space to find fixed-point phenotypes and cyclic attractors with basin sizes, and how they shift under node perturbations (drug knockout/activation). Deterministic state-space simulation, not a fabricated digital twin.',
+    engineCommand: 'boolean_attractors',
+    parameters: {
+      nodes: { type: 'array', description: 'Node names (<=20).' },
+      rules: { type: 'object', description: 'Map node -> boolean update rule (AND/OR/NOT over {node} / {const}).', required: true },
+      perturbations: { type: 'array', description: 'Optional: [{fix:{node:0|1}}] to recompute attractors under perturbation.' },
+    },
+  },
+  {
     name: 'adversarial_validate',
     category: 'Verifiable AI / validation',
     description: 'Adversarially validate a two-group differential-expression hypothesis via a label-permutation null; returns a deterministic VALIDATED/INVALIDATED/INCONCLUSIVE verdict, confidence, and auto-veto. No LLM in the decision.',

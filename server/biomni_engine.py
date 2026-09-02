@@ -2627,6 +2627,135 @@ def evaluate_pathway_logic(payload):
     }
 
 
+# ============================================================================
+# BOOLEAN ATTRACTOR ANALYSIS — rigorous, deterministic state-space simulation
+# (an honest replacement for a "digital twin"). Given a Boolean network of gene
+# regulatory rules, enumerate the state space, find the attractors (fixed points
+# = stable phenotypes, and cyclic attractors) with basin sizes, and compute how
+# attractors shift under node perturbations (e.g. a drug knockout/activation).
+# Everything is exact combinatorial computation — no fabrication, no ODE guesswork.
+# ============================================================================
+
+def _eval_bool(rule, state):
+    """Evaluate a boolean rule (AND/OR/NOT over node ON/OFF states)."""
+    if not isinstance(rule, dict):
+        return False
+    if "const" in rule:
+        return bool(rule["const"])
+    if "node" in rule:
+        return bool(state.get(rule["node"], False))
+    op = str(rule.get("op", "")).upper()
+    if op == "NOT":
+        return not _eval_bool(rule.get("arg", {}), state)
+    if op == "AND":
+        return all(_eval_bool(a, state) for a in rule.get("args", []))
+    if op == "OR":
+        return any(_eval_bool(a, state) for a in rule.get("args", []))
+    return False
+
+
+def boolean_attractors(payload):
+    """Find synchronous-update attractors of a Boolean gene network."""
+    nodes = payload.get("nodes")
+    rules = payload.get("rules") or {}
+    if not nodes:
+        nodes = list(rules.keys())
+    if not nodes or not rules:
+        return {"status": "error", "error": "Provide `nodes` and `rules` (node -> boolean expression)."}
+    n = len(nodes)
+    if n > 20:
+        return {"status": "error", "error": f"State space too large for exact enumeration (n={n} > 20)."}
+
+    idx = {node: i for i, node in enumerate(nodes)}
+
+    def to_state(bits):
+        return {node: bool((bits >> idx[node]) & 1) for node in nodes}
+
+    def step(bits):
+        st = to_state(bits)
+        nxt = 0
+        for node in nodes:
+            rule = rules.get(node, {"node": node})  # default: identity (self-hold)
+            if _eval_bool(rule, st):
+                nxt |= (1 << idx[node])
+        return nxt
+
+    total = 1 << n
+    next_of = [step(b) for b in range(total)]
+
+    # Detect attractors by following each trajectory to its cycle.
+    attractor_id = [-1] * total
+    attractors = []  # list of frozenset(states-in-cycle)
+    basin = {}
+    for start in range(total):
+        if attractor_id[start] != -1:
+            continue
+        path = []
+        seen = {}
+        cur = start
+        while cur not in seen and attractor_id[cur] == -1:
+            seen[cur] = len(path)
+            path.append(cur)
+            cur = next_of[cur]
+        if attractor_id[cur] != -1:
+            aid = attractor_id[cur]
+        else:
+            cycle = path[seen[cur]:]
+            aid = len(attractors)
+            attractors.append(cycle)
+            basin[aid] = 0
+            for s in cycle:
+                attractor_id[s] = aid
+        for s in path:
+            if attractor_id[s] == -1:
+                attractor_id[s] = aid
+        # count basin contributions
+    for s in range(total):
+        basin[attractor_id[s]] = basin.get(attractor_id[s], 0) + 1
+
+    def describe(cycle):
+        return [{"state": {node: int((s >> idx[node]) & 1) for node in nodes}} for s in cycle]
+
+    attractor_out = []
+    for aid, cycle in enumerate(attractors):
+        attractor_out.append({
+            "type": "fixed_point" if len(cycle) == 1 else f"cycle_len_{len(cycle)}",
+            "size": len(cycle),
+            "basinSize": basin.get(aid, 0),
+            "basinFraction": round(basin.get(aid, 0) / total, 4),
+            "states": describe(cycle),
+        })
+    attractor_out.sort(key=lambda a: -a["basinSize"])
+
+    result = {
+        "status": "success",
+        "method": "synchronous Boolean network attractor enumeration (exact)",
+        "nodes": nodes,
+        "stateSpaceSize": total,
+        "attractorCount": len(attractors),
+        "attractors": attractor_out,
+    }
+
+    # Optional perturbation analysis: fix nodes ON/OFF and recompute attractors.
+    perturbations = payload.get("perturbations") or []
+    if perturbations:
+        pert_results = []
+        for pert in perturbations:
+            fixed = pert.get("fix", {})  # {node: 0|1}
+            new_rules = dict(rules)
+            for node, val in fixed.items():
+                new_rules[node] = {"const": bool(val)}
+            sub = boolean_attractors({"nodes": nodes, "rules": new_rules})
+            pert_results.append({
+                "fix": fixed,
+                "attractorCount": sub.get("attractorCount"),
+                "attractors": sub.get("attractors"),
+            })
+        result["perturbations"] = pert_results
+
+    return result
+
+
 def ingest_file(filename, content):
     """Detect format from extension/content and parse. Honest error if unknown."""
     name = (filename or "").lower()
@@ -2843,6 +2972,10 @@ def main():
 
     elif cmd == "pathway_logic":
         result = evaluate_pathway_logic(payload)
+        print(json.dumps(result))
+
+    elif cmd == "boolean_attractors":
+        result = boolean_attractors(payload)
         print(json.dumps(result))
 
     elif cmd == "adversarial_validate":
