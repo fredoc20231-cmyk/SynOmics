@@ -41,6 +41,10 @@ export const DrugDiscoveryMode: React.FC<DrugDiscoveryModeProps> = ({
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<'docking' | 'admet' | 'targets' | 'denovo'>('docking');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  // Honest capability notice. Docking / ADMET / de-novo generation require real
+  // external tools (AutoDock Vina, RDKit, a generative model) that are not wired
+  // in this build, so we never fabricate results — we say so plainly.
+  const [notice, setNotice] = useState<string | null>(null);
 
   // Target Protein State for Docking
   const [selectedTargetGene, setSelectedTargetGene] = useState('EGFR');
@@ -165,150 +169,38 @@ export const DrugDiscoveryMode: React.FC<DrugDiscoveryModeProps> = ({
     }
   ];
 
-  // Initialize data on mount
+  // Initialize on mount: only the curated known-target catalog (real reference
+  // data). Docking/ADMET are NOT auto-run with fabricated results.
   useEffect(() => {
     setIdentifiedTargets(curatedTargets);
-    runAdmetCalculation(admetSmilesInput, 'Gefitinib');
-    runDockingSimulation('EGFR', '1M17', 'Gefitinib', 'COc1cc2ncnc(Nc3ccc(F)c(Cl)c3)c2cc1OCCCN1CCOCC1');
   }, []);
 
-  // Molecular Docking Handler
-  const runDockingSimulation = (target: string, pdb: string, ligName: string, smiles: string) => {
-    setIsDockingRunning(true);
-    setTimeout(() => {
-      // Deterministic biophysical AutoDock Vina score based on target & SMILES complexity
-      const isEgfr = target.includes('EGFR');
-      const isKras = target.includes('KRAS');
-      const isAbl = target.includes('ABL');
-      
-      const bindingAffinity = isEgfr ? -9.8 : isKras ? -9.2 : isAbl ? -11.4 : -8.6;
-      const estimatedKi = isAbl ? 4.8 : isEgfr ? 14.2 : isKras ? 28.5 : 84.0;
+  const DOCKING_UNAVAILABLE =
+    'Molecular docking is not available in this build. Real docking requires an AutoDock Vina (or DiffDock) worker with the binary installed; configure CLOUD_RUN_ENDPOINT / a docking backend to enable it. No binding affinity is shown because none was computed.';
+  const ADMET_UNAVAILABLE =
+    'ADMET prediction is not available in this build. Real ADMET requires RDKit descriptors and a trained/hosted model (e.g. admetSAR / DeepPurpose). No pharmacokinetic values are shown because none were computed.';
+  const DENOVO_UNAVAILABLE =
+    'De-novo molecule generation is not available in this build. It requires a real generative chemistry model. No candidate molecules are shown because none were generated.';
 
-      const mockResult: MolecularDockingResult = {
-        targetPdbId: pdb,
-        targetGene: target,
-        targetResolution: '1.90 Å (X-Ray Crystallography)',
-        ligandName: ligName,
-        ligandSmiles: smiles,
-        bindingAffinityKcalMol: bindingAffinity,
-        estimatedKi_nM: estimatedKi,
-        bindingPocket: {
-          center: [22.4, 0.8, 52.6],
-          size: [18.0, 18.0, 18.0],
-          volumeA3: 684.5
-        },
-        interactingResidues: [
-          { resName: 'Met', resSeq: 793, interactionType: 'H-Bond', distanceA: 2.78 },
-          { resName: 'Thr', resSeq: 790, interactionType: 'Hydrophobic', distanceA: 3.42 },
-          { resName: 'Leu', resSeq: 718, interactionType: 'Hydrophobic', distanceA: 3.65 },
-          { resName: 'Lys', resSeq: 745, interactionType: 'Salt-Bridge', distanceA: 3.12 },
-          { resName: 'Phe', resSeq: 723, interactionType: 'Pi-Stacking', distanceA: 3.84 },
-          { resName: 'Asp', resSeq: 855, interactionType: 'H-Bond', distanceA: 2.91 }
-        ],
-        dockingPoses: [
-          { poseNumber: 1, affinityKcalMol: bindingAffinity, rmsdLowerBound: 0.0, rmsdUpperBound: 0.0 },
-          { poseNumber: 2, affinityKcalMol: Number((bindingAffinity + 0.6).toFixed(1)), rmsdLowerBound: 1.12, rmsdUpperBound: 1.84 },
-          { poseNumber: 3, affinityKcalMol: Number((bindingAffinity + 1.1).toFixed(1)), rmsdLowerBound: 1.78, rmsdUpperBound: 2.45 },
-          { poseNumber: 4, affinityKcalMol: Number((bindingAffinity + 1.8).toFixed(1)), rmsdLowerBound: 2.40, rmsdUpperBound: 3.15 }
-        ]
-      };
-
-      setDockingResult(mockResult);
-      setIsDockingRunning(false);
-    }, 600);
+  // Molecular Docking Handler — honest: no real docking backend is wired, so we
+  // report unavailability instead of fabricating a binding affinity.
+  const runDockingSimulation = (_target: string, _pdb: string, _ligName: string, _smiles: string) => {
+    setDockingResult(null);
+    setNotice(DOCKING_UNAVAILABLE);
   };
 
-  // ADMET Predictor Calculation Handler
-  const runAdmetCalculation = (smiles: string, name: string) => {
-    setIsAdmetRunning(true);
-    setTimeout(() => {
-      // Evaluate molecular metrics from SMILES structure
-      const heavyAtomCount = smiles.replace(/[^A-Za-z]/g, '').length;
-      const hasN = smiles.includes('N');
-      const hasO = smiles.includes('O');
-      const hasCl = smiles.includes('Cl');
-      const hasF = smiles.includes('F');
-
-      const mockAdmet: AdmetProfile = {
-        absorption: {
-          hiaPct: 93.4,
-          caco2Permeability: 28.6,
-          bbbPermeable: hasCl || hasF,
-          pGpSubstrate: true
-        },
-        distribution: {
-          ppbPct: 91.2,
-          vdssLKg: 1.85
-        },
-        metabolism: {
-          cyp1a2Inhibitor: false,
-          cyp2c9Inhibitor: true,
-          cyp2d6Inhibitor: true,
-          cyp3a4Inhibitor: true
-        },
-        excretion: {
-          halfLifeHours: 12.4,
-          clearanceRate: 14.8
-        },
-        toxicity: {
-          hergCardiotoxRisk: hasN && hasCl ? 'Medium' : 'Low',
-          amesMutagenicity: false,
-          diliHepatotoxicity: false,
-          ld50_mg_kg: 1850
-        },
-        druglikeness: {
-          lipinskiViolations: 0,
-          qedScore: 0.78,
-          syntheticAccessibilityScore: 3.4,
-          passRuleOf5: true
-        }
-      };
-
-      setAdmetProfile(mockAdmet);
-      setIsAdmetRunning(false);
-    }, 500);
+  // ADMET Predictor Handler — honest: no real ADMET model is wired.
+  const runAdmetCalculation = (_smiles: string, _name: string) => {
+    setAdmetProfile(null);
+    setNotice(ADMET_UNAVAILABLE);
   };
 
   // De Novo Drug Design Handler
+  // De-novo generation Handler — honest: no generative chemistry model is wired,
+  // so we report unavailability instead of fabricating candidate molecules.
   const runDeNovoGeneration = () => {
-    setIsDeNovoRunning(true);
-    setTimeout(() => {
-      const suggestions: DeNovoMoleculeSuggestion[] = [
-        {
-          id: 'denovo-mod-1',
-          name: 'Syn-Opt-01 (Fluorinated Pyrimidine Extension)',
-          baseCompound: deNovoTargetGene,
-          modifiedSmiles: `${deNovoBaseSmiles.slice(0, 30)}F${deNovoBaseSmiles.slice(30)}`,
-          modificationType: 'Bioisosteric Replacement',
-          rationalRationale: 'Incorporated ortho-fluorine on the aniline core to optimize dihedral locking and enhance π-π stacking with gatekeeper residue Phe382.',
-          predictedAffinityGainKcalMol: -1.6,
-          predictedAdmetImprovement: 'Decreased CYP3A4 metabolic clearance rate by 34%; improved metabolic half-life from 12h to 19h.'
-        },
-        {
-          id: 'denovo-mod-2',
-          name: 'Syn-Opt-02 (Morpholine to Piperazine Bioisostere)',
-          baseCompound: deNovoTargetGene,
-          modifiedSmiles: `${deNovoBaseSmiles}N(C)C`,
-          modificationType: 'Fragment Growing',
-          rationalRationale: 'Extended tertiary amine into solvent-exposed channel, creating an additional hydrogen bond with Glu286 and stabilizing the DFG-out inactive kinase conformation.',
-          predictedAffinityGainKcalMol: -2.1,
-          predictedAdmetImprovement: 'Increased aqueous solubility (LogS improved by +0.82); elevated human intestinal absorption (HIA) to 96.8%.'
-        },
-        {
-          id: 'denovo-mod-3',
-          name: 'Syn-Opt-03 (Conformational Macrocyclization)',
-          baseCompound: deNovoTargetGene,
-          modifiedSmiles: `C1CC1${deNovoBaseSmiles.slice(10, 45)}`,
-          modificationType: 'Conformational Constraint',
-          rationalRationale: 'Introduced cyclopropyl rigidification to reduce rotational entropy penalty upon binding pocket insertion.',
-          predictedAffinityGainKcalMol: -1.2,
-          predictedAdmetImprovement: 'Maintained zero Lipinski violations; reduced hERG cardiotoxicity flag from Medium to Low.'
-        }
-      ];
-
-      setDeNovoSuggestions(suggestions);
-      setIsDeNovoRunning(false);
-    }, 800);
+    setDeNovoSuggestions([]);
+    setNotice(DENOVO_UNAVAILABLE);
   };
 
   const handleCopy = (text: string, id: string) => {
@@ -319,6 +211,15 @@ export const DrugDiscoveryMode: React.FC<DrugDiscoveryModeProps> = ({
 
   return (
     <div className="h-full flex flex-col bg-[#FAF9F5] dark:bg-[#0B0F17] overflow-y-auto font-sans">
+      {/* Honest capability notice — shown when a capability that needs an external
+          backend is invoked. No fabricated results are ever displayed. */}
+      {notice && (
+        <div className="mx-4 mt-3 px-4 py-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/70 flex items-start gap-3" role="status">
+          <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+          <p className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed flex-1">{notice}</p>
+          <button onClick={() => setNotice(null)} className="text-amber-700 dark:text-amber-400 text-xs font-bold hover:underline cursor-pointer">Dismiss</button>
+        </div>
+      )}
       {/* Header Banner */}
       <div className="bg-white dark:bg-[#111722] border-b border-[#E2DDD2] dark:border-[#1E293B] px-6 py-4">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -330,12 +231,12 @@ export const DrugDiscoveryMode: React.FC<DrugDiscoveryModeProps> = ({
               <h1 className="text-xl font-bold text-[#0F172A] dark:text-[#F8FAFC]">
                 SynOmics Drug Discovery &amp; Molecular Studio
               </h1>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold border border-emerald-300 dark:border-emerald-800">
-                Autonomous AutoDock &amp; ADMET AI
+              <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 text-[10px] font-bold border border-slate-300 dark:border-slate-700">
+                Curated targets · docking/ADMET require a backend
               </span>
             </div>
             <p className="text-xs text-[#64748B] dark:text-slate-400">
-              Integrated multi-omics target identification, AutoDock Vina thermodynamic scoring, AI ADMET prediction, and de novo molecular optimization.
+              Curated druggable-target reference catalog. Molecular docking, ADMET prediction, and de-novo design are shown as inputs only and require a real external compute backend (AutoDock Vina / RDKit / a generative model) — no results are fabricated.
             </p>
           </div>
 
@@ -550,7 +451,7 @@ export const DrugDiscoveryMode: React.FC<DrugDiscoveryModeProps> = ({
                   />
                   <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-black/70 backdrop-blur-md text-white text-[11px] font-mono flex items-center gap-1.5 border border-white/20">
                     <Zap className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Docked Pose 1 (ΔG = {dockingResult?.bindingAffinityKcalMol || -9.8} kcal/mol)</span>
+                    <span>{dockingResult ? `Docked Pose 1 (ΔG = ${dockingResult.bindingAffinityKcalMol} kcal/mol)` : 'Reference structure (no docking run)'}</span>
                   </div>
                 </div>
 
