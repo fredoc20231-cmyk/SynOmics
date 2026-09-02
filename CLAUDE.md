@@ -180,8 +180,16 @@ Bridges omics findings into molecular design + rigorous in-silico validation.
     discarded, nothing fabricated. Tabular tier only — a deep neural GFlowNet needs
     torch/GPU and is NOT claimed. Verified: trained policy concentrates above uniform
     random; all reported QED values match RDKit.
-  - Manifest at `/idiscover`. Frontiers 3 (ZKP federated biomarkers) and 4
+  - Manifest at `/idiscover`. Both are also reachable as engine commands
+    (`synomics_engine.py cellular_reversion|gflownet_sampling`, delegating to the
+    dedicated modules). Frontiers 3 (ZKP federated biomarkers) and 4
     (Hyper-NOTEARS hypergraph causal discovery) are NOT built and must not be faked.
+- **De-faked sandbox route:** `/api/synomics/tool-execute` (+ `/api/biomni`,
+  `/api/bio` aliases) no longer returns canned/fabricated tool results. It now
+  dispatches every `toolId` to the real registry via `invokeTool` (with a UI→tool
+  alias map); unmapped tools and missing params return honest errors. The former
+  hardcoded DE/single-cell/docking result blocks and the dead
+  `generateDomainIntelligence` fabricator have been removed.
 - Concordance: 7/7 engine statistics match scipy/statsmodels (VALIDATION_REPORT.md).
 - Lint gate: `ruff check server tests` (pyflakes/syntax/imports) runs in CI.
 - 41 real agent tools; 21 test suites in CI.

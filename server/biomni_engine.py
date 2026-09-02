@@ -14,6 +14,7 @@ import json
 import math
 import os
 import random
+import subprocess
 import sys
 import urllib.request
 from collections import defaultdict
@@ -2987,6 +2988,25 @@ def main():
         seed = int(payload.get("seed", 1337))
         result = run_adversarial_validation(counts, conditions, n_permutations=n_perm, fdr_threshold=fdr, lfc_min=lfc, seed=seed)
         print(json.dumps(result))
+
+    elif cmd in ("cellular_reversion", "gflownet_sampling"):
+        # iDiscover frontiers. These require the scientific stack (numpy / POT /
+        # rdkit), so they live in dedicated, individually-tested modules and are
+        # delegated to here — a single source of truth, no duplicated math. The
+        # engine itself stays dependency-free (only subprocess is used).
+        module = "optimal_transport.py" if cmd == "cellular_reversion" else "gflownet.py"
+        script = os.path.join(os.path.dirname(os.path.abspath(__file__)), module)
+        proc = subprocess.run(
+            [sys.executable, script],
+            input=json.dumps(payload).encode(),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        )
+        out = proc.stdout.decode().strip()
+        if out:
+            print(out)
+        else:
+            err = proc.stderr.decode().strip() or f"{cmd} produced no output"
+            print(json.dumps({"status": "error", "error": err}))
 
     else:
         print(json.dumps({"error": f"Unknown command {cmd}"}))
