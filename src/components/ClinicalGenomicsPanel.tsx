@@ -166,6 +166,18 @@ export const ClinicalGenomicsPanel: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Honest framing: curated demonstration variants, not a clinical interpretation
+          of the user's own sequencing data. */}
+      <div className="px-4 py-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/70 flex items-start gap-3" role="status">
+        <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+        <p className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
+          Curated reference variants shown for demonstration. This panel does not interpret
+          your own sequencing data, and the ACMG classifications / population frequencies shown
+          are <strong>curated examples, not a live clinical determination</strong>. Real variant
+          interpretation requires ClinVar / gnomAD and an ACMG classification engine, and is not a
+          medical diagnosis.
+        </p>
+      </div>
       {/* Top Header Card */}
       <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">

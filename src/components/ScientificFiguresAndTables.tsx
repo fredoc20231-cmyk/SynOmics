@@ -55,6 +55,23 @@ export const ScientificFiguresAndTables: React.FC<ScientificFiguresAndTablesProp
     return Object.values(row).some(val => String(val).toLowerCase().includes(q));
   }) || [];
 
+  // Honest empty state — no example figures/tables are shown when a real run has
+  // not produced any.
+  if (figures.length === 0 && tables.length === 0) {
+    return (
+      <div className="rounded-2xl bg-white dark:bg-[#131A29] border border-[#E2DDD2] dark:border-[#1E293B] shadow-xs p-10 flex flex-col items-center text-center">
+        <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 mb-4">
+          <BarChart3 className="w-7 h-7" />
+        </div>
+        <h3 className="text-base font-bold text-[#0F172A] dark:text-[#F8FAFC]">No figures or tables yet</h3>
+        <p className="text-xs text-[#64748B] dark:text-slate-400 mt-2 max-w-md leading-relaxed">
+          Figures and tables appear here once a real analysis run produces them. No
+          example results are displayed in the meantime.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Top Selector Bar */}
@@ -164,19 +181,19 @@ export const ScientificFiguresAndTables: React.FC<ScientificFiguresAndTablesProp
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
                         <div className="p-2.5 rounded-lg bg-white dark:bg-[#131A29] border border-[#E2DDD2] dark:border-[#1E293B]">
                           <div className="text-[10px] font-mono text-[#64748B] dark:text-slate-400 uppercase">10-90% Rise Time (WT)</div>
-                          <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{activeFigure.data.meta.riseTime10_90_wt || '1.82 ms'}</div>
+                          <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{activeFigure.data.meta.riseTime10_90_wt || '—'}</div>
                         </div>
                         <div className="p-2.5 rounded-lg bg-white dark:bg-[#131A29] border border-[#E2DDD2] dark:border-[#1E293B]">
                           <div className="text-[10px] font-mono text-[#64748B] dark:text-slate-400 uppercase">10-90% Rise Time (Pert)</div>
-                          <div className="text-xs font-bold text-rose-600 dark:text-rose-400">{activeFigure.data.meta.riseTime10_90_pert || '2.48 ms'}</div>
+                          <div className="text-xs font-bold text-rose-600 dark:text-rose-400">{activeFigure.data.meta.riseTime10_90_pert || '—'}</div>
                         </div>
                         <div className="p-2.5 rounded-lg bg-white dark:bg-[#131A29] border border-[#E2DDD2] dark:border-[#1E293B]">
                           <div className="text-[10px] font-mono text-[#64748B] dark:text-slate-400 uppercase">Peak Vm (WT)</div>
-                          <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{activeFigure.data.meta.peakVoltage_wt || '-51.4 mV'}</div>
+                          <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{activeFigure.data.meta.peakVoltage_wt || '—'}</div>
                         </div>
                         <div className="p-2.5 rounded-lg bg-white dark:bg-[#131A29] border border-[#E2DDD2] dark:border-[#1E293B]">
                           <div className="text-[10px] font-mono text-[#64748B] dark:text-slate-400 uppercase">Peak Vm (Perturbed)</div>
-                          <div className="text-xs font-bold text-rose-600 dark:text-rose-400">{activeFigure.data.meta.peakVoltage_pert || '-57.3 mV'}</div>
+                          <div className="text-xs font-bold text-rose-600 dark:text-rose-400">{activeFigure.data.meta.peakVoltage_pert || '—'}</div>
                         </div>
                       </div>
                     )}

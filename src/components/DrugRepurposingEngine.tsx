@@ -133,21 +133,35 @@ export const DrugRepurposingEngine: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Honest framing: this is a curated literature-derived reference set, not a
+          live CMap/L1000 run against the user's own expression data. */}
+      <div className="px-4 py-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/70 flex items-start gap-3" role="status">
+        <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+        <p className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
+          Curated reference set of literature-derived repurposing hypotheses. A live
+          connectivity-map / LINCS&nbsp;L1000 signature-reversal run against your own
+          expression data is not wired in this build — the reversal (τ) scores and
+          ADMET values shown are <strong>curated priors, not computed</strong> from
+          your input.
+        </p>
+      </div>
       {/* Top Card */}
       <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
-                LINCS L1000 Transcriptomic Signature Reversal (CMap / DrugBank)
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-500/10 text-slate-600 dark:text-slate-300 border border-slate-500/20">
+                Curated repurposing reference (literature-derived) — not a live CMap run
               </span>
-              <span className="text-xs text-slate-400 font-mono">Tau Score τ &lt; -90 (Inversion Threshold)</span>
+              <span className="text-xs text-slate-400 font-mono">Curated τ priors (illustrative)</span>
             </div>
             <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
               <Pill className="w-5 h-5 text-cyan-500" /> Drug Repurposing &amp; Target Inversion Engine
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-3xl">
-              Identifies FDA-approved compounds and investigational clinical small molecules that reverse pathological disease gene expression signatures with high target specificity.
+              A curated catalog of FDA-approved and investigational compounds with literature-reported
+              potential to reverse disease gene-expression signatures. Values are curated references to
+              guide hypotheses; they are not computed from user-supplied data in this build.
             </p>
           </div>
 
@@ -192,10 +206,10 @@ export const DrugRepurposingEngine: React.FC = () => {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Zap className="w-4 h-4 text-cyan-500" /> LINCS Transcriptomic Reversal Score (Tau Score $\tau$)
+                <Zap className="w-4 h-4 text-cyan-500" /> Curated Reversal Score (τ, literature-derived)
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Negative score ($&lt; -90$) reflects strong perturbation signature inversion against disease profile
+                A more negative curated τ reflects stronger reported signature inversion. Curated priors — not computed from your data.
               </p>
             </div>
           </div>

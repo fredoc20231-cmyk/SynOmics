@@ -63,122 +63,9 @@ export const AnalysisOutcomesExplorer: React.FC<AnalysisOutcomesExplorerProps> =
   className = ''
 }) => {
   // Aggregate figures & tables from agentRun or props
-  const figures: ScientificFigure[] = propFigures || agentRun?.figures || [
-    {
-      id: 'fig-01-volcano',
-      figureNumber: 1,
-      title: 'Differential Expression Volcano Plot & Statistical Significance',
-      subtitle: 'Wald Test Significance (-log10 FDR) vs. Effect Size (log2 Fold Change)',
-      type: 'volcano_plot',
-      caption: 'Figure 1: Volcano plot illustrating differentially regulated genes across experimental conditions. Statistically significant genes with FDR < 0.05 and |log2FC| >= 1.0 are highlighted in emerald (upregulated) and rose (downregulated).',
-      data: {
-        points: [
-          { x: 2.8, y: 14.2, label: 'TOP2A', significance: true, category: 'up' },
-          { x: -3.1, y: 18.5, label: 'CDKN2A', significance: true, category: 'down' },
-          { x: 1.9, y: 8.4, label: 'EGFR', significance: true, category: 'up' },
-          { x: -2.4, y: 11.2, label: 'TP53', significance: true, category: 'down' },
-          { x: 3.4, y: 16.8, label: 'MKI67', significance: true, category: 'up' },
-          { x: -1.7, y: 6.9, label: 'PTEN', significance: true, category: 'down' },
-          { x: 0.2, y: 1.1, label: 'ACTB', significance: false, category: 'neutral' },
-          { x: -0.4, y: 1.8, label: 'GAPDH', significance: false, category: 'neutral' }
-        ]
-      }
-    },
-    {
-      id: 'fig-02-pca',
-      figureNumber: 2,
-      title: 'Principal Component Analysis (PCA) Sample Clustering',
-      subtitle: 'Variance Explained along PC1 (68.4%) and PC2 (14.8%)',
-      type: 'line_chart',
-      caption: 'Figure 2: Two-dimensional PCA ordination of normalized transcriptomic profiles demonstrating distinct clustering separation between treated/disease and control cohorts.',
-      data: {
-        labels: ['Sample_WT_1', 'Sample_WT_2', 'Sample_WT_3', 'Sample_KO_1', 'Sample_KO_2', 'Sample_KO_3'],
-        series: [
-          { name: 'PC1 Loading', values: [-14.2, -12.8, -13.9, 15.4, 14.9, 16.2], color: '#6366F1' },
-          { name: 'PC2 Loading', values: [2.1, -1.8, 0.4, 3.2, -2.9, 1.1], color: '#10B981' }
-        ]
-      }
-    },
-    {
-      id: 'fig-03-pathways',
-      figureNumber: 3,
-      title: 'Gene Ontology & Reactome Pathway Overrepresentation',
-      subtitle: 'Fisher Hypergeometric Enrichment with Benjamini-Hochberg FDR',
-      type: 'bar_chart',
-      caption: 'Figure 3: Top statistically enriched biological processes and signaling cascades calculated across the dysregulated gene sets.',
-      data: {
-        labels: ['Cell Cycle G1/S Transition', 'PI3K-Akt Signaling Pathway', 'Apoptotic Execution', 'DNA Repair & HR', 'Extracellular Matrix Organization'],
-        series: [
-          { name: '-log10(FDR q-value)', values: [14.2, 11.8, 9.4, 7.8, 6.2], color: '#F59E0B' }
-        ]
-      }
-    },
-    {
-      id: 'fig-04-dose-response',
-      figureNumber: 4,
-      title: 'Drug Dose-Response & In-Silico Perturbation Dynamics',
-      subtitle: 'Simulated Cellular Viability & Phenotypic Recovery Rate (%)',
-      type: 'line_chart',
-      caption: 'Figure 4: Non-linear regression curve modeling perturbation rescue efficacy across micromolar compound concentrations.',
-      data: {
-        labels: ['0.01 µM', '0.05 µM', '0.1 µM', '0.5 µM', '1.0 µM', '5.0 µM', '10.0 µM'],
-        series: [
-          { name: 'Wild-Type Baseline', values: [100, 99, 98, 97, 95, 92, 88], color: '#059669' },
-          { name: 'Perturbation Disease Model', values: [38, 42, 54, 72, 86, 92, 94], color: '#3B82F6' }
-        ]
-      }
-    }
-  ];
+  const figures: ScientificFigure[] = propFigures || agentRun?.figures || ([] as ScientificFigure[]);
 
-  const tables: ScientificTable[] = propTables || agentRun?.tables || [
-    {
-      id: 'tbl-01-de-genes',
-      tableNumber: 1,
-      title: 'Top Statistically Significant Differentially Expressed Genes',
-      description: 'Calculated using Negative Binomial Generalized Linear Model (GLM) with apeglm dispersion shrinkage.',
-      columns: [
-        { key: 'geneSymbol', label: 'Gene Symbol', type: 'string', align: 'left' },
-        { key: 'log2FC', label: 'log2 Fold Change', type: 'log2fc', align: 'right' },
-        { key: 'baseMean', label: 'Base Mean', type: 'number', align: 'right' },
-        { key: 'stat', label: 'Wald Stat', type: 'number', align: 'right' },
-        { key: 'pValue', label: 'p-value', type: 'pvalue', align: 'right' },
-        { key: 'pAdj', label: 'FDR q-value', type: 'pvalue', align: 'right' },
-        { key: 'status', label: 'Regulation', type: 'badge', align: 'center' }
-      ],
-      rows: [
-        { geneSymbol: 'TOP2A', log2FC: '+2.84', baseMean: 4210, stat: 8.92, pValue: '2.14e-16', pAdj: '1.42e-14', status: 'Upregulated' },
-        { geneSymbol: 'CDKN2A', log2FC: '-3.12', baseMean: 1840, stat: -9.84, pValue: '4.81e-21', pAdj: '6.20e-19', status: 'Downregulated' },
-        { geneSymbol: 'EGFR', log2FC: '+1.92', baseMean: 3120, stat: 6.45, pValue: '1.18e-09', pAdj: '8.40e-09', status: 'Upregulated' },
-        { geneSymbol: 'TP53', log2FC: '-2.45', baseMean: 2780, stat: -7.62, pValue: '8.94e-13', pAdj: '1.12e-11', status: 'Downregulated' },
-        { geneSymbol: 'MKI67', log2FC: '+3.41', baseMean: 5120, stat: 10.42, pValue: '1.20e-19', pAdj: '1.80e-17', status: 'Upregulated' },
-        { geneSymbol: 'PTEN', log2FC: '-1.74', baseMean: 1450, stat: -5.84, pValue: '3.42e-08', pAdj: '1.92e-07', status: 'Downregulated' },
-        { geneSymbol: 'MYC', log2FC: '+2.15', baseMean: 3890, stat: 7.12, pValue: '6.14e-11', pAdj: '5.20e-10', status: 'Upregulated' }
-      ],
-      footerSummary: 'Filtered by FDR q < 0.05 and |log2FC| >= 1.0. Ranked by Wald statistic.'
-    },
-    {
-      id: 'tbl-02-pathway-enrichment',
-      tableNumber: 2,
-      title: 'Enriched Functional Biological Pathways & Ontologies',
-      description: 'Overrepresentation analysis across GO Biological Process, KEGG, and Reactome hierarchies.',
-      columns: [
-        { key: 'pathwayId', label: 'Pathway ID', type: 'string', align: 'left' },
-        { key: 'pathwayName', label: 'Pathway Description', type: 'string', align: 'left' },
-        { key: 'overlapCount', label: 'Overlap (k)', type: 'number', align: 'right' },
-        { key: 'pathwayTotal', label: 'Total (K)', type: 'number', align: 'right' },
-        { key: 'pValue', label: 'p-value', type: 'pvalue', align: 'right' },
-        { key: 'fdrQValue', label: 'FDR q-value', type: 'pvalue', align: 'right' },
-        { key: 'genes', label: 'Key Enriched Genes', type: 'string', align: 'left' }
-      ],
-      rows: [
-        { pathwayId: 'R-HSA-69278', pathwayName: 'Cell Cycle G1/S Transition', overlapCount: 28, pathwayTotal: 142, pValue: '1.42e-15', fdrQValue: '2.84e-14', genes: 'CDKN2A, TOP2A, MKI67, CCND1, CDK4' },
-        { pathwayId: 'hsa04151', pathwayName: 'PI3K-Akt Signaling Pathway', overlapCount: 34, pathwayTotal: 354, pValue: '3.18e-12', fdrQValue: '3.18e-11', genes: 'EGFR, PTEN, AKT1, MTOR, PIK3CA' },
-        { pathwayId: 'GO:0006915', pathwayName: 'Apoptotic Execution Phase', overlapCount: 19, pathwayTotal: 189, pValue: '8.42e-10', fdrQValue: '5.61e-09', genes: 'TP53, BAX, BCL2, CASP3, CYCS' },
-        { pathwayId: 'GO:0006281', pathwayName: 'DNA Repair Mechanisms', overlapCount: 22, pathwayTotal: 260, pValue: '4.12e-08', fdrQValue: '2.06e-07', genes: 'BRCA1, RAD51, ATM, CHEK2' }
-      ],
-      footerSummary: 'Fisher Exact Hypergeometric test against Human Background (N = 19,800).'
-    }
-  ];
+  const tables: ScientificTable[] = propTables || agentRun?.tables || ([] as ScientificTable[]);
 
   // Active folder state: 'figures' | 'tables' | 'code' | 'report'
   const [activeFolder, setActiveFolder] = useState<'figures' | 'tables' | 'code' | 'report'>(defaultFolder);
@@ -422,6 +309,25 @@ echo "=== [4/4] Pipeline Complete: Ready for Statistical GLM Modeling ==="
     const q = tableSearchQuery.toLowerCase();
     return Object.values(row).some((val) => String(val).toLowerCase().includes(q));
   }) || [];
+
+  // Honest empty state: when no real figures/tables have been produced (no props
+  // and no agent run), we show nothing to analyze rather than fabricating a
+  // volcano plot and p-values that were never computed.
+  if (figures.length === 0 && tables.length === 0) {
+    return (
+      <div className={`rounded-2xl border border-[#E2DDD2] dark:border-[#1E293B] bg-[#FAF9F5] dark:bg-[#0B0F17] shadow-sm overflow-hidden flex flex-col items-center justify-center text-center p-10 ${className}`}>
+        <div className="p-3 rounded-2xl bg-emerald-600/10 text-emerald-600 dark:text-emerald-400 mb-4">
+          <FolderOpen className="w-7 h-7" />
+        </div>
+        <h3 className="text-base font-bold text-[#0F172A] dark:text-[#F8FAFC]">No analysis results yet</h3>
+        <p className="text-xs text-[#64748B] dark:text-slate-400 mt-2 max-w-md leading-relaxed">
+          Run an analysis or attach an agent run to populate this explorer. Figures and
+          tables appear here only when they are produced from real computation — no
+          example results are shown in their place.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className={`rounded-2xl border border-[#E2DDD2] dark:border-[#1E293B] bg-[#FAF9F5] dark:bg-[#0B0F17] shadow-sm overflow-hidden flex flex-col ${className}`}>

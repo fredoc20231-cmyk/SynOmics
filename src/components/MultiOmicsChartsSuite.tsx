@@ -70,6 +70,16 @@ export const MultiOmicsChartsSuite: React.FC<MultiOmicsChartsSuiteProps> = ({
 
   return (
     <div className="h-full flex flex-col rounded-2xl bg-white dark:bg-[#131A29] border border-[#E2DDD2] dark:border-[#1E293B] shadow-xs overflow-hidden font-sans">
+      {/* Honest framing: charts are rendered from a curated built-in reference
+          dataset, not computed from user-supplied omics data. */}
+      <div className="px-3.5 py-2.5 bg-amber-50 dark:bg-amber-950/40 border-b border-amber-300 dark:border-amber-800/70 flex items-start gap-2 shrink-0" role="status">
+        <Info className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+        <p className="text-[11px] text-amber-900 dark:text-amber-200 leading-relaxed">
+          Rendered from a curated built-in reference dataset for illustration — not computed
+          from your own uploaded omics data. Upload data and run the analysis tools to produce
+          real results.
+        </p>
+      </div>
       {/* Header controls */}
       <div className="p-3.5 border-b border-[#E2DDD2] dark:border-[#1E293B] bg-[#FAF9F5] dark:bg-[#0E131E] flex flex-wrap items-center justify-between gap-2 shrink-0">
         <div className="flex items-center gap-2">
