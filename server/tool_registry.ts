@@ -330,6 +330,18 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     },
   },
   {
+    name: 'mml_select',
+    category: 'Verifiable AI / model selection',
+    description: 'Minimum Message Length (MML) model selection: choose the model minimizing model complexity + encoded residual, so extra parameters are only kept when they genuinely shorten the data encoding. numpy.',
+    handler: (i) => runPythonScript('server/mml.py', i),
+    parameters: {
+      x: { type: 'array', description: 'Predictor values (polynomial-order mode).' },
+      y: { type: 'array', description: 'Response values (polynomial-order mode).' },
+      maxDegree: { type: 'number', description: 'Max polynomial degree to consider.' },
+      candidates: { type: 'array', description: 'Generic mode: [{name, paramsCount, negLogLik, n}].' },
+    },
+  },
+  {
     name: 'causal_discovery',
     category: 'Verifiable AI / causal inference',
     description: 'Infer a directed causal graph (not just correlation) from linear non-Gaussian data via DirectLiNGAM, with bootstrap-stability edge gating. Requires numpy; returns honest "unavailable" if absent.',

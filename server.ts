@@ -1254,6 +1254,17 @@ app.post(['/api/synomics/multiomic-consistency', '/api/biomni/multiomic-consiste
   }
 });
 
+// 4a-6. MML model selection (parsimony): minimize model complexity + residual.
+app.post(['/api/synomics/mml-select', '/api/biomni/mml-select'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/mml.py', req.body);
+    const code = result?.status === 'success' ? 200 : result?.status === 'error' ? 400 : 501;
+    res.status(code).json(result);
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 // 4a0. Causal discovery (Part 3A): DirectLiNGAM directed causal graph with
 // bootstrap-stability gating. Honest 'unavailable' if numpy is absent.
 app.post(['/api/synomics/causal-discovery', '/api/biomni/causal-discovery'], async (req, res) => {
