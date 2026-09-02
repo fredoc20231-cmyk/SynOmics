@@ -101,6 +101,33 @@ Current result: **7/7 statistics concordant** (Welch t-test, Student's t,
 Benjamini–Hochberg FDR, hypergeometric enrichment, Jukes–Cantor) to ≤1e-10 — see
 [`VALIDATION_REPORT.md`](./VALIDATION_REPORT.md).
 
+### Verifiable-AI engines (the decision is math, not the LLM)
+
+A "Zero-Fake" layer where every verdict is produced by deterministic code:
+
+- **Adversarial validation** — `POST /api/synomics/adversarial-validate`: a
+  label-permutation null tests whether a differential-expression signal survives
+  random relabelling; returns VALIDATED / INVALIDATED / INCONCLUSIVE + confidence
+  + auto-veto. Verified: real signal validated, pure noise never validated.
+- **Neuro-symbolic pathway solver** — `POST /api/synomics/pathway-logic`: a
+  deterministic boolean logic solver (AND/OR/NOT over gene up/down states)
+  returns SATISFIABLE / UNSATISFIABLE with a proof trace; missing genes stay
+  neutral (never fabricated as active).
+- **Causal discovery** — `POST /api/synomics/causal-discovery`: DirectLiNGAM
+  (numpy) infers a directed causal graph with bootstrap-stability-gated edges;
+  validated to recover known DAGs.
+- **Tensor-Train compression** — `POST /api/synomics/tensor-compress`: an
+  error-bounded compression utility with an honest "approximate" flag (not a cell
+  simulator).
+
+Run the Verifiable-AI test gates:
+
+```bash
+pip install numpy scipy statsmodels tensorly
+python tests/causal_smoke.py
+python tests/tensor_smoke.py
+```
+
 ### Provenance / audit trail (Module C)
 
 Every analytical request is recorded as an immutable append-only JSONL line

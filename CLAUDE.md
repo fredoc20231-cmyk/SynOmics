@@ -123,6 +123,19 @@ Bridges omics findings into molecular design + rigorous in-silico validation.
   ODE; file ingestion; a real agent tool-use loop (`/api/synomics/agent-execute`).
 - External DB routes (`/api/synomics/db/*`) are real fetches with honest errors;
   their happy path is unverified until run in an open-egress environment.
+- **Verifiable-AI engines (decision made by math, not the LLM):**
+  - Adversarial validation (`/adversarial-validate`): permutation-null test of a
+    DE hypothesis → deterministic VALIDATED/INVALIDATED/INCONCLUSIVE + veto.
+    Verified: real signal validated, pure noise never validated.
+  - Neuro-symbolic pathway solver (`/pathway-logic`): deterministic boolean
+    SAT/UNSAT + proof trace. Tier-1 GNN edge-weight extractor is NOT built
+    (needs trained weights/GPU) — accept edge states/fold-changes as input.
+  - Causal discovery (`/causal-discovery`): DirectLiNGAM in numpy, empirically
+    validated to recover known DAGs; bootstrap-gated edges; honest 'unavailable'
+    without numpy.
+  - Tensor-Train compression (`/tensor-compress`): error-bounded compression
+    utility with an honest 'approximate' flag. NOT a cell/digital-twin simulator.
+- Concordance: 7/7 engine statistics match scipy/statsmodels (VALIDATION_REPORT.md).
 - Everything marked "to build" / "not implemented" above must not be faked.
 
 ## 6. Commands
