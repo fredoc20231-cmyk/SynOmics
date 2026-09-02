@@ -104,12 +104,17 @@ invented multi-model consensus. That is the line that keeps this credible.
   synthesize agent loop (`/api/synomics/agent-execute`, `/agent-tools`).
 - Honesty: de-faked `DrugDiscoveryMode` (docking/ADMET/de-novo now honest
   "requires backend" states, no fabricated affinities/ADMET/molecules).
+- Honesty: de-faked the remaining viz components. `AnalysisOutcomesExplorer` and
+  `ScientificFiguresAndTables` now show honest empty states instead of hardcoded
+  volcano/PCA/pathway results with invented p-values; `DrugRepurposingEngine`,
+  `ClinicalGenomicsPanel`, and `MultiOmicsChartsSuite` carry explicit banners
+  marking their data as curated reference / illustrative, not computed from user
+  input. (`InSilicoPerturbationLab` already runs the real ODE route.)
 
 ## Remaining (highest value first)
-- Phase 1 live external-database routes (need open outbound network to verify).
-- Remaining frontend default/demo data → empty states: `DrugRepurposingEngine`,
-  `ClinicalGenomicsPanel`, `MultiOmicsChartsSuite`, `AnalysisOutcomesExplorer`,
-  `ScientificFiguresAndTables`. (`InSilicoPerturbationLab` already runs the real
-  ODE route.) `PlatformSupremacyBenchmark` is a marketing table, not a feature.
+- Phase 1 live external-database routes (need open outbound network to verify;
+  deferred rather than shipped unverified, per the honesty guardrail).
 - Harden `python-exec` into an isolated sandbox before agent-authored code.
 - Real docking/ADMET workers (AutoDock Vina / RDKit) — external infra.
+- `PlatformSupremacyBenchmark` is a marketing table, not a feature — consider
+  removing (left in place as a product decision).
