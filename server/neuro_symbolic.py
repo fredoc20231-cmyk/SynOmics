@@ -157,6 +157,107 @@ def z3_pathway(payload):
     }))
 
 
+def _states_from_layer(layer, threshold):
+    """Map a layer's {gene: fold-change|state} to discrete up/down/neutral."""
+    out = {}
+    for g, v in (layer or {}).items():
+        if isinstance(v, str):
+            out[g] = v.lower()
+            continue
+        try:
+            fv = float(v)
+        except (TypeError, ValueError):
+            continue
+        out[g] = "up" if fv >= threshold else ("down" if fv <= -threshold else "neutral")
+    return out
+
+
+def z3_multiomic(payload):
+    """Reconcile multi-omic layers with Z3: flag LOGICAL_CONFLICT where layers
+    contradict (e.g. transcript up but protein down) and halt pathway activation
+    for the affected genes instead of silently averaging over the contradiction."""
+    try:
+        import z3
+    except Exception as e:
+        _fail(f"Multi-omic reconciliation requires z3-solver: {e}")
+
+    threshold = float(payload.get("threshold", 1.0))
+    layers = payload.get("layers") or {}
+    if len(layers) < 2:
+        _fail("Provide at least two omics `layers` (e.g. transcriptomics, proteomics).", status="error")
+
+    layer_states = {name: _states_from_layer(layer, threshold) for name, layer in layers.items()}
+    all_genes = sorted({g for st in layer_states.values() for g in st})
+
+    solver = z3.Solver()
+    up = {}
+    down = {}
+    conflicts = []
+    per_gene = {}
+    for g in all_genes:
+        present = {ln: st[g] for ln, st in layer_states.items() if g in st}
+        per_gene[g] = present
+        if len(present) < 2:
+            continue
+        # Z3 booleans per (gene) aggregate direction, pinned to each layer's fact,
+        # with the consistency axiom NOT(up AND down).
+        gi = g.replace(" ", "_")
+        u = z3.Bool(f"{gi}_up"); d = z3.Bool(f"{gi}_down")
+        up[g], down[g] = u, d
+        any_up = any(s == "up" for s in present.values())
+        any_down = any(s == "down" for s in present.values())
+        solver.push()
+        solver.add(u == any_up, d == any_down)
+        solver.add(z3.Not(z3.And(u, d)))  # a gene cannot be both up and down
+        if solver.check() == z3.unsat:
+            conflicts.append({"gene": g, "layers": present, "type": "up_vs_down"})
+        solver.pop()
+
+    status_flag = "LOGICAL_CONFLICT" if conflicts else "CONSISTENT"
+    conflict_genes = {c["gene"] for c in conflicts}
+
+    result = {
+        "status": "success",
+        "consistency": status_flag,
+        "method": "Z3 multi-omic consistency axiom (NOT(up AND down) per gene)",
+        "layers": list(layers.keys()),
+        "conflicts": conflicts,
+        "genesReconciled": len(all_genes),
+        "perGeneStates": per_gene,
+    }
+
+    # Pathway evaluation is HALTED for conflicted genes (doctrine: do not ignore
+    # multi-omic contradictions). Consistent genes still evaluate.
+    pathways = payload.get("pathways") or []
+    if pathways:
+        consensus = {}
+        for g, present in per_gene.items():
+            if g in conflict_genes:
+                continue
+            vals = list(present.values())
+            consensus[g] = vals[0] if len(set(vals)) == 1 else ("up" if "up" in vals else ("down" if "down" in vals else "neutral"))
+        pw_out = []
+        for pw in pathways:
+            rule = pw.get("rule")
+            bvars = {}
+            expr = _to_z3(rule, bvars, z3) if rule is not None else z3.BoolVal(False)
+            uses_conflict = any(gene in conflict_genes for (gene, _st) in bvars)
+            if uses_conflict:
+                pw_out.append({"id": pw.get("id"), "name": pw.get("name"),
+                               "status": "HALTED", "reason": "Pathway depends on a gene with an unresolved multi-omic conflict."})
+                continue
+            s2 = z3.Solver()
+            for (gene, want), var in bvars.items():
+                s2.add(var == (consensus.get(gene, "missing") == want))
+            s2.add(expr)
+            activated = (s2.check() == z3.sat)
+            pw_out.append({"id": pw.get("id"), "name": pw.get("name"),
+                           "status": "SATISFIABLE" if activated else "UNSATISFIABLE", "activated": activated})
+        result["pathways"] = pw_out
+
+    print(json.dumps(result))
+
+
 def main():
     try:
         raw = sys.stdin.read()
@@ -168,8 +269,10 @@ def main():
         edge_extraction(payload)
     elif task == "z3_pathway":
         z3_pathway(payload)
+    elif task == "multiomic_consistency":
+        z3_multiomic(payload)
     else:
-        _fail("Unknown task. Use 'edge_extraction' or 'z3_pathway'.", status="error")
+        _fail("Unknown task. Use 'edge_extraction', 'z3_pathway', or 'multiomic_consistency'.", status="error")
 
 
 if __name__ == "__main__":

@@ -57,4 +57,17 @@ check("z3 SAT when logic holds", res2["pathways"][0]["z3Result"] == "SAT" and re
 check("z3 UNSAT when data fails (cannot override)", res2["pathways"][1]["z3Result"] == "UNSAT" and res2["pathways"][1]["activated"] is False)
 check("z3 emits a satisfying model on SAT", isinstance(res2["pathways"][0]["model"], dict))
 
+# Multi-omic Z3 consistency: transcript up but protein down -> LOGICAL_CONFLICT + HALT.
+res3 = run({"task": "multiomic_consistency", "threshold": 1.0,
+            "layers": {"transcriptomics": {"EGFR": 2.0, "TP53": 1.5},
+                       "proteomics": {"EGFR": 1.8, "TP53": -2.0}},
+            "pathways": [{"id": "P53", "name": "p53", "rule": {"gene": "TP53", "state": "up"}},
+                         {"id": "EGFRp", "name": "EGFR", "rule": {"gene": "EGFR", "state": "up"}}]})
+check("multiomic conflict flagged", res3.get("consistency") == "LOGICAL_CONFLICT")
+check("conflict identifies TP53", any(c["gene"] == "TP53" for c in res3["conflicts"]))
+check("conflicted pathway HALTED", any(p["id"] == "P53" and p["status"] == "HALTED" for p in res3["pathways"]))
+check("consistent gene pathway still evaluates", any(p["id"] == "EGFRp" and p["status"] == "SATISFIABLE" for p in res3["pathways"]))
+res4 = run({"task": "multiomic_consistency", "layers": {"transcriptomics": {"EGFR": 2.0}, "proteomics": {"EGFR": 1.9}}})
+check("consistent layers -> CONSISTENT", res4.get("consistency") == "CONSISTENT")
+
 print(f"\nALL {passed} NEURO-SYMBOLIC TESTS PASSED")

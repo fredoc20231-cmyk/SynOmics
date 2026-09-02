@@ -258,6 +258,17 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     },
   },
   {
+    name: 'multiomic_consistency',
+    category: 'Verifiable AI / neuro-symbolic',
+    description: 'Reconcile multi-omic layers with Z3: flag LOGICAL_CONFLICT where layers contradict (e.g. transcript up but protein down) and HALT pathway activation for affected genes. Requires z3-solver.',
+    handler: (i) => runPythonScript('server/neuro_symbolic.py', { ...i, task: 'multiomic_consistency' }),
+    parameters: {
+      layers: { type: 'object', description: 'Map layerName -> {gene: foldChange|state} for >=2 omics layers.', required: true },
+      threshold: { type: 'number', description: 'Fold-change threshold for up/down (default 1.0).' },
+      pathways: { type: 'array', description: 'Optional pathways [{id,name,rule}] evaluated on consistent genes only.' },
+    },
+  },
+  {
     name: 'pathway_logic_z3',
     category: 'Verifiable AI / neuro-symbolic',
     description: 'Tier-2 formal verification: decide pathway activation with the Z3 SMT solver and emit a satisfying model. UNSAT means not activated and cannot be overridden. Requires z3-solver.',

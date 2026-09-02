@@ -1221,6 +1221,17 @@ app.post(['/api/synomics/pathway-logic-z3', '/api/biomni/pathway-logic-z3'], asy
   }
 });
 
+// Multi-omic consistency: Z3 flags cross-layer contradictions (LOGICAL_CONFLICT).
+app.post(['/api/synomics/multiomic-consistency', '/api/biomni/multiomic-consistency'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/neuro_symbolic.py', { ...req.body, task: 'multiomic_consistency' });
+    const code = result?.status === 'success' ? 200 : result?.status === 'error' ? 400 : 501;
+    res.status(code).json(result);
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 // 4a0. Causal discovery (Part 3A): DirectLiNGAM directed causal graph with
 // bootstrap-stability gating. Honest 'unavailable' if numpy is absent.
 app.post(['/api/synomics/causal-discovery', '/api/biomni/causal-discovery'], async (req, res) => {
