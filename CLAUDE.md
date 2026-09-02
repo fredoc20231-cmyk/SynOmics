@@ -148,7 +148,20 @@ Bridges omics findings into molecular design + rigorous in-silico validation.
     "digital twin" replacement (no ODE/PDE fabrication).
   - Causal discovery (`/causal-discovery`): DirectLiNGAM + bootstrap gating.
 - Module D report generator (`/report`): 6-section HTML+DOCX from real content only.
+- **APEX engines (all code-grounded, honest fallbacks, CI-gated):**
+  - Multi-omic Z3 consistency (`/multiomic-consistency`): flags LOGICAL_CONFLICT
+    across omics layers and HALTS pathway activation for conflicted genes.
+  - Adversarial swarm (`/adversarial-swarm`): ensemble (Welch + Mann-Whitney +
+    exact permutation), survivors gated at FDR<0.01 with a swarm survival rate.
+  - Robotic protocol (`/robotic-protocol`): Opentrons protocol generation gated
+    by physical-constraint validation (volume/slot; oversize auto-split).
+  - Self-optimizing compilation (`/accelerate`): runtime Cython acceleration with
+    a correctness guard + measured speedup logged to the audit trail.
+  - Cryptographic provenance (`/provenance`): SHA-256 manifest of inputs/scripts/
+    outputs; the report footer embeds the manifest hash.
 - Concordance: 7/7 engine statistics match scipy/statsmodels (VALIDATION_REPORT.md).
+- Lint gate: `ruff check server tests` (pyflakes/syntax/imports) runs in CI.
+- 33 real agent tools; 13 test suites in CI.
 - Everything marked "to build" / "not implemented" above must not be faked.
 
 ## 6. Commands
