@@ -15,13 +15,21 @@ Effort: S (hours) · M (a day) · L (multi-day) · XL (needs infra/licensing).
   single-cell, Ramachandran, phylogenetics (NJ), MS/MS, ΔΔG, MCL, ODE, network.
 - ✅ Real: GWAS (λ_GC, Manhattan, QQ, lead loci), Microbiome (Shannon/Simpson/
   Chao1/Bray–Curtis/PCoA), AlphaFold DB fetch with real B-factor pLDDT.
-- ⬜ **S** — Add a SessionStart hook + CI that runs `npm run build`, `tsc`,
-  and `pytest` so every change is verified (this is what unblocks fast, safe iteration).
-- ⬜ **M** — Real file ingestion: parse uploaded FASTA/FASTQ/VCF/CSV/H5AD server-side
-  (currently detection is filename-heuristic) and route into the engines above.
+- ✅ **S** — CI that runs `tsc`, the full `npm run build`, the Python compile,
+  and the engine + agent test suites on every push/PR (`.github/workflows/ci.yml`,
+  `tests/engine_smoke.py`, `tests/agent_smoke.ts`). (H5AD ingestion still ⬜.)
+- ✅ **M** — Real file ingestion: `ingest_file` parses uploaded FASTA/FASTQ/VCF/
+  CSV/TSV server-side into structured records (Phred+33 decoding, VCF variant
+  typing, matrix→gene-keyed counts) with honest routing suggestions and honest
+  errors, exposed at `POST /api/synomics/ingest-file`. (H5AD/binary formats ⬜.)
 
 ## Phase 1 — Real external databases (grounding, like Biomni's data lake)
 Each is a thin, cached server route to a public API; all real, no keys except where noted.
+> Note: these require outbound network to the public APIs. They can be written
+> here but cannot be *verified* in a sandbox whose egress is restricted to
+> package registries — so they are deferred until they can be run against the
+> live endpoints, per the honesty guardrail (no shipping of unverified network
+> code claimed as working).
 - ⬜ **S** Ensembl REST (`rest.ensembl.org`) — gene → coordinates, transcripts,
   exons → replace the synaptic `GENOMIC_LOCI` fallback and `get_genomic_locus_tracks`.
 - ⬜ **S** UniProt REST — protein metadata, sequence, domains (feeds alignment/ΔΔG).
@@ -52,18 +60,26 @@ Each is a thin, cached server route to a public API; all real, no keys except wh
 ## Phase 3 — The agent (Biomni's core differentiator)
 Biomni's power is an LLM agent that **plans → writes code → executes in a sandbox →
 inspects results → iterates**. To match/exceed it:
-- ⬜ **M** Turn each real endpoint above into a typed **tool schema** the LLM can call
-  (the app already has a tool registry — populate it with the real routes).
-- ⬜ **L** Give the agent a real code-execution sandbox (the `/api/synomics/python-exec`
-  route exists; harden it: run in an isolated container, write temp to `os.tmpdir()`,
-  resource/time limits) so it can run arbitrary analysis, like Biomni.
-- ⬜ **M** Multi-step tool-use loop in `server.ts` `/agent-run` (plan → call tools →
-  observe → synthesize) replacing the templated scaffold in `grounded_multi_agent.ts`.
+- ✅ **M** Typed **tool schema** registry (`server/tool_registry.ts`): 15 real
+  tools mapped to engine commands with parameter schemas, required-arg
+  validation, and honest unknown-tool errors; discoverable at
+  `GET /api/synomics/agent-tools`.
+- ✅ **M** Real multi-step tool-use loop (`server/agent_executor.ts`,
+  `POST /api/synomics/agent-execute`): plan → **actually execute the real tools**
+  → observe genuine outputs → synthesize, with data-flow between steps
+  (ingest_file → differential_expression chains on real parsed counts).
+  Observations are never LLM-simulated. Without a key it returns real tool
+  outputs + a factual synthesis or an honest `needs_input`.
+- 🟡 **L** Code-execution sandbox: `/api/synomics/python-exec` exists and writes
+  temp to `os.tmpdir()` with a 30s timeout; still needs container isolation and
+  resource limits before it is safe for arbitrary agent-authored code.
 - ⬜ **S** Optional: real second-model verification (only claim consensus when a real
   second provider key is configured).
 
 ## Phase 4 — Scale & UX
-- ⬜ **S** `vite.config.ts` `manualChunks` to split 3D viewer/charts/tools (bundle >1 MB).
+- ✅ **S** `vite.config.ts` `manualChunks` splits firebase/charts/react/markdown/
+  pdf/icons into separate vendor chunks (function form, since firebase exposes
+  only subpath exports).
 - ⬜ **S** Explicit Basic / Advanced / Discovery tier selector (chat box already default).
 - ⬜ **M** Remove remaining dead/duplicate components (Bio*/Synaptic* pairs).
 - ⬜ **S** Migrate `/api/synapse/*` legacy routes fully to `/api/bio|synomics/*`.
@@ -78,3 +94,22 @@ invented multi-model consensus. That is the line that keeps this credible.
 2. Phase 1 Ensembl + UniProt + ClinVar + Open Targets (biggest realness-per-hour).
 3. Phase 3 tool schemas + hardened python-exec + real agent loop.
 4. Phase 2 docking/ADMET workers (infra permitting).
+
+## Delivered in the SynOmics-a build session
+- Consolidated the full-stack platform into the repo and made it build, boot,
+  and serve real computation end-to-end (tsc, vite, esbuild ESM server bundle).
+- Phase 0: expanded CI + `tests/engine_smoke.py` + `tests/agent_smoke.ts`; real
+  file ingestion (`ingest_file` + `/api/synomics/ingest-file`).
+- Phase 3: typed tool registry (15 real tools) + real plan→execute→observe→
+  synthesize agent loop (`/api/synomics/agent-execute`, `/agent-tools`).
+- Honesty: de-faked `DrugDiscoveryMode` (docking/ADMET/de-novo now honest
+  "requires backend" states, no fabricated affinities/ADMET/molecules).
+
+## Remaining (highest value first)
+- Phase 1 live external-database routes (need open outbound network to verify).
+- Remaining frontend default/demo data → empty states: `DrugRepurposingEngine`,
+  `ClinicalGenomicsPanel`, `MultiOmicsChartsSuite`, `AnalysisOutcomesExplorer`,
+  `ScientificFiguresAndTables`. (`InSilicoPerturbationLab` already runs the real
+  ODE route.) `PlatformSupremacyBenchmark` is a marketing table, not a feature.
+- Harden `python-exec` into an isolated sandbox before agent-authored code.
+- Real docking/ADMET workers (AutoDock Vina / RDKit) — external infra.
