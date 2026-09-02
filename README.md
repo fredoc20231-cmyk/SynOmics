@@ -87,8 +87,30 @@ echo '{"seq1":"MKTAYIAKQR","seq2":"MKTAYIAKQC","method":"needleman_wunsch","seq_
   | python server/synomics_engine.py align_sequences
 ```
 
+### Scientific concordance (gold-standard validation)
+
+The engine's statistics are validated against community reference
+implementations (scipy / statsmodels) across ~1,200 seeded randomized cases:
+
+```bash
+pip install numpy scipy statsmodels
+python tests/scientific_validation.py     # writes VALIDATION_REPORT.md
+```
+
+Current result: **7/7 statistics concordant** (Welch t-test, Student's t,
+Benjamini–Hochberg FDR, hypergeometric enrichment, Jukes–Cantor) to ≤1e-10 — see
+[`VALIDATION_REPORT.md`](./VALIDATION_REPORT.md).
+
+### Provenance / audit trail (Module C)
+
+Every analytical request is recorded as an immutable append-only JSONL line
+(`SYNOMICS_AUDIT_LOG`) with tool, params (large/sensitive inputs hashed, not
+copied), input/output SHA-256, status and timing; read recent records at
+`GET /api/synomics/audit-log`.
+
 CI (`.github/workflows/ci.yml`) runs the type-check, the full build, the Python
-compile, and the engine smoke tests on every push and pull request.
+compile, the engine/agent/external-DB/audit test suites, and the scientific
+concordance gate on every push and pull request.
 
 ---
 
