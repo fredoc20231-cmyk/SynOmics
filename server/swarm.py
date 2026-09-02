@@ -45,8 +45,9 @@ def main():
         _fail(f"Invalid JSON payload: {e}", status="error")
 
     try:
-        import numpy as np
         from math import comb
+
+        import numpy as np
         from scipy import stats as sp
     except Exception as e:
         _fail(f"Adversarial swarm requires numpy + scipy: {e}")

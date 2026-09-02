@@ -38,9 +38,9 @@ def main():
 
     try:
         import numpy as np
-        from sklearn.linear_model import LogisticRegression
-        from sklearn.model_selection import permutation_test_score, StratifiedKFold
         from sklearn.decomposition import PCA
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.model_selection import StratifiedKFold, permutation_test_score
         from sklearn.preprocessing import StandardScaler
     except Exception as e:
         _fail(f"Enhanced adversary requires numpy + scikit-learn: {e}")

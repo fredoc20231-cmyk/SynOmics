@@ -10,11 +10,11 @@ Provides:
 5. SVD / PCA dimensionality reduction for Single-Cell Transcriptomics
 """
 
-import sys
 import json
 import math
-import random
 import os
+import random
+import sys
 import urllib.request
 from collections import defaultdict
 
@@ -2832,7 +2832,7 @@ def main():
     try:
         raw_input = sys.stdin.read()
         payload = json.loads(raw_input) if raw_input.strip() else {}
-    except Exception as e:
+    except Exception:
         payload = {}
 
     if cmd == "ode_simulate":

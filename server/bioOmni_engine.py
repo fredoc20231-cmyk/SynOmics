@@ -6,13 +6,10 @@ Genomics, Transcriptomics, Proteomics, Single-Cell, Spatial Omics, Microbiome, G
 Drug Discovery & Repurposing, Structural Biology, Epigenomics, and Clinical Genetics.
 """
 
-import sys
 import json
 import math
 import random
-import os
-import urllib.request
-from collections import defaultdict
+import sys
 
 # ============================================================================
 # 1. BIOPHYSICAL ODE SIMULATOR (Runge-Kutta 4th Order across 5 Biological Systems)

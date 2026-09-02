@@ -12,8 +12,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCRIPT = os.path.join(ROOT, "server", "report_generator.py")
 
 try:
-    import jinja2  # noqa: F401
     import docx  # noqa: F401
+    import jinja2  # noqa: F401
 except Exception as e:
     print(f"SKIP: jinja2/python-docx not available ({e}).")
     sys.exit(0)

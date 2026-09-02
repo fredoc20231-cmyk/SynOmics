@@ -5,7 +5,6 @@ Every assertion validates real computation (values checked against known
 references where possible). Run: `python tests/engine_smoke.py`
 """
 import importlib.util
-import math
 import os
 import sys
 
@@ -65,6 +64,7 @@ check("unknown format -> honest unsupported", bad["status"] == "unsupported")
 
 # --- Adversarial validation engine (Zero-Fake): signal validated, noise never validated ---
 import random as _rnd
+
 _r = _rnd.Random(42)
 _conds = ["control"] * 6 + ["treated"] * 6
 _signal = {}

@@ -28,6 +28,11 @@ jobs:
       - name: Type-check + build (frontend + server bundle)
         run: npm run build
 
+      - name: Ruff lint gate (Python correctness rules)
+        run: |
+          python -m pip install --quiet ruff
+          ruff check server tests
+
       - name: Compile Python engines
         run: python -m py_compile server/synomics_engine.py server/biomni_engine.py server/bioOmni_engine.py
 

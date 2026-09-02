@@ -21,10 +21,10 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 try:
     import numpy as np
-    from scipy import stats as sp
-    from statsmodels.stats.multitest import multipletests
     import scipy
     import statsmodels
+    from scipy import stats as sp
+    from statsmodels.stats.multitest import multipletests
 except Exception as e:  # reference libs absent -> cannot validate, skip honestly
     print(f"SKIP: scientific reference stack not available ({e}).")
     print("Install with: pip install numpy scipy statsmodels")
@@ -100,6 +100,7 @@ record("Hypergeometric enrichment tail", "P", hg, 1e-9)
 # 5. Jukes-Cantor distance vs closed form -3/4 ln(1 - 4/3 p)
 jc = []
 import math
+
 for _ in range(100):
     L = int(rng.integers(50, 400))
     s1 = "".join(rng.choice(list("ACGT"), L))

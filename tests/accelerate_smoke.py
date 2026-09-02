@@ -2,11 +2,15 @@
 """Test self-optimizing Cython compilation. Requires numpy + Cython + a C compiler.
 Run: `python tests/accelerate_smoke.py`
 """
-import json, os, subprocess, sys
+import json
+import os
+import subprocess
+import sys
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCRIPT = os.path.join(ROOT, "server", "accelerate.py")
 try:
-    import numpy, Cython  # noqa: F401
+    import numpy  # noqa: F401
 except Exception as e:
     print(f"SKIP: numpy/Cython not available ({e}).")
     sys.exit(0)

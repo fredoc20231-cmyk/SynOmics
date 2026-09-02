@@ -1,0 +1,19 @@
+# Ruff configuration — high-value correctness gate for SynOmics Python.
+line-length = 140
+target-version = "py311"
+extend-exclude = ["*.pyx", "server/kernels"]
+
+[lint]
+# Pyflakes (real bugs: unused imports/vars, undefined names), syntax errors,
+# and import ordering. Style-only rules are intentionally not enforced.
+select = ["F", "E9", "I"]
+
+[lint.per-file-ignores]
+# Legacy compute engines carry some unused intermediate locals; the important
+# pyflakes checks (undefined names, unused imports) remain enforced there.
+"server/synomics_engine.py" = ["F841"]
+"server/biomni_engine.py" = ["F841"]
+"server/bioOmni_engine.py" = ["F841"]
+# Backward-compat re-export shims intentionally use star imports / re-exports.
+"server/bioOmni.py" = ["F401", "F403", "F405"]
+"server/synomics.py" = ["F401", "F403", "F405"]

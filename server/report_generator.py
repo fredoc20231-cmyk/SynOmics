@@ -96,7 +96,7 @@ def main():
     if "docx" in formats:
         try:
             from docx import Document
-            from docx.shared import Pt, RGBColor
+            from docx.shared import RGBColor
         except Exception as e:
             _fail(f"DOCX report requires python-docx: {e}")
         doc = Document()
