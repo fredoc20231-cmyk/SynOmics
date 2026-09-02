@@ -194,6 +194,20 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     },
   },
   {
+    name: 'circuit_verify',
+    category: 'Verifiable AI / synthetic biology',
+    description: 'Formally verify a synthetic genetic circuit: Gillespie SSA (exact CTMC) + Monte-Carlo temporal-property check (e.g. P(species reaches N by time T) >= p). Reports VERIFIED/VIOLATED with a Wilson CI. numpy.',
+    handler: (i) => runPythonScript('server/circuit_verify.py', i),
+    parameters: {
+      reactions: { type: 'array', description: '[{reactants:{s:c}, products:{s:c}, rate}] mass-action reactions.', required: true },
+      initialState: { type: 'object', description: 'Map species -> initial molecule count.', required: true },
+      property: { type: 'object', description: '{species, comparator, threshold, byTime, targetProbability}.' },
+      maxTime: { type: 'number', description: 'Simulation horizon.' },
+      nRuns: { type: 'number', description: 'Monte-Carlo runs (default 2000).' },
+      seed: { type: 'number', description: 'Random seed (default 1337).' },
+    },
+  },
+  {
     name: 'adversarial_swarm',
     category: 'Verifiable AI / validation',
     description: 'Evolutionary falsification swarm: an ensemble of statistical models (Welch t, Mann-Whitney U, exact permutation). Only genes significant under EVERY model at strict FDR<0.01 survive; each is tagged with its swarm survival rate. Requires scipy.',

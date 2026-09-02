@@ -1331,6 +1331,17 @@ app.post(['/api/synomics/adversarial-validate', '/api/biomni/adversarial-validat
   }
 });
 
+// 4a2d. Formal stochastic verification of synthetic genetic circuits (SSA + CTMC).
+app.post(['/api/synomics/circuit-verify', '/api/biomni/circuit-verify'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/circuit_verify.py', req.body, 180000);
+    const code = result?.status === 'success' ? 200 : result?.status === 'error' ? 400 : 501;
+    res.status(code).json(result);
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 // 4a2c. Adversarial swarm: ensemble falsification with per-gene survival rate.
 app.post(['/api/synomics/adversarial-swarm', '/api/biomni/adversarial-swarm'], async (req, res) => {
   try {
