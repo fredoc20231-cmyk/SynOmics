@@ -1175,6 +1175,20 @@ Respond in strict JSON with the following structure:
   }
 });
 
+// 4a1. Neuro-symbolic pathway reasoner (Tier 2): deterministic boolean logic
+// solver over gene states -> SATISFIABLE/UNSATISFIABLE + proof trace.
+app.post(['/api/synomics/pathway-logic', '/api/biomni/pathway-logic'], async (req, res) => {
+  try {
+    const result = await runPythonEngine('pathway_logic', req.body);
+    if (result && result.status && result.status !== 'success') {
+      return res.status(422).json(result);
+    }
+    res.json({ status: 'success', result, ...result });
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 // 4a2. Adversarial validation (Zero-Fake): permutation-null test of a DE
 // hypothesis with a deterministic verdict + veto. No LLM in the decision.
 app.post(['/api/synomics/adversarial-validate', '/api/biomni/adversarial-validate'], async (req, res) => {

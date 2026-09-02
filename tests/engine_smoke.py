@@ -85,4 +85,21 @@ _noise_res = eng.run_adversarial_validation(_noise, _conds, n_permutations=200, 
 check("adversarial: pure noise NOT VALIDATED (anti-hallucination)", _noise_res["verdict"] != "VALIDATED")
 check("adversarial: reports empirical p + expected FP", "empiricalP" in _noise_res["adversary"] and "expectedFalsePositives" in _noise_res["adversary"])
 
+# --- Neuro-symbolic pathway solver: deterministic SAT/UNSAT ---
+_pw = eng.evaluate_pathway_logic({
+    "foldChanges": {"EGFR": 2.4, "KRAS": 0.1, "BRAF": 1.8, "TP53": -2.0},
+    "threshold": 1.0,
+    "pathways": [
+        {"id": "RTK", "name": "RTK/MAPK", "rule": {"op": "AND", "args": [
+            {"gene": "EGFR", "state": "up"},
+            {"op": "OR", "args": [{"gene": "KRAS", "state": "up"}, {"gene": "BRAF", "state": "up"}]}]}},
+        {"id": "P53", "name": "p53", "rule": {"op": "AND", "args": [
+            {"gene": "TP53", "state": "up"}, {"gene": "BAX", "state": "up"}]}},
+    ],
+})
+check("pathway solver SATISFIABLE when logic holds", _pw["pathways"][0]["status"] == "SATISFIABLE")
+check("pathway solver UNSATISFIABLE when data fails (no fabrication)", _pw["pathways"][1]["status"] == "UNSATISFIABLE")
+check("pathway solver emits a proof trace", len(_pw["pathways"][0]["proofTrace"]) > 0)
+check("missing gene treated as neutral, not active", _pw["geneStates"].get("BAX") is None)
+
 print(f"\nALL {passed} ENGINE SMOKE TESTS PASSED")

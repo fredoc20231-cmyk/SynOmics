@@ -2515,6 +2515,118 @@ def run_adversarial_validation(gene_counts, conditions, n_permutations=1000, fdr
     }
 
 
+# ============================================================================
+# NEURO-SYMBOLIC PATHWAY REASONER — Tier 2: deterministic symbolic logic solver.
+# The LLM is forbidden from guessing pathway activation. Activation is decided by
+# evaluating explicit boolean logic (AND/OR/NOT over gene up/down states) against
+# the data, returning SATISFIABLE / UNSATISFIABLE with a formal proof trace.
+# Missing genes are treated as neutral (never fabricated as active).
+# ============================================================================
+
+def _derive_gene_states(fold_changes, threshold=1.0):
+    """Map continuous fold-changes to discrete {up, down, neutral} states."""
+    states = {}
+    for gene, fc in (fold_changes or {}).items():
+        try:
+            v = float(fc)
+        except (TypeError, ValueError):
+            continue
+        if v >= threshold:
+            states[gene] = "up"
+        elif v <= -threshold:
+            states[gene] = "down"
+        else:
+            states[gene] = "neutral"
+    return states
+
+
+def _eval_rule(rule, states, trace):
+    """Recursively evaluate a boolean pathway rule; append proof-trace nodes."""
+    if not isinstance(rule, dict):
+        trace.append({"node": "invalid", "detail": repr(rule), "value": False})
+        return False
+
+    if "gene" in rule:
+        gene = rule["gene"]
+        want = str(rule.get("state", "up")).lower()
+        actual = states.get(gene, "missing")
+        value = (actual == want)
+        trace.append({
+            "node": "leaf", "gene": gene, "required": want,
+            "observed": actual, "value": value,
+            "note": "gene absent from data -> neutral/missing" if actual == "missing" else None,
+        })
+        return value
+
+    op = str(rule.get("op", "")).upper()
+    if op == "NOT":
+        inner = _eval_rule(rule.get("arg", {}), states, trace)
+        value = not inner
+        trace.append({"node": "NOT", "value": value})
+        return value
+    if op in ("AND", "OR"):
+        args = rule.get("args", [])
+        results = [_eval_rule(a, states, trace) for a in args]
+        value = all(results) if op == "AND" else any(results)
+        trace.append({"node": op, "childCount": len(results), "value": value})
+        return value
+
+    trace.append({"node": "unknown_op", "detail": op, "value": False})
+    return False
+
+
+def _rule_to_str(rule):
+    if not isinstance(rule, dict):
+        return "?"
+    if "gene" in rule:
+        return f"{rule['gene']}={str(rule.get('state', 'up')).lower()}"
+    op = str(rule.get("op", "")).upper()
+    if op == "NOT":
+        return f"NOT({_rule_to_str(rule.get('arg', {}))})"
+    if op in ("AND", "OR"):
+        return "(" + f" {op} ".join(_rule_to_str(a) for a in rule.get("args", [])) + ")"
+    return "?"
+
+
+def evaluate_pathway_logic(payload):
+    """Deterministically evaluate pathway activation rules against gene data.
+    Returns per-pathway SATISFIABLE/UNSATISFIABLE + a formal proof trace."""
+    threshold = float(payload.get("threshold", 1.0))
+    if isinstance(payload.get("geneStates"), dict):
+        states = {g: str(s).lower() for g, s in payload["geneStates"].items()}
+    else:
+        states = _derive_gene_states(payload.get("foldChanges") or payload.get("genes") or {}, threshold)
+
+    pathways = payload.get("pathways") or []
+    if not pathways:
+        return {"status": "error", "error": "No pathway rules provided."}
+
+    results = []
+    for pw in pathways:
+        rule = pw.get("rule")
+        trace = []
+        activated = _eval_rule(rule, states, trace) if rule is not None else False
+        expr = _rule_to_str(rule)
+        results.append({
+            "id": pw.get("id"),
+            "name": pw.get("name"),
+            "expression": expr,
+            "status": "SATISFIABLE" if activated else "UNSATISFIABLE",
+            "activated": activated,
+            "proof": f"{expr} => {'SATISFIABLE (pathway activated)' if activated else 'UNSATISFIABLE (not activated by data constraints)'}",
+            "proofTrace": trace,
+        })
+
+    return {
+        "status": "success",
+        "method": "deterministic boolean logic solver (Tier 2 neuro-symbolic)",
+        "threshold": threshold,
+        "geneStates": states,
+        "pathways": results,
+        "activatedCount": sum(1 for r in results if r["activated"]),
+    }
+
+
 def ingest_file(filename, content):
     """Detect format from extension/content and parse. Honest error if unknown."""
     name = (filename or "").lower()
@@ -2727,6 +2839,10 @@ def main():
         filename = payload.get("filename", "")
         content = payload.get("content", "")
         result = ingest_file(filename, content)
+        print(json.dumps(result))
+
+    elif cmd == "pathway_logic":
+        result = evaluate_pathway_logic(payload)
         print(json.dumps(result))
 
     elif cmd == "adversarial_validate":

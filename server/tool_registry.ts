@@ -182,6 +182,18 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     },
   },
   {
+    name: 'pathway_logic',
+    category: 'Verifiable AI / neuro-symbolic',
+    description: 'Deterministically evaluate pathway activation with a boolean logic solver (AND/OR/NOT over gene up/down states). Returns SATISFIABLE/UNSATISFIABLE + a formal proof trace. No LLM guessing.',
+    engineCommand: 'pathway_logic',
+    parameters: {
+      foldChanges: { type: 'object', description: 'Map of gene -> fold-change (states derived by threshold).' },
+      geneStates: { type: 'object', description: "Alternative: explicit map of gene -> 'up'|'down'|'neutral'." },
+      threshold: { type: 'number', description: 'Fold-change threshold for up/down (default 1.0).' },
+      pathways: { type: 'array', description: 'Pathways: [{id, name, rule}] where rule is a boolean expression.', required: true },
+    },
+  },
+  {
     name: 'adversarial_validate',
     category: 'Verifiable AI / validation',
     description: 'Adversarially validate a two-group differential-expression hypothesis via a label-permutation null; returns a deterministic VALIDATED/INVALIDATED/INCONCLUSIVE verdict, confidence, and auto-veto. No LLM in the decision.',
