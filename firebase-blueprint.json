@@ -1,0 +1,146 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID"
+        },
+        "email": {
+          "type": "string",
+          "description": "User email address"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "User display name",
+          "maxLength": 100
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "User avatar photo URL",
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Account creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last profile update timestamp"
+        }
+      },
+      "required": ["uid", "email", "createdAt"]
+    },
+    "AnalysisSession": {
+      "title": "AnalysisSession",
+      "description": "Saved multi-agent and multi-omics analysis session",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique session ID",
+          "maxLength": 128
+        },
+        "userId": {
+          "type": "string",
+          "description": "Owner user ID"
+        },
+        "title": {
+          "type": "string",
+          "description": "Title or headline of the analysis",
+          "maxLength": 200
+        },
+        "query": {
+          "type": "string",
+          "description": "Original biological research prompt",
+          "maxLength": 5000
+        },
+        "mode": {
+          "type": "string",
+          "description": "Analysis mode or category",
+          "maxLength": 50
+        },
+        "targetGenes": {
+          "type": "array",
+          "description": "Array of target gene symbols analyzed"
+        },
+        "summary": {
+          "type": "string",
+          "description": "Executive summary markdown or text",
+          "maxLength": 20000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Update timestamp"
+        }
+      },
+      "required": ["id", "userId", "title", "query", "createdAt"]
+    },
+    "SavedTarget": {
+      "title": "SavedTarget",
+      "description": "Saved target protein or biomarker for drug discovery",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Target ID",
+          "maxLength": 128
+        },
+        "userId": {
+          "type": "string",
+          "description": "Owner user ID"
+        },
+        "geneSymbol": {
+          "type": "string",
+          "description": "Gene symbol (e.g. TP53)",
+          "maxLength": 30
+        },
+        "proteinName": {
+          "type": "string",
+          "description": "Full protein name",
+          "maxLength": 200
+        },
+        "druggabilityScore": {
+          "type": "number",
+          "description": "Computed druggability score between 0 and 1"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Scientist notes",
+          "maxLength": 2000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        }
+      },
+      "required": ["id", "userId", "geneSymbol", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "UserProfile" },
+      "description": "User profile collection partitioned by Firebase UID"
+    },
+    "/users/{userId}/sessions/{sessionId}": {
+      "schema": { "$ref": "AnalysisSession" },
+      "description": "User's saved analysis sessions and report history"
+    },
+    "/users/{userId}/targets/{targetId}": {
+      "schema": { "$ref": "SavedTarget" },
+      "description": "User's saved target proteins and therapeutic candidates"
+    }
+  }
+}

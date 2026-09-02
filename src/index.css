@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --bg-canvas: #FAF9F5;
+    --bg-workspace: #FFFFFF;
+    --bg-sidebar: #F3EFE6;
+    --border-sidebar: #E2DDD2;
+    --border-subtle: #E2DDD2;
+    --text-main: #0F172A;
+    --text-muted: #64748B;
+    --primary-emerald: #059669;
+    --primary-emerald-hover: #047857;
+    --primary-emerald-soft: #ECFDF5;
+    --bubble-user: #E7E0D2;
+    --bubble-assistant: #FFFFFF;
+  }
+
+  .dark {
+    --bg-canvas: #0B0F17;
+    --bg-workspace: #12161F;
+    --bg-sidebar: #0E131E;
+    --border-sidebar: #1E293B;
+    --border-subtle: #1E293B;
+    --text-main: #F8FAFC;
+    --text-muted: #94A3B8;
+    --primary-emerald: #10B981;
+    --primary-emerald-hover: #059669;
+    --primary-emerald-soft: #064E3B;
+    --bubble-user: #1E293B;
+    --bubble-assistant: #131A29;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--bg-canvas);
+    color: var(--text-main);
+  }
+
+  h1, h2, h3, .font-serif-brand {
+    font-family: 'Newsreader', 'Georgia', serif;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+}
+
+/* Custom crisp scrollbars for sidebar, chats, and terminals */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.25);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(5, 150, 105, 0.5);
+}
+
+/* Claude/ChatGPT style smooth message transitions */
+@keyframes fadeInSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

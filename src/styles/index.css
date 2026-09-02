@@ -1,9 +1,0 @@
-@import "./theme.css";
-@import "./trust.css";
-@import "./omega-rail.css";
-@import "./research-composer.css";
-@import "./portal.css";
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;

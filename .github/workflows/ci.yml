@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install npm dependencies
+        run: npm install
+
+      - name: Type-check + build (frontend + server bundle)
+        run: npm run build
+
+      - name: Compile Python engines
+        run: python -m py_compile server/synomics_engine.py server/biomni_engine.py server/bioOmni_engine.py
+
+      - name: Engine smoke tests (real computation, no network)
+        run: |
+          set -e
+          echo '{"seq1":"MKTAYIAKQR","seq2":"MKTAYIAKQC","method":"needleman_wunsch","seq_type":"protein"}' \
+            | python server/synomics_engine.py align_sequences | python -c "import sys,json; d=json.load(sys.stdin); assert d['alignmentLength']>0; print('align OK', d['identityPct'])"
+          echo '{"counts":{"A":[10,11,12,50,52,55],"B":[100,98,101,20,22,19]},"conditions":["control","control","control","treated","treated","treated"]}' \
+            | python server/synomics_engine.py deseq2 | python -c "import sys,json; d=json.load(sys.stdin)['differentialExpression']; assert any(r['isSignificant'] for r in d); print('deseq2 OK')"
+          echo '{"trait":"T","summaryStats":[{"rsid":"rs1","chr":"1","pos":1,"pvalue":1e-20},{"rsid":"rs2","chr":"2","pos":2,"pvalue":0.5}]}' \
+            | python server/synomics_engine.py gwas | python -c "import sys,json; d=json.load(sys.stdin); assert d['significantHits']==1; print('gwas OK', d['genomicInflationLambda'])"
+          echo '{"samples":[{"sampleId":"H1","group":"H","abundances":{"a":50,"b":30,"c":2}},{"sampleId":"D1","group":"D","abundances":{"a":5,"b":20,"c":60}}]}' \
+            | python server/synomics_engine.py microbiome | python -c "import sys,json; d=json.load(sys.stdin); assert d['sampleCount']==2; print('microbiome OK')"

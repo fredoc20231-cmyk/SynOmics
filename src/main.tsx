@@ -1,15 +1,10 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import { App } from "./App";
-import { applyGlobalAppearance, readStoredGlobalSettings } from "./globalSettings";
-import { applyTheme, readStoredTheme } from "./theme";
-import "./styles/index.css";
+import {StrictMode} from 'react';
+import {createRoot} from 'react-dom/client';
+import App from './App.tsx';
+import './index.css';
 
-applyTheme(readStoredTheme());
-applyGlobalAppearance(readStoredGlobalSettings());
-
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
     <App />
-  </React.StrictMode>
+  </StrictMode>,
 );

@@ -1,0 +1,6 @@
+{
+  "name": "SynOmics — Universal Bioinformatics Platform",
+  "description": "A general-purpose AI-native bioinformatics platform for autonomous multi-omics analysis. Covers genomics, transcriptomics, proteomics, single-cell biology, spatial omics, microbiome, GWAS, drug repurposing, clinical genomics, structural biology, synthetic biology, and more — across any organism and any biological domain.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

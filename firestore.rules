@@ -1,0 +1,73 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.uid == userId &&
+        data.email is string && data.email.size() <= 200 &&
+        (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100)) &&
+        (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 500));
+    }
+
+    function isValidAnalysisSession(data, userId) {
+      return data.userId == userId &&
+        data.id is string && data.id.size() <= 128 &&
+        data.title is string && data.title.size() <= 200 &&
+        data.query is string && data.query.size() <= 5000 &&
+        (!('mode' in data) || (data.mode is string && data.mode.size() <= 50)) &&
+        (!('targetGenes' in data) || (data.targetGenes is list && data.targetGenes.size() <= 50)) &&
+        (!('summary' in data) || (data.summary is string && data.summary.size() <= 20000));
+    }
+
+    function isValidSavedTarget(data, userId) {
+      return data.userId == userId &&
+        data.id is string && data.id.size() <= 128 &&
+        data.geneSymbol is string && data.geneSymbol.size() <= 30 &&
+        (!('proteinName' in data) || (data.proteinName is string && data.proteinName.size() <= 200)) &&
+        (!('druggabilityScore' in data) || (data.druggabilityScore is number)) &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 2000));
+    }
+
+    // User profiles
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(userId) && isValidUserProfile(request.resource.data, userId);
+      allow update: if isOwner(userId) && isValidId(userId) && isValidUserProfile(request.resource.data, userId);
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      // User's analysis sessions
+      match /sessions/{sessionId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(sessionId) && isValidAnalysisSession(request.resource.data, userId);
+        allow update: if isOwner(userId) && isValidId(sessionId) && isValidAnalysisSession(request.resource.data, userId);
+        allow delete: if isOwner(userId) && isValidId(sessionId);
+      }
+
+      // User's saved targets
+      match /targets/{targetId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(targetId) && isValidSavedTarget(request.resource.data, userId);
+        allow update: if isOwner(userId) && isValidId(targetId) && isValidSavedTarget(request.resource.data, userId);
+        allow delete: if isOwner(userId) && isValidId(targetId);
+      }
+    }
+  }
+}
