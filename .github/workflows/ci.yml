@@ -80,3 +80,6 @@ jobs:
         run: |
           python -m pip install --quiet jinja2 python-docx
           python tests/report_smoke.py
+
+      - name: Provenance manifest gate (SHA-256 inputs/scripts/outputs)
+        run: python tests/provenance_smoke.py

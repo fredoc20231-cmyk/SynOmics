@@ -231,6 +231,18 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     },
   },
   {
+    name: 'provenance_manifest',
+    category: 'Reporting / provenance',
+    description: 'Build a cryptographic provenance manifest (SHA-256 of inputs, scripts, outputs + a manifest hash) so results are tied to the exact bytes that produced them. Pure stdlib.',
+    handler: (i) => runPythonScript('server/provenance.py', i),
+    parameters: {
+      inputs: { type: 'object', description: 'Map name -> input value.' },
+      scripts: { type: 'array', description: 'List of script file paths to hash.' },
+      outputs: { type: 'object', description: 'Map name -> output value.' },
+      sessionId: { type: 'string', description: 'Optional session id.' },
+    },
+  },
+  {
     name: 'generate_report',
     category: 'Reporting',
     description: 'Render a 6-section publication-grade report (Title/Summary/Introduction/Methods/Results/Interpretations) to HTML + DOCX from REAL provided content. Renders only what is passed; missing sections marked "not provided". Requires jinja2/python-docx.',

@@ -56,6 +56,7 @@ HTML_TEMPLATE = """<!doctype html>
     <tbody>{% for row in t.get('rows',[]) %}<tr>{% for cell in row %}<td class="mono">{{ cell }}</td>{% endfor %}</tr>{% endfor %}</tbody></table>
   {% endfor %}
   {% endif %}
+  {% if provenanceHash %}<hr/><p class="meta mono">Provenance manifest SHA-256: {{ provenanceHash }}</p>{% endif %}
 </body></html>"""
 
 
@@ -79,6 +80,7 @@ def main():
     generated = datetime.datetime.now(datetime.timezone.utc).isoformat()
     content = {k: payload.get(k) for k, _ in SECTIONS}
     tables = payload.get("tables") or []
+    provenance_hash = payload.get("provenanceHash")
 
     out = {"status": "success", "title": title, "sections": [k for k, _ in SECTIONS]}
 
@@ -88,7 +90,8 @@ def main():
         except Exception as e:
             _fail(f"HTML report requires jinja2: {e}")
         out["html"] = Template(HTML_TEMPLATE).render(
-            title=title, p=PALETTE, sections=SECTIONS, content=content, tables=tables, generated=generated)
+            title=title, p=PALETTE, sections=SECTIONS, content=content, tables=tables,
+            generated=generated, provenanceHash=provenance_hash)
 
     if "docx" in formats:
         try:
@@ -118,6 +121,9 @@ def main():
                     cells = table.add_row().cells
                     for i, cell in enumerate(row[:len(cols)]):
                         cells[i].text = str(cell)
+        if provenance_hash:
+            doc.add_paragraph()
+            doc.add_paragraph(f"Provenance manifest SHA-256: {provenance_hash}")
         buf = io.BytesIO()
         doc.save(buf)
         out["docxBase64"] = base64.b64encode(buf.getvalue()).decode("ascii")
