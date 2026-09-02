@@ -74,8 +74,8 @@ export const SynapticNetworkGraph: React.FC<SynapticNetworkGraphProps> = ({
       return {
         id: p.geneSymbol,
         geneSymbol: p.geneSymbol,
-        x: cx + Math.cos(angle) * 70 + (Math.random() - 0.5) * 40,
-        y: cy + Math.sin(angle) * 70 + (Math.random() - 0.5) * 40,
+        x: cx + Math.cos(angle) * 70 + (((idx * 53) % 40) - 20),
+        y: cy + Math.sin(angle) * 70 + (((idx * 89) % 40) - 20),
         vx: 0,
         vy: 0,
         radius,

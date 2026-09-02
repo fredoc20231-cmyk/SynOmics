@@ -1,0 +1,18 @@
+# SynOmics production scientific stack.
+# All versions verified to install and import in this environment.
+# The core compute engine (server/synomics_engine.py) is dependency-free and
+# runs without any of these; they power the optional heavier modules (drug
+# descriptors, causal discovery, neuro-symbolic, swarm, vision, compilation).
+numpy>=1.24.0
+scipy>=1.10.0
+scikit-learn>=1.2.0
+statsmodels>=0.14.0
+networkx>=3.0
+z3-solver>=4.12.0
+rdkit>=2023.3.1          # NOTE: use `rdkit` (the deprecated `rdkit-pypi` fails to build here)
+tigramite>=5.2.0         # PCMCI causal discovery (time-series)
+tensorly>=0.8.0          # Tensor-Train compression
+opencv-python-headless>=4.8.0
+Cython>=3.0.0            # self-optimizing compilation (needs a C compiler)
+jinja2>=3.1.0            # HTML report rendering
+python-docx>=1.1.0       # DOCX report rendering

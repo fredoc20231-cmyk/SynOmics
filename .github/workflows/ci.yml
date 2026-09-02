@@ -109,6 +109,11 @@ jobs:
           python -m pip install --quiet opencv-python-headless
           python tests/vision_assay_smoke.py
 
+      - name: Drug descriptors gate (real RDKit cheminformatics)
+        run: |
+          python -m pip install --quiet rdkit
+          python tests/drug_descriptors_smoke.py
+
       - name: Self-optimizing compilation gate (Cython speedup, correctness-guarded)
         run: |
           python -m pip install --quiet cython

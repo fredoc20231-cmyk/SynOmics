@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Test MML model selection. Requires numpy. Run: python tests/mml_smoke.py"""
-import json, os, subprocess, sys
+import json
+import os
+import subprocess
+import sys
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCRIPT = os.path.join(ROOT, "server", "mml.py")
 try:

@@ -69,7 +69,7 @@ export const BioNetworkGraph: React.FC<BioNetworkGraphProps> = ({
       }
 
       const angle = (idx / proteins.length) * 2 * Math.PI;
-      const radius = 60 + Math.random() * 80;
+      const radius = 60 + ((idx * 37) % 80);
       return {
         id: p.geneSymbol,
         geneSymbol: p.geneSymbol,

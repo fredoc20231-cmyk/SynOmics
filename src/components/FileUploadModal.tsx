@@ -262,7 +262,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
       if (response.ok) {
         const data = await response.json();
         return {
-          id: `file_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          id: `file_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`,
           name: file.name,
           size: file.size,
           type: fileType,
@@ -293,7 +293,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
 
     // Heuristic fallback
     return {
-      id: `file_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      id: `file_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`,
       name: file.name,
       size: file.size,
       type: fileType,

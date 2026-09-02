@@ -59,6 +59,18 @@ async function main() {
   // 7. Registry is non-trivial and every tool is executable (engine or handler).
   check('registry populated', TOOL_REGISTRY.length >= 10 && TOOL_REGISTRY.every((t) => !!t.engineCommand || !!t.handler));
 
+  // 8. Zero-BS gate: a differential-expression plan auto-runs adversarial validation.
+  const csvGate = 'gene,c1,c2,c3,t1,t2,t3\nGENEA,10,11,12,50,52,55\nGENEB,100,98,101,20,22,19\n';
+  const gated = await runAgent({
+    query: 'DE then conclude',
+    plan: [
+      { tool: 'ingest_file', input: { filename: 'e.csv', content: csvGate } },
+      { tool: 'differential_expression', input: { conditions: ['control', 'control', 'control', 'treated', 'treated', 'treated'] }, inputFrom: { counts: { fromStep: 0, path: 'data.geneCounts' } } },
+    ],
+  });
+  check('DE plan triggers adversarial validation gate', gated.validationGate?.required === true && gated.validationGate?.enforced === true);
+  check('gate appended a real adversarial_validate step', gated.steps.some((s) => s.tool === 'adversarial_validate' && s.observation.ok));
+
   console.log(`\nALL ${passed} AGENT SMOKE TESTS PASSED`);
 }
 

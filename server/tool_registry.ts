@@ -292,6 +292,16 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     },
   },
   {
+    name: 'molecule_descriptors',
+    category: 'Drug discovery / cheminformatics',
+    description: 'Compute REAL molecular descriptors from a SMILES via RDKit (MW, cLogP, TPSA, HBD/HBA, rotatable bonds, QED, Lipinski/Veber). Docking/binding affinity is NOT fabricated (needs a real docking engine). Requires rdkit.',
+    handler: (i) => runPythonScript('server/drug_descriptors.py', i),
+    parameters: {
+      smiles: { type: 'string', description: 'Ligand SMILES string.', required: true },
+      name: { type: 'string', description: 'Optional compound name.' },
+    },
+  },
+  {
     name: 'robotic_protocol',
     category: 'Wet-lab automation',
     description: 'Generate an Opentrons (apiLevel 2) liquid-handling protocol from a transfer plan AFTER deterministically verifying physical constraints (volume<=pipette capacity with auto-split, unique deck slots within capacity). Emits no protocol if the plan is physically invalid.',

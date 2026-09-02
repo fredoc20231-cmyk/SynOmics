@@ -1209,6 +1209,17 @@ app.post(['/api/synomics/bayesian-update', '/api/biomni/bayesian-update'], async
   }
 });
 
+// 4a-9. Real molecular descriptors (RDKit) — replaces the former mock ADMET.
+app.post(['/api/synomics/molecule-descriptors', '/api/biomni/molecule-descriptors', '/api/synomics/drug-discovery'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/drug_descriptors.py', req.body);
+    const code = result?.status === 'success' ? 200 : result?.status === 'error' ? 400 : 501;
+    res.status(code).json(result);
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 // 4a-5. Robotic liquid-handling protocol generation + physical validation.
 app.post(['/api/synomics/robotic-protocol', '/api/biomni/robotic-protocol'], async (req, res) => {
   try {

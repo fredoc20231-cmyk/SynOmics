@@ -1,6 +1,6 @@
 # SynOmics Engine — Scientific Validation & Concordance Report
 
-Generated: 2026-09-02T08:27:25.004189+00:00
+Generated: 2026-09-02T08:40:38.852000+00:00
 Deterministic seed: 20240902
 Reference stack: numpy 2.4.6, scipy 1.17.1, statsmodels 0.15.0
 Python: 3.11.15

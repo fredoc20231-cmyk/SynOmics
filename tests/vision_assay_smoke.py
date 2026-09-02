@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
 """Test OpenCV assay quantification + Bayesian update. Requires opencv + scipy.
 Run: python tests/vision_assay_smoke.py"""
-import base64, json, os, subprocess, sys
+import base64
+import json
+import os
+import subprocess
+import sys
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCRIPT = os.path.join(ROOT, "server", "vision_assay.py")
 try:
-    import cv2, numpy as np, scipy  # noqa: F401
+    import cv2  # noqa: F401
+    import numpy as np
 except Exception as e:
     print(f"SKIP: opencv/scipy not available ({e}).")
     sys.exit(0)

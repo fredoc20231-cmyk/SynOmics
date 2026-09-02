@@ -155,6 +155,7 @@ export interface AgentRunResult {
   synthesis: any;
   synthesisSource: 'gemini' | 'deterministic';
   availableTools: string[];
+  validationGate?: any;
   message?: string;
 }
 
@@ -212,6 +213,13 @@ export async function runAgent(inputArg: AgentRunInput): Promise<AgentRunResult>
   }
 
   const steps = await executePlan(plan);
+
+  // Zero-BS conclusion gate: a differential-expression finding may not be
+  // concluded without adversarial validation. If the plan ran DE but no
+  // adversarial check, the loop AUTO-RUNS the permutation-null validator on the
+  // same data (real execution) and appends the verdict before synthesizing.
+  const validationGate = await enforceAdversarialGate(steps);
+
   const succeeded = steps.filter((s) => s.observation.ok).length;
 
   let synthesis: any;
@@ -238,9 +246,47 @@ export async function runAgent(inputArg: AgentRunInput): Promise<AgentRunResult>
     synthesis,
     synthesisSource,
     availableTools,
+    validationGate,
     ...(synthesisSource === 'deterministic'
       ? { message: 'Results are real tool outputs. Natural-language synthesis requires GEMINI_API_KEY; a factual summary is provided instead.' }
       : {}),
+  };
+}
+
+/**
+ * Enforce that any differential-expression finding is adversarially validated
+ * before it can be concluded. Runs the real permutation-null validator on the DE
+ * step's own data and appends the verdict as an executed step. Returns a summary
+ * of what was enforced (no-op when there is no DE step or validation is present).
+ */
+async function enforceAdversarialGate(steps: ExecutedStep[]): Promise<any> {
+  const deSteps = steps.filter((s) => s.tool === 'differential_expression' && s.observation.ok);
+  if (!deSteps.length) return { required: false, enforced: false, reason: 'No differential-expression step to validate.' };
+  const alreadyValidated = steps.some((s) => s.tool === 'adversarial_validate' || s.tool === 'adversarial_swarm');
+  if (alreadyValidated) return { required: true, enforced: false, reason: 'Adversarial validation already present in the plan.' };
+
+  const de = deSteps[deSteps.length - 1];
+  const counts = de.input?.counts;
+  const conditions = de.input?.conditions;
+  if (!counts || !conditions) {
+    return { required: true, enforced: false, reason: 'DE step lacks counts/conditions; cannot auto-validate.' };
+  }
+  const inv = await invokeTool('adversarial_validate', { counts, conditions, nPermutations: 200 });
+  steps.push({
+    stepIndex: steps.length,
+    tool: 'adversarial_validate',
+    thought: 'Zero-BS gate: differential-expression finding must survive a permutation-null test before conclusion.',
+    input: { counts, conditions, nPermutations: 200 },
+    observation: inv.ok
+      ? { ok: true, summary: `Adversarial verdict: ${inv.result?.verdict} (confidence ${inv.result?.confidenceScore}).`, result: inv.result }
+      : { ok: false, summary: 'Adversarial validation could not run.', error: inv.error },
+  });
+  return {
+    required: true,
+    enforced: true,
+    verdict: inv.ok ? inv.result?.verdict : null,
+    confidence: inv.ok ? inv.result?.confidenceScore : null,
+    reason: 'Adversarial validation auto-run on the differential-expression result.',
   };
 }
 
