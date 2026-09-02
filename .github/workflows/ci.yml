@@ -48,3 +48,6 @@ jobs:
 
       - name: Agent tool-use loop test suite (real execution, no network)
         run: npx tsx tests/agent_smoke.ts
+
+      - name: External-DB clients test suite (normalizers + honest-failure path)
+        run: npx tsx tests/external_db_smoke.ts

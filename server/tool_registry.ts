@@ -1,4 +1,5 @@
 import { runEngine } from './engine_client.ts';
+import { ensemblGeneBySymbol, myGeneBySymbol, uniProtByGene, vepByRsId } from './external_db.ts';
 
 /**
  * Typed registry of the REAL analysis tools the agent can call. Each entry maps
@@ -15,7 +16,10 @@ export interface ToolSpec {
   name: string;
   category: string;
   description: string;
-  engineCommand: string;
+  /** For engine-backed tools: the synomics_engine.py command to run. */
+  engineCommand?: string;
+  /** For JS-native tools (e.g. external DB clients): a real async handler. */
+  handler?: (input: any) => Promise<any>;
   parameters: Record<string, ToolParam>;
 }
 
@@ -177,6 +181,47 @@ export const TOOL_REGISTRY: ToolSpec[] = [
       duration_ms: { type: 'number', description: 'Simulation duration in ms.' },
     },
   },
+  // --- Real external-database grounding (live public APIs; honest errors) ---
+  {
+    name: 'db_ensembl_gene',
+    category: 'External database (grounding)',
+    description: 'Look up real gene coordinates, biotype and assembly from the Ensembl REST API by gene symbol.',
+    handler: (i) => ensemblGeneBySymbol(i.symbol, i.species || 'homo_sapiens'),
+    parameters: {
+      symbol: { type: 'string', description: 'Gene symbol (e.g. TP53, BRCA2).', required: true },
+      species: { type: 'string', description: "Ensembl species (default 'homo_sapiens')." },
+    },
+  },
+  {
+    name: 'db_gene_annotation',
+    category: 'External database (grounding)',
+    description: 'Fetch real gene annotation (Entrez ID, name, Ensembl gene, summary) from MyGene.info by symbol.',
+    handler: (i) => myGeneBySymbol(i.symbol, i.species || 'human'),
+    parameters: {
+      symbol: { type: 'string', description: 'Gene symbol.', required: true },
+      species: { type: 'string', description: "Species (default 'human')." },
+    },
+  },
+  {
+    name: 'db_protein_uniprot',
+    category: 'External database (grounding)',
+    description: 'Fetch the real canonical UniProt protein entry (accession, name, length) for a gene symbol + organism.',
+    handler: (i) => uniProtByGene(i.symbol, i.organismId || 9606),
+    parameters: {
+      symbol: { type: 'string', description: 'Gene symbol.', required: true },
+      organismId: { type: 'number', description: 'NCBI taxon id (default 9606 = human).' },
+    },
+  },
+  {
+    name: 'db_variant_vep',
+    category: 'External database (grounding)',
+    description: 'Real variant effect prediction (consequence, SIFT/PolyPhen) from the Ensembl VEP API by dbSNP rsID.',
+    handler: (i) => vepByRsId(i.rsid, i.species || 'human'),
+    parameters: {
+      rsid: { type: 'string', description: 'dbSNP rsID (e.g. rs56116432).', required: true },
+      species: { type: 'string', description: "Species (default 'human')." },
+    },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));
@@ -208,6 +253,19 @@ export async function invokeTool(name: string, input: any): Promise<ToolInvocati
     return { tool: spec.name, ok: false, error: `Missing required parameter(s): ${missing.join(', ')}.` };
   }
   try {
+    // JS-native tools (external DB clients) run their handler; engine tools spawn Python.
+    if (spec.handler) {
+      const result = await spec.handler(input);
+      // External DB results carry an explicit status; an unavailable/not_found
+      // upstream is an honest tool failure, not a crash.
+      if (result && typeof result === 'object' && 'status' in result && result.status !== 'success') {
+        return { tool: spec.name, ok: false, error: String(result.error || result.status), result };
+      }
+      return { tool: spec.name, ok: true, result };
+    }
+    if (!spec.engineCommand) {
+      return { tool: spec.name, ok: false, error: `Tool '${spec.name}' has no engine command or handler.` };
+    }
     const result = await runEngine(spec.engineCommand, input);
     if (result && typeof result === 'object' && 'error' in result && result.error) {
       return { tool: spec.name, ok: false, error: String(result.error), result };

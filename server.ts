@@ -11,6 +11,7 @@ import { BIOLOGICAL_ENTITIES, GO_ONTOLOGY_TREE, BIOTOOLS_REGISTRY, PREBUILT_PROT
 import { generateGroundedMultiAgentRun } from './server/grounded_multi_agent.ts';
 import { runAgent } from './server/agent_executor.ts';
 import { toolSchemasForLLM } from './server/tool_registry.ts';
+import { ensemblGeneBySymbol, myGeneBySymbol, uniProtByGene, vepByRsId, type DbResult } from './server/external_db.ts';
 
 dotenv.config();
 
@@ -1178,6 +1179,56 @@ app.post(['/api/synomics/agent-execute', '/api/biomni/agent-execute'], async (re
     res.json(result);
   } catch (err: any) {
     console.error('agent-execute failed:', err);
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+// 4d. Real external-database grounding routes. Each performs a REAL request to a
+// public API and returns the normalized real record, or an honest error. No
+// fabricated fallback data. HTTP status mirrors the outcome: 200 success,
+// 404 not found, 502 upstream/host unavailable.
+function sendDbResult(res: express.Response, result: DbResult) {
+  const code = result.status === 'success' ? 200 : result.status === 'not_found' ? 404 : 502;
+  res.status(code).json(result);
+}
+
+app.get(['/api/synomics/db/ensembl-gene', '/api/biomni/db/ensembl-gene'], async (req, res) => {
+  const symbol = String(req.query.symbol || '').trim();
+  if (!symbol) return res.status(400).json({ status: 'error', message: 'Query param `symbol` is required.' });
+  try {
+    sendDbResult(res, await ensemblGeneBySymbol(symbol, String(req.query.species || 'homo_sapiens')));
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+app.get(['/api/synomics/db/gene-annotation', '/api/biomni/db/gene-annotation'], async (req, res) => {
+  const symbol = String(req.query.symbol || '').trim();
+  if (!symbol) return res.status(400).json({ status: 'error', message: 'Query param `symbol` is required.' });
+  try {
+    sendDbResult(res, await myGeneBySymbol(symbol, String(req.query.species || 'human')));
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+app.get(['/api/synomics/db/protein', '/api/biomni/db/protein'], async (req, res) => {
+  const symbol = String(req.query.symbol || '').trim();
+  if (!symbol) return res.status(400).json({ status: 'error', message: 'Query param `symbol` is required.' });
+  try {
+    const organismId = req.query.organismId ? Number(req.query.organismId) : 9606;
+    sendDbResult(res, await uniProtByGene(symbol, organismId));
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+app.get(['/api/synomics/db/variant', '/api/biomni/db/variant'], async (req, res) => {
+  const rsid = String(req.query.rsid || '').trim();
+  if (!rsid) return res.status(400).json({ status: 'error', message: 'Query param `rsid` is required.' });
+  try {
+    sendDbResult(res, await vepByRsId(rsid, String(req.query.species || 'human')));
+  } catch (err: any) {
     res.status(500).json({ status: 'error', message: err.message });
   }
 });
