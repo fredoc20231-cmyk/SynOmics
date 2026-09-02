@@ -1188,6 +1188,27 @@ app.post(['/api/synomics/tensor-compress', '/api/biomni/tensor-compress'], async
   }
 });
 
+// 4a-8. Assay image quantification (OpenCV) + Bayesian posterior update.
+app.post(['/api/synomics/assay-quantify', '/api/biomni/assay-quantify'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/vision_assay.py', { ...req.body, task: 'quantify_image' });
+    const code = result?.status === 'success' ? 200 : result?.status === 'error' ? 400 : 501;
+    res.status(code).json(result);
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+app.post(['/api/synomics/bayesian-update', '/api/biomni/bayesian-update'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/vision_assay.py', { ...req.body, task: 'bayesian_update' });
+    const code = result?.status === 'success' ? 200 : result?.status === 'error' ? 400 : 501;
+    res.status(code).json(result);
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 // 4a-5. Robotic liquid-handling protocol generation + physical validation.
 app.post(['/api/synomics/robotic-protocol', '/api/biomni/robotic-protocol'], async (req, res) => {
   try {

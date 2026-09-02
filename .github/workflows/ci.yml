@@ -104,6 +104,11 @@ jobs:
       - name: Robotics gate (Opentrons protocol + physical validation)
         run: python tests/robotics_smoke.py
 
+      - name: Vision + Bayesian gate (OpenCV assay quantification + conjugate update)
+        run: |
+          python -m pip install --quiet opencv-python-headless
+          python tests/vision_assay_smoke.py
+
       - name: Self-optimizing compilation gate (Cython speedup, correctness-guarded)
         run: |
           python -m pip install --quiet cython

@@ -270,6 +270,28 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     },
   },
   {
+    name: 'assay_quantify',
+    category: 'Wet-lab automation / vision',
+    description: 'Deterministic OpenCV quantification of a physical assay image (Otsu/threshold + contour intensity), no LLM eyeballing. Returns per-region area/centroid/mean-intensity. Requires opencv.',
+    handler: (i) => runPythonScript('server/vision_assay.py', { ...i, task: 'quantify_image' }),
+    parameters: {
+      imageBase64: { type: 'string', description: 'Assay image (PNG/JPEG) as base64.', required: true },
+      minArea: { type: 'number', description: 'Minimum contour area to report.' },
+      threshold: { type: 'number', description: 'Fixed background threshold; Otsu if omitted.' },
+    },
+  },
+  {
+    name: 'bayesian_update',
+    category: 'Verifiable AI / inference',
+    description: 'Conjugate Bayesian posterior update (Beta-Binomial for proportions, Normal-Normal for continuous) that folds physical assay results into posterior probabilities. Requires numpy/scipy.',
+    handler: (i) => runPythonScript('server/vision_assay.py', { ...i, task: 'bayesian_update' }),
+    parameters: {
+      model: { type: 'string', description: "'beta_binomial' or 'normal'.", required: true },
+      prior: { type: 'object', description: 'Prior params ({alpha,beta} or {mean,var}).' },
+      data: { type: 'object', description: 'Observed data ({successes,trials} or {values,obsVar}).', required: true },
+    },
+  },
+  {
     name: 'robotic_protocol',
     category: 'Wet-lab automation',
     description: 'Generate an Opentrons (apiLevel 2) liquid-handling protocol from a transfer plan AFTER deterministically verifying physical constraints (volume<=pipette capacity with auto-split, unique deck slots within capacity). Emits no protocol if the plan is physically invalid.',
