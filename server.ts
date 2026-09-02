@@ -1188,6 +1188,17 @@ app.post(['/api/synomics/tensor-compress', '/api/biomni/tensor-compress'], async
   }
 });
 
+// 4a-5. Robotic liquid-handling protocol generation + physical validation.
+app.post(['/api/synomics/robotic-protocol', '/api/biomni/robotic-protocol'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/robotics.py', req.body);
+    const code = result?.status === 'success' ? 200 : 400;
+    res.status(code).json(result);
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 // 4a-4. Cryptographic provenance manifest (SHA-256 of inputs/scripts/outputs).
 app.post(['/api/synomics/provenance', '/api/biomni/provenance'], async (req, res) => {
   try {

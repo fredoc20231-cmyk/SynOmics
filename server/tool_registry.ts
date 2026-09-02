@@ -244,6 +244,18 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     },
   },
   {
+    name: 'robotic_protocol',
+    category: 'Wet-lab automation',
+    description: 'Generate an Opentrons (apiLevel 2) liquid-handling protocol from a transfer plan AFTER deterministically verifying physical constraints (volume<=pipette capacity with auto-split, unique deck slots within capacity). Emits no protocol if the plan is physically invalid.',
+    handler: (i) => runPythonScript('server/robotics.py', i),
+    parameters: {
+      pipette: { type: 'object', description: '{model, maxVolume, minVolume}.', required: true },
+      labware: { type: 'array', description: '[{name, slot}] deck placements.' },
+      transfers: { type: 'array', description: '[{source, dest, volume}] liquid transfers.', required: true },
+      deckSlots: { type: 'number', description: 'Available deck slots (default 11 for OT-2).' },
+    },
+  },
+  {
     name: 'provenance_manifest',
     category: 'Reporting / provenance',
     description: 'Build a cryptographic provenance manifest (SHA-256 of inputs, scripts, outputs + a manifest hash) so results are tied to the exact bytes that produced them. Pure stdlib.',

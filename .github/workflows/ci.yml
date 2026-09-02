@@ -86,3 +86,6 @@ jobs:
 
       - name: Provenance manifest gate (SHA-256 inputs/scripts/outputs)
         run: python tests/provenance_smoke.py
+
+      - name: Robotics gate (Opentrons protocol + physical validation)
+        run: python tests/robotics_smoke.py
