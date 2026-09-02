@@ -124,6 +124,11 @@ jobs:
           python -m pip install --quiet rdkit
           python tests/gflownet_smoke.py
 
+      - name: iDiscover — Hyper-NOTEARS hypergraph causal discovery (exact acyclicity gate)
+        run: |
+          python -m pip install --quiet numpy scipy
+          python tests/test_hyper_causal.py
+
       - name: Self-optimizing compilation gate (Cython speedup, correctness-guarded)
         run: |
           python -m pip install --quiet cython

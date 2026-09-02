@@ -565,6 +565,19 @@ app.post(['/api/synomics/idiscover/gflownet-sample', '/api/biomni/idiscover/gflo
   }
 });
 
+// iDiscover Frontier 4 — Hyper-NOTEARS hypergraph causal discovery. Discovers
+// multi-way (joint) causes as a Directed Acyclic Hypergraph, or verifies a
+// proposed weighted adjacency for causal loops via the exact tr(exp(W∘W))-d gate.
+app.post(['/api/synomics/idiscover/hyper-causal-discovery', '/api/biomni/idiscover/hyper-causal-discovery'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/hyper_causal.py', req.body, 180000);
+    const code = result?.status === 'success' ? 200 : result?.status === 'error' ? 400 : 501;
+    res.status(code).json(result);
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 // iDiscover — capability manifest for the monumental frontier engines.
 app.get(['/api/synomics/idiscover', '/api/biomni/idiscover'], (req, res) => {
   res.json({
@@ -584,6 +597,13 @@ app.get(['/api/synomics/idiscover', '/api/biomni/idiscover'], (req, res) => {
         title: 'GFlowNet generative molecular sampling (Trajectory Balance)',
         route: '/api/synomics/idiscover/gflownet-sample',
         grounding: 'Tabular numpy GFlowNet; every candidate RDKit-valid with real computed QED. Deep neural GFlowNet (torch/GPU) not claimed.',
+        status: 'implemented',
+      },
+      {
+        id: 'hyper_causal_discovery',
+        title: 'Hyper-NOTEARS — hypergraph (multi-way) causal discovery',
+        route: '/api/synomics/idiscover/hyper-causal-discovery',
+        grounding: 'Discovers a Directed Acyclic Hypergraph of joint causes ([A,B]->C) via order-restricted continuous optimization; verify mode checks a proposed adjacency with the exact tr(exp(W∘W))-d acyclicity gate and rejects loops (no heuristic DAG).',
         status: 'implemented',
       },
     ],

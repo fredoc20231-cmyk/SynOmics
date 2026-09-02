@@ -180,10 +180,20 @@ Bridges omics findings into molecular design + rigorous in-silico validation.
     discarded, nothing fabricated. Tabular tier only — a deep neural GFlowNet needs
     torch/GPU and is NOT claimed. Verified: trained policy concentrates above uniform
     random; all reported QED values match RDKit.
-  - Manifest at `/idiscover`. Both are also reachable as engine commands
-    (`synomics_engine.py cellular_reversion|gflownet_sampling`, delegating to the
-    dedicated modules). Frontiers 3 (ZKP federated biomarkers) and 4
-    (Hyper-NOTEARS hypergraph causal discovery) are NOT built and must not be faked.
+  - Hyper-NOTEARS — hypergraph causal discovery (`/idiscover/hyper-causal-discovery`):
+    discovers a Directed Acyclic Hypergraph of multi-way JOINT causes ([A,B]->C
+    that pairwise LiNGAM/PCMCI cannot represent) via exogeneity-ordered,
+    order-restricted continuous optimization (scipy L-BFGS-B); OR verifies a
+    proposed weighted adjacency with the EXACT tr(exp(W∘W))-d acyclicity gate and
+    rejects any causal loop with a strict error (no heuristic DAG). Honest scope:
+    orienting edges / detecting loops from raw observational data is not
+    identifiable in general, so discover returns a certified DAH and loop-detection
+    is the verify path. Verified: recovers Z=X*Y joint cause; rejects A→B→C→A loop
+    (h=0.131>ε). Requires numpy+scipy.
+  - Manifest at `/idiscover`. All three are also reachable as engine commands
+    (`synomics_engine.py cellular_reversion|gflownet_sampling|hyper_causal_discovery`,
+    delegating to the dedicated modules). Frontier 3 (ZKP federated biomarkers) is
+    NOT built and must not be faked.
 - **De-faked sandbox route:** `/api/synomics/tool-execute` (+ `/api/biomni`,
   `/api/bio` aliases) no longer returns canned/fabricated tool results. It now
   dispatches every `toolId` to the real registry via `invokeTool` (with a UI→tool
@@ -192,7 +202,7 @@ Bridges omics findings into molecular design + rigorous in-silico validation.
   `generateDomainIntelligence` fabricator have been removed.
 - Concordance: 7/7 engine statistics match scipy/statsmodels (VALIDATION_REPORT.md).
 - Lint gate: `ruff check server tests` (pyflakes/syntax/imports) runs in CI.
-- 41 real agent tools; 21 test suites in CI.
+- 42 real agent tools; 22 test suites in CI.
 - Everything marked "to build" / "not implemented" above must not be faked.
 
 ## 6. Commands

@@ -114,10 +114,20 @@ Code-grounded, honest-fallback engines (manifest at `GET /api/synomics/idiscover
   with a **real computed QED**; invalid samples are discarded. Tabular tier
   (numpy) — a deep neural GFlowNet (torch/GPU) is not claimed.
 
+- **Hyper-NOTEARS** (`POST /api/synomics/idiscover/hyper-causal-discovery`) —
+  hypergraph causal discovery. Discovers a Directed Acyclic Hypergraph of
+  multi-way *joint* causes (`[A,B]→C` that pairwise LiNGAM/PCMCI cannot represent)
+  via exogeneity-ordered continuous optimization; or *verifies* a proposed
+  weighted adjacency with the exact `tr(e^{W∘W})−d` acyclicity gate, rejecting any
+  causal loop with a strict error (no heuristic DAG). Loop detection from raw
+  observational data is not identifiable in general — stated honestly: discover
+  returns a certified DAH, verify is the loop check.
+
 ```bash
-pip install numpy pot rdkit
+pip install numpy scipy pot rdkit
 python tests/optimal_transport_smoke.py   # exact Wasserstein recovered analytically
 python tests/gflownet_smoke.py            # every candidate RDKit-valid, real QED
+python tests/test_hyper_causal.py         # recovers Z=X*Y joint cause; rejects A→B→C→A loop
 ```
 
 ### Engine smoke tests (no network, real math)

@@ -2989,12 +2989,16 @@ def main():
         result = run_adversarial_validation(counts, conditions, n_permutations=n_perm, fdr_threshold=fdr, lfc_min=lfc, seed=seed)
         print(json.dumps(result))
 
-    elif cmd in ("cellular_reversion", "gflownet_sampling"):
-        # iDiscover frontiers. These require the scientific stack (numpy / POT /
-        # rdkit), so they live in dedicated, individually-tested modules and are
-        # delegated to here — a single source of truth, no duplicated math. The
+    elif cmd in ("cellular_reversion", "gflownet_sampling", "hyper_causal_discovery"):
+        # iDiscover frontiers. These require the scientific stack (numpy / scipy /
+        # POT / rdkit), so they live in dedicated, individually-tested modules and
+        # are delegated to here — a single source of truth, no duplicated math. The
         # engine itself stays dependency-free (only subprocess is used).
-        module = "optimal_transport.py" if cmd == "cellular_reversion" else "gflownet.py"
+        module = {
+            "cellular_reversion": "optimal_transport.py",
+            "gflownet_sampling": "gflownet.py",
+            "hyper_causal_discovery": "hyper_causal.py",
+        }[cmd]
         script = os.path.join(os.path.dirname(os.path.abspath(__file__)), module)
         proc = subprocess.run(
             [sys.executable, script],

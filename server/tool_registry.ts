@@ -482,6 +482,21 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     },
   },
   {
+    name: 'hyper_causal_discovery',
+    category: 'iDiscover / hypergraph causal discovery',
+    description: 'iDiscover Hyper-NOTEARS: discover a Directed Acyclic Hypergraph of multi-way (joint) causes from data (finds e.g. [A,B]->C that pairwise methods miss), OR verify a proposed weighted adjacency for causal loops. Acyclicity is enforced/certified by the exact tr(exp(W∘W))-d gate; a detected loop is rejected with a strict error — no heuristic DAG. Requires numpy + scipy.',
+    handler: (i) => runPythonScript('server/hyper_causal.py', i, 180000),
+    parameters: {
+      data: { type: 'array', description: 'Discover mode: matrix rows=samples, cols=nodes/genes.' },
+      series: { type: 'object', description: 'Discover mode alternative: map node -> values.' },
+      adjacency: { type: 'array', description: 'Verify mode: square d×d weighted directed adjacency (W[i][j] = edge i->j).' },
+      variables: { type: 'array', description: 'Node names (optional).' },
+      maxOrder: { type: 'number', description: 'Max hyperedge tail size (default 2 = pairs).' },
+      epsilon: { type: 'number', description: 'Acyclicity tolerance (default 1e-5).' },
+      edgeThreshold: { type: 'number', description: '|strength| to report a discovered hyperedge (default 0.3).' },
+    },
+  },
+  {
     name: 'gflownet_sample',
     category: 'iDiscover / generative chemistry',
     description: 'iDiscover GFlowNet: sample a diverse set of drug-like molecules proportionally to reward (Trajectory-Balance), not a single optimum. Tabular numpy GFlowNet; every returned molecule is RDKit-valid with a REAL computed QED reward — invalid samples are discarded, nothing fabricated. A deep neural GFlowNet (torch/GPU) is not claimed. Requires numpy + rdkit.',
