@@ -1,4 +1,4 @@
-import { runEngine } from './engine_client.ts';
+import { runEngine, runPythonScript } from './engine_client.ts';
 import { ensemblGeneBySymbol, myGeneBySymbol, uniProtByGene, vepByRsId } from './external_db.ts';
 
 /**
@@ -204,6 +204,20 @@ export const TOOL_REGISTRY: ToolSpec[] = [
       nPermutations: { type: 'number', description: 'Permutations for the null (default 1000).' },
       fdrThreshold: { type: 'number', description: 'FDR cutoff for significance (default 0.05).' },
       seed: { type: 'number', description: 'Random seed for reproducibility (default 1337).' },
+    },
+  },
+  {
+    name: 'causal_discovery',
+    category: 'Verifiable AI / causal inference',
+    description: 'Infer a directed causal graph (not just correlation) from linear non-Gaussian data via DirectLiNGAM, with bootstrap-stability edge gating. Requires numpy; returns honest "unavailable" if absent.',
+    handler: (i) => runPythonScript('server/causal_discovery.py', i),
+    parameters: {
+      data: { type: 'array', description: 'Matrix rows=samples, cols=variables.' },
+      series: { type: 'object', description: 'Alternative: map variable -> values.' },
+      variables: { type: 'array', description: 'Variable names (optional).' },
+      nBootstrap: { type: 'number', description: 'Bootstrap resamples for stability (default 200).' },
+      stabilityThreshold: { type: 'number', description: 'Keep edges seen in >= this fraction of bootstraps (default 0.9).' },
+      seed: { type: 'number', description: 'Random seed (default 1337).' },
     },
   },
   // --- Real external-database grounding (live public APIs; honest errors) ---

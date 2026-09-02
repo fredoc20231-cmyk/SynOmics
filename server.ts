@@ -11,6 +11,7 @@ import { BIOLOGICAL_ENTITIES, GO_ONTOLOGY_TREE, BIOTOOLS_REGISTRY, PREBUILT_PROT
 import { generateGroundedMultiAgentRun } from './server/grounded_multi_agent.ts';
 import { runAgent } from './server/agent_executor.ts';
 import { toolSchemasForLLM } from './server/tool_registry.ts';
+import { runPythonScript } from './server/engine_client.ts';
 import { ensemblGeneBySymbol, myGeneBySymbol, uniProtByGene, vepByRsId, type DbResult } from './server/external_db.ts';
 import { auditMiddleware, readAudit, auditLogPath } from './server/audit.ts';
 
@@ -1172,6 +1173,18 @@ Respond in strict JSON with the following structure:
   } catch (err: any) {
     console.error('Error running SynOmics agent:', err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+// 4a0. Causal discovery (Part 3A): DirectLiNGAM directed causal graph with
+// bootstrap-stability gating. Honest 'unavailable' if numpy is absent.
+app.post(['/api/synomics/causal-discovery', '/api/biomni/causal-discovery'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/causal_discovery.py', req.body);
+    const code = result?.status === 'success' ? 200 : result?.status === 'error' ? 400 : 501;
+    res.status(code).json(result);
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
   }
 });
 

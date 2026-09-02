@@ -9,9 +9,20 @@ import path from 'path';
  * same real computation.
  */
 export function runEngine(cmd: string, payload: any, timeoutMs = 60000): Promise<any> {
+  return runPython([path.join(process.cwd(), 'server', 'synomics_engine.py'), cmd], payload, timeoutMs, `command '${cmd}'`);
+}
+
+/**
+ * Run a standalone Python script (e.g. optional modules with heavier deps that
+ * are kept out of the zero-dependency core engine) with a JSON payload on stdin.
+ */
+export function runPythonScript(scriptRelPath: string, payload: any, timeoutMs = 120000): Promise<any> {
+  return runPython([path.join(process.cwd(), scriptRelPath)], payload, timeoutMs, scriptRelPath);
+}
+
+function runPython(args: string[], payload: any, timeoutMs: number, label: string): Promise<any> {
   return new Promise((resolve, reject) => {
-    const enginePath = path.join(process.cwd(), 'server', 'synomics_engine.py');
-    const py = spawn('python3', [enginePath, cmd], {
+    const py = spawn('python3', args, {
       cwd: process.cwd(),
       env: { ...process.env, PYTHONPATH: process.cwd() },
     });
@@ -20,7 +31,7 @@ export function runEngine(cmd: string, payload: any, timeoutMs = 60000): Promise
     let stderr = '';
     const timer = setTimeout(() => {
       py.kill();
-      reject(new Error(`Engine command '${cmd}' timed out after ${timeoutMs}ms`));
+      reject(new Error(`Engine ${label} timed out after ${timeoutMs}ms`));
     }, timeoutMs);
 
     py.stdout.on('data', (d) => { stdout += d.toString(); });
@@ -29,7 +40,7 @@ export function runEngine(cmd: string, payload: any, timeoutMs = 60000): Promise
     py.on('close', (code) => {
       clearTimeout(timer);
       if (code !== 0 && !stdout.trim()) {
-        return reject(new Error(stderr || `Engine command '${cmd}' exited with code ${code}`));
+        return reject(new Error(stderr || `Engine ${label} exited with code ${code}`));
       }
       try {
         resolve(JSON.parse(stdout));
