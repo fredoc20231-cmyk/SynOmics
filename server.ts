@@ -12,6 +12,7 @@ import { generateGroundedMultiAgentRun } from './server/grounded_multi_agent.ts'
 import { runAgent } from './server/agent_executor.ts';
 import { toolSchemasForLLM } from './server/tool_registry.ts';
 import { ensemblGeneBySymbol, myGeneBySymbol, uniProtByGene, vepByRsId, type DbResult } from './server/external_db.ts';
+import { auditMiddleware, readAudit, auditLogPath } from './server/audit.ts';
 
 dotenv.config();
 
@@ -22,6 +23,17 @@ const app = express();
 const PORT = 3000;
 
 app.use(express.json({ limit: '10mb' }));
+
+// Module C — provenance: audit every analytical request (append-only JSONL).
+// Registered globally; the middleware itself filters to the analytical surface
+// so req.path retains the full route for accurate provenance records.
+app.use(auditMiddleware('gemini-2.5-flash+synomics_engine'));
+
+// Module C — read recent provenance records for reproducibility/inspection.
+app.get(['/api/synomics/audit-log', '/api/biomni/audit-log'], (req, res) => {
+  const limit = Math.min(1000, Math.max(1, Number(req.query.limit) || 100));
+  res.json({ status: 'success', path: auditLogPath(), count: readAudit(limit).length, entries: readAudit(limit) });
+});
 
 // Lazy initializer for Gemini client
 let aiClient: GoogleGenAI | null = null;

@@ -51,3 +51,6 @@ jobs:
 
       - name: External-DB clients test suite (normalizers + honest-failure path)
         run: npx tsx tests/external_db_smoke.ts
+
+      - name: Audit trail / provenance test suite
+        run: npx tsx tests/audit_smoke.ts
