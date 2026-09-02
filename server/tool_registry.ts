@@ -218,6 +218,29 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     },
   },
   {
+    name: 'edge_extraction',
+    category: 'Verifiable AI / neuro-symbolic',
+    description: 'Tier-1 grounding: partial-correlation (sparse inverse covariance, GraphicalLassoCV) edge extraction that separates direct from indirect associations. Not a neural network. Requires scikit-learn.',
+    handler: (i) => runPythonScript('server/neuro_symbolic.py', { ...i, task: 'edge_extraction' }),
+    parameters: {
+      data: { type: 'array', description: 'Matrix rows=samples, cols=variables (samples > variables).', required: true },
+      variables: { type: 'array', description: 'Variable names (optional).' },
+      threshold: { type: 'number', description: 'Absolute partial-correlation edge threshold (default 0.1).' },
+    },
+  },
+  {
+    name: 'pathway_logic_z3',
+    category: 'Verifiable AI / neuro-symbolic',
+    description: 'Tier-2 formal verification: decide pathway activation with the Z3 SMT solver and emit a satisfying model. UNSAT means not activated and cannot be overridden. Requires z3-solver.',
+    handler: (i) => runPythonScript('server/neuro_symbolic.py', { ...i, task: 'z3_pathway' }),
+    parameters: {
+      foldChanges: { type: 'object', description: 'Map gene -> fold-change (states derived by threshold).' },
+      geneStates: { type: 'object', description: "Alternative: map gene -> 'up'|'down'|'neutral'." },
+      threshold: { type: 'number', description: 'Fold-change threshold (default 1.0).' },
+      pathways: { type: 'array', description: 'Pathways [{id, name, rule}].', required: true },
+    },
+  },
+  {
     name: 'causal_discovery',
     category: 'Verifiable AI / causal inference',
     description: 'Infer a directed causal graph (not just correlation) from linear non-Gaussian data via DirectLiNGAM, with bootstrap-stability edge gating. Requires numpy; returns honest "unavailable" if absent.',

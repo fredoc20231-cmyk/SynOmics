@@ -1188,6 +1188,28 @@ app.post(['/api/synomics/tensor-compress', '/api/biomni/tensor-compress'], async
   }
 });
 
+// 4a-2. Neuro-symbolic Tier 1 (partial-correlation edges) + Tier 2 (Z3 formal
+// pathway proof). Honest 'unavailable' if scikit-learn / z3-solver are absent.
+app.post(['/api/synomics/edge-extraction', '/api/biomni/edge-extraction'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/neuro_symbolic.py', { ...req.body, task: 'edge_extraction' });
+    const code = result?.status === 'success' ? 200 : result?.status === 'error' ? 400 : 501;
+    res.status(code).json(result);
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+app.post(['/api/synomics/pathway-logic-z3', '/api/biomni/pathway-logic-z3'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/neuro_symbolic.py', { ...req.body, task: 'z3_pathway' });
+    const code = result?.status === 'success' ? 200 : result?.status === 'error' ? 400 : 501;
+    res.status(code).json(result);
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 // 4a0. Causal discovery (Part 3A): DirectLiNGAM directed causal graph with
 // bootstrap-stability gating. Honest 'unavailable' if numpy is absent.
 app.post(['/api/synomics/causal-discovery', '/api/biomni/causal-discovery'], async (req, res) => {
