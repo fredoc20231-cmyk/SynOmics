@@ -204,6 +204,11 @@ Bridges omics findings into molecular design + rigorous in-silico validation.
   - Manifest at `/idiscover`. All four are also reachable as engine commands
     (`synomics_engine.py cellular_reversion|gflownet_sampling|hyper_causal_discovery|federated_zkp`,
     delegating to the dedicated modules).
+  - Frontend surface: `src/components/IDiscoverPanel.tsx` (in the Analysis Hub →
+    "iDiscover Frontiers" pipeline). Calls the four real routes and renders real
+    computed output with honest error/empty states, on the §2 palette. "Load
+    example input" only fills INPUT fields (user-initiated); displayed results
+    always come from the backend — nothing is fabricated client-side.
 - **De-faked sandbox route:** `/api/synomics/tool-execute` (+ `/api/biomni`,
   `/api/bio` aliases) no longer returns canned/fabricated tool results. It now
   dispatches every `toolId` to the real registry via `invokeTool` (with a UI→tool

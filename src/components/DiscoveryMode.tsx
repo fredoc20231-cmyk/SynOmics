@@ -40,6 +40,7 @@ import { GWASVariantPrioritizer } from './GWASVariantPrioritizer';
 import { MicrobiomeAnalyzer } from './MicrobiomeAnalyzer';
 import { DrugRepurposingEngine } from './DrugRepurposingEngine';
 import { ClinicalGenomicsPanel } from './ClinicalGenomicsPanel';
+import { IDiscoverPanel } from './IDiscoverPanel';
 import { Scale, Stethoscope, Pill as PillIcon, Bug } from 'lucide-react';
 
 interface DiscoveryModeProps {
@@ -56,13 +57,14 @@ export const DiscoveryMode: React.FC<DiscoveryModeProps> = ({
   onLaunchCoScientistForPathway
 }) => {
   const [activePipeline, setActivePipeline] = useState<
-    'all_omics' | 'gwas_prioritization' | 'microbiome_metagenomics' | 'drug_repurposing_l1000' | 'clinical_acmg_pgx' | 'multi_model_verification' | 'platform_benchmark' | 'rosetta_mutagenesis' | 'genomic_locus' | 'dag_workflows' | 'kaplan_meier' | 'seq_alignment' | 'single_cell_scanpy' | 'ramachandran' | 'phylogenetics' | 'mass_spec' | 'synapse_map' | 'network_graph' | 'in_silico_lab' | 'multi_omics_suite'
+    'all_omics' | 'idiscover_frontiers' | 'gwas_prioritization' | 'microbiome_metagenomics' | 'drug_repurposing_l1000' | 'clinical_acmg_pgx' | 'multi_model_verification' | 'platform_benchmark' | 'rosetta_mutagenesis' | 'genomic_locus' | 'dag_workflows' | 'kaplan_meier' | 'seq_alignment' | 'single_cell_scanpy' | 'ramachandran' | 'phylogenetics' | 'mass_spec' | 'synapse_map' | 'network_graph' | 'in_silico_lab' | 'multi_omics_suite'
   >('all_omics');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDisease, setSelectedDisease] = useState<string>('all');
 
   const pipelines = [
     { id: 'all_omics', name: 'Multi-Omics Matrix', icon: Compass, badge: 'Unified' },
+    { id: 'idiscover_frontiers', name: 'iDiscover Frontiers', icon: Sparkles, badge: 'OT · GFlowNet · ZKP' },
     { id: 'gwas_prioritization', name: 'GWAS Variant Prioritizer', icon: Dna, badge: 'Fine-Map' },
     { id: 'microbiome_metagenomics', name: 'Microbiome & Dysbiosis', icon: Bug, badge: '16S / WGS' },
     { id: 'drug_repurposing_l1000', name: 'Drug Repurposing (L1000)', icon: PillIcon, badge: 'CMap' },
@@ -182,6 +184,12 @@ export const DiscoveryMode: React.FC<DiscoveryModeProps> = ({
       <div className="flex-1 overflow-y-auto p-4 sm:p-6">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Sub-views routing */}
+          {activePipeline === 'idiscover_frontiers' && (
+            <div className="-m-4 sm:-m-6 h-[calc(100vh-8rem)]">
+              <IDiscoverPanel />
+            </div>
+          )}
+
           {activePipeline === 'all_omics' && (
             <div className="space-y-6">
               {/* Top Summary Banner */}
