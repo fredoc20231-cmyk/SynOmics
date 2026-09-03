@@ -851,6 +851,19 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     handler: (i) => runPythonScript('server/structure_tools.py', { ...i, task: 'distance' }),
     parameters: { pdb: { type: 'string', required: true, description: 'PDB text.' }, atomA: { type: 'object', required: true, description: '{chain, resid, atom?}.' }, atomB: { type: 'object', required: true, description: '{chain, resid, atom?}.' } },
   },
+  // --- Pharmacology / dose-response ---
+  {
+    name: 'dose_response_ic50', category: 'Pharmacology',
+    description: '4-parameter logistic (Hill) dose-response fit → IC50/EC50, Hill slope, top/bottom, R^2. Requires scipy.',
+    handler: (i) => runPythonScript('server/doseresponse.py', { ...i, task: 'ic50' }),
+    parameters: { doses: { type: 'array', required: true, description: 'Positive dose concentrations.' }, responses: { type: 'array', required: true, description: 'Measured responses.' } },
+  },
+  {
+    name: 'curve_auc', category: 'Pharmacology',
+    description: 'Trapezoidal area under a response curve. Requires scipy/numpy.',
+    handler: (i) => runPythonScript('server/doseresponse.py', { ...i, task: 'auc' }),
+    parameters: { x: { type: 'array', required: true, description: 'x values.' }, y: { type: 'array', required: true, description: 'y values.' } },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));

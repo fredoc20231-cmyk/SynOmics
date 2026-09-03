@@ -119,6 +119,11 @@ jobs:
           python -m pip install --quiet biopython numpy
           python tests/structure_tools_smoke.py
 
+      - name: Dose-response gate (4-parameter logistic IC50 + AUC)
+        run: |
+          python -m pip install --quiet scipy numpy
+          python tests/doseresponse_smoke.py
+
       - name: Scientific concordance gate (engine stats vs scipy/statsmodels)
         run: |
           python -m pip install --quiet numpy scipy statsmodels

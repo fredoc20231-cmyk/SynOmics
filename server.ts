@@ -666,6 +666,14 @@ app.get(['/api/synomics/idiscover', '/api/biomni/idiscover'], (req, res) => {
   });
 });
 
+// Dose-response / pharmacology curve fitting — single dispatch route.
+app.post(['/api/synomics/dose-response', '/api/biomni/dose-response'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/doseresponse.py', req.body, 30000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
 // Protein-structure analyses (biopython PDB) — single dispatch route.
 app.post(['/api/synomics/structure-tools', '/api/biomni/structure-tools'], async (req, res) => {
   try {
