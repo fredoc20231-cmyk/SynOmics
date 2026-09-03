@@ -63,6 +63,9 @@ jobs:
       - name: Production hardening test suite (headers, rate limit, metrics, 404/errors)
         run: npx tsx tests/production_smoke.ts
 
+      - name: Sandbox isolation test suite (Module C: rlimits, env-strip, kill bombs)
+        run: python tests/sandbox_smoke.py
+
       - name: Scientific concordance gate (engine stats vs scipy/statsmodels)
         run: |
           python -m pip install --quiet numpy scipy statsmodels

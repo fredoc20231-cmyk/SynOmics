@@ -960,50 +960,32 @@ app.post(['/api/synomics/python-exec', '/api/biomni/python-exec'], async (req, r
     return res.status(400).json({ error: 'Python code or script is required' });
   }
 
-  // Write to the OS temp dir (Cloud Run's working dir is read-only; only /tmp is writable).
-  const tmpFile = path.join(os.tmpdir(), `synomics_exec_${Date.now()}_${Math.random().toString(36).substring(7)}.py`);
+  // Module C isolation: run under real OS resource limits (CPU/memory/file-size),
+  // a stripped environment (server secrets are NOT exposed to the code), an
+  // isolated temp cwd, and a wall-clock timeout. See server/sandbox_runner.py.
+  const timeoutSec = Math.min(120, Math.max(1, Number(req.body.timeoutSec) || 30));
   try {
-    fs.writeFileSync(tmpFile, code, 'utf-8');
+    const r: any = await runPythonScript('server/sandbox_runner.py', {
+      code,
+      timeoutSec,
+      cpuSec: Number(req.body.cpuSec) || Math.min(timeoutSec, 15),
+      memoryMB: Number(req.body.memoryMB) || 512,
+      fileSizeMB: Number(req.body.fileSizeMB) || 64,
+    }, (timeoutSec + 15) * 1000);
 
-    const py = spawn('python3', [tmpFile], {
-      cwd: process.cwd(),
-      env: { ...process.env, PYTHONPATH: process.cwd() }
-    });
-
-    let stdout = '';
-    let stderr = '';
-
-    const timeout = setTimeout(() => {
-      py.kill();
-      stderr += '\n[Execution timed out after 30 seconds]';
-    }, 30000);
-
-    py.stdout.on('data', (data) => {
-      stdout += data.toString();
-    });
-
-    py.stderr.on('data', (data) => {
-      stderr += data.toString();
-    });
-
-    py.on('close', (exitCode) => {
-      clearTimeout(timeout);
-      try {
-        if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
-      } catch (_) {}
-
-      res.json({
-        success: exitCode === 0,
-        stdout,
-        stderr,
-        exitCode,
-        executionTimeMs: Date.now() - startTime
-      });
+    if (r?.status !== 'success') {
+      return res.status(400).json({ error: r?.error || 'Sandbox execution error', executionTimeMs: Date.now() - startTime });
+    }
+    res.json({
+      success: r.success,
+      stdout: r.stdout,
+      stderr: r.stderr,
+      exitCode: r.exitCode,
+      timedOut: r.timedOut,
+      sandbox: r.limits,
+      executionTimeMs: Date.now() - startTime,
     });
   } catch (err: any) {
-    try {
-      if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
-    } catch (_) {}
     res.status(500).json({ error: err.message, executionTimeMs: Date.now() - startTime });
   }
 });

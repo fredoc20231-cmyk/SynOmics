@@ -68,10 +68,15 @@ commit.)
 - Write analysis code to a file, execute it, read the real output.
 - Append to `audit_log.json` per session: timestamp, tool/version, exact
   parameters, random seeds, output file paths — for 100% reproducibility.
-- Status: `POST /api/synomics/python-exec` runs code and writes temp to
-  `os.tmpdir()` with a timeout. Container isolation, resource limits, and the
-  audit log are still to build; do not run untrusted agent-authored code until
-  isolation exists.
+- Status: `POST /api/synomics/python-exec` runs agent code through
+  `server/sandbox_runner.py`, which enforces REAL OS resource limits (RLIMIT_CPU,
+  RLIMIT_AS memory, RLIMIT_FSIZE, RLIMIT_CORE=0), a wall-clock timeout, a stripped
+  environment (server secrets are NOT visible to the code), and an isolated temp
+  cwd. Verified: memory bombs and infinite loops are killed; secrets are invisible.
+  The append-only audit trail is live (`server/audit.ts`). Honest scope: kernel
+  network namespacing / seccomp syscall filtering are NOT applied (need root/unshare,
+  unavailable here) — outbound network from sandboxed code is still governed by the
+  environment's egress policy, not blocked at this layer.
 
 ### Module D — Publication-Grade Report Generator
 - Compile validated results into a 6-section report (Title, Summary,
