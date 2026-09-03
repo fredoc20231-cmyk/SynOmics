@@ -14,8 +14,11 @@ import { toolSchemasForLLM, invokeTool } from './server/tool_registry.ts';
 import { runPythonScript } from './server/engine_client.ts';
 import { ensemblGeneBySymbol, myGeneBySymbol, uniProtByGene, vepByRsId, type DbResult } from './server/external_db.ts';
 import { auditMiddleware, readAudit, auditLogPath } from './server/audit.ts';
+import { securityHeaders, rateLimit, startRateLimitSweeper, requestMetrics, metricsSnapshot, apiNotFound, errorHandler } from './server/production.ts';
 
 dotenv.config();
+
+const APP_VERSION = '1.0.0';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,6 +28,14 @@ const app = express();
 // fall back to 3000 for local development. Never hardcode — most PaaS require
 // the server to bind the port they provide via $PORT.
 const PORT = Number(process.env.PORT) || 3000;
+
+// Production hardening: security headers on every response, request metrics, and a
+// per-IP rate limit on the API surface (static assets are exempt).
+app.disable('x-powered-by');
+app.use(securityHeaders());
+app.use(requestMetrics());
+app.use('/api', rateLimit({ windowMs: 60_000, max: Number(process.env.RATE_LIMIT_MAX) || 240 }));
+startRateLimitSweeper();
 
 app.use(express.json({ limit: '10mb' }));
 
@@ -66,8 +77,31 @@ app.get('/api/health', (req, res) => {
     framework: 'SynOmics Universal Bioinformatics Engine',
     model: 'gemini-2.5-flash',
     hasApiKey: Boolean(process.env.GEMINI_API_KEY),
+    version: APP_VERSION,
     timestamp: new Date().toISOString()
   });
+});
+
+// 1a. Version / build info (ops).
+app.get('/api/version', (req, res) => {
+  res.json({ status: 'success', name: 'SynOmics', version: APP_VERSION, node: process.version, env: process.env.NODE_ENV || 'development' });
+});
+
+// 1b. Readiness probe — verifies the Python engine is actually invokable.
+app.get('/api/ready', async (req, res) => {
+  try {
+    const result = await runPythonScript('server/federated_zkp.py', {}, 8000).catch((e) => ({ status: 'error', error: String(e) }));
+    // Any structured JSON response (even an honest error) proves python3 + engine spawn works.
+    const pythonOk = result && typeof result === 'object' && 'status' in result;
+    res.status(pythonOk ? 200 : 503).json({ status: pythonOk ? 'ready' : 'not_ready', pythonEngine: pythonOk, version: APP_VERSION });
+  } catch (err: any) {
+    res.status(503).json({ status: 'not_ready', error: err.message });
+  }
+});
+
+// 1c. Operational metrics (in-memory; per-route counts/latency/errors).
+app.get('/api/metrics', (req, res) => {
+  res.json(metricsSnapshot());
 });
 
 // 2. Fetch Universal SynOmics Database & Metadata
@@ -2196,6 +2230,11 @@ app.post('/api/voice/transcribe', async (req, res) => {
 
 // Vite Middleware integration for development and static serving for production
 async function startServer() {
+  // Unmatched /api/* routes return a JSON 404 (registered before the SPA catch-all
+  // so the frontend fallback never swallows a mistyped API path).
+  app.use('/api', apiNotFound());
+  app.use('/api', errorHandler());
+
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -2210,9 +2249,21 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`SynOmics (SynOmics Engine) Server running on http://0.0.0.0:${PORT}`);
+  // Final safety-net error handler (covers non-/api paths too).
+  app.use(errorHandler());
+
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`SynOmics (SynOmics Engine) Server v${APP_VERSION} running on http://0.0.0.0:${PORT}`);
   });
+
+  // Graceful shutdown for container orchestration (Cloud Run / K8s send SIGTERM).
+  const shutdown = (sig: string) => {
+    console.log(`[SynOmics] ${sig} received — draining connections and shutting down.`);
+    server.close(() => { console.log('[SynOmics] HTTP server closed.'); process.exit(0); });
+    setTimeout(() => process.exit(1), 10_000).unref();
+  };
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 }
 
 startServer();

@@ -60,6 +60,9 @@ jobs:
       - name: Audit trail / provenance test suite
         run: npx tsx tests/audit_smoke.ts
 
+      - name: Production hardening test suite (headers, rate limit, metrics, 404/errors)
+        run: npx tsx tests/production_smoke.ts
+
       - name: Scientific concordance gate (engine stats vs scipy/statsmodels)
         run: |
           python -m pip install --quiet numpy scipy statsmodels
