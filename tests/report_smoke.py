@@ -49,6 +49,27 @@ check("real results rendered (not fabricated)", "log2FC -2.4" in res["html"])
 docx_bytes = base64.b64decode(res["docxBase64"])
 check("DOCX is a valid OOXML zip", docx_bytes[:2] == b"PK" and len(docx_bytes) > 1000)
 
+# PDF export (ReportLab) — only assert if reportlab is importable in this env.
+try:
+    import reportlab  # noqa: F401
+    have_reportlab = True
+except Exception:
+    have_reportlab = False
+if have_reportlab:
+    pres = run({
+        "title": "TP53 Pathway Differential Expression",
+        "summary": "15 genes significant at FDR<0.05.",
+        "results": "TP53 downregulated (log2FC -2.4).",
+        "tables": [{"title": "Top genes", "columns": ["Gene", "log2FC"], "rows": [["TP53", -2.4]]}],
+        "provenanceHash": "deadbeef",
+        "formats": ["pdf"],
+    })
+    check("PDF status success", pres.get("status") == "success")
+    pdf_bytes = base64.b64decode(pres["pdfBase64"])
+    check("PDF has valid %PDF- magic", pdf_bytes[:5] == b"%PDF-" and len(pdf_bytes) > 800)
+else:
+    print("note: reportlab not installed — PDF assertions skipped (HTML/DOCX still gated)")
+
 bad = run({"summary": "no title"})
 check("missing title -> honest error", bad.get("status") == "error")
 

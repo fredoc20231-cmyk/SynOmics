@@ -82,10 +82,11 @@ commit.)
 - Compile validated results into a 6-section report (Title, Summary,
   Introduction, Methods, Results, Interpretations) exportable to PDF/DOCX/HTML.
 - Tech: `python-docx` (Word), WeasyPrint/ReportLab (PDF), Jinja2 + Plotly (HTML).
-- Status: HTML (Jinja2) + DOCX (python-docx) implemented in
-  `server/report_generator.py` (`POST /api/synomics/report`); renders only real
-  provided content, missing sections marked "not provided". PDF (WeasyPrint) and
-  live Plotly figures still to add.
+- Status: HTML (Jinja2) + DOCX (python-docx) + PDF (ReportLab, pure-Python) all
+  implemented in `server/report_generator.py` (`POST /api/synomics/report`, pass
+  `formats:["html","docx","pdf"]`); renders only real provided content, missing
+  sections marked "not provided". Verified: PDF has valid %PDF- magic. Live Plotly
+  figures still to add.
 
 ### Module E — AI-Native Drug Discovery (CADD) & Virtual Validation
 Bridges omics findings into molecular design + rigorous in-silico validation.

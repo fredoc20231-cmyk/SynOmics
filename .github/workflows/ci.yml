@@ -99,9 +99,9 @@ jobs:
       - name: Circuit verification gate (Gillespie SSA + temporal property)
         run: python tests/circuit_smoke.py
 
-      - name: Report generator gate (HTML + DOCX from real content)
+      - name: Report generator gate (HTML + DOCX + PDF from real content)
         run: |
-          python -m pip install --quiet jinja2 python-docx
+          python -m pip install --quiet jinja2 python-docx reportlab
           python tests/report_smoke.py
 
       - name: Provenance manifest gate (SHA-256 inputs/scripts/outputs)
