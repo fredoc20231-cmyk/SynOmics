@@ -28,6 +28,9 @@ jobs:
       - name: Type-check + build (frontend + server bundle)
         run: npm run build
 
+      - name: Server integration test (boots dist/server.mjs; real HTTP stack)
+        run: npx tsx tests/server_integration.ts
+
       - name: Ruff lint gate (Python correctness rules)
         run: |
           python -m pip install --quiet ruff
