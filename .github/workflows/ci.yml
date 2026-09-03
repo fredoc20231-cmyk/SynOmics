@@ -94,6 +94,11 @@ jobs:
           python -m pip install --quiet networkx numpy
           python tests/netbio_smoke.py
 
+      - name: Cheminformatics gate (Tanimoto/similarity/substructure/Murcko/PAINS)
+        run: |
+          python -m pip install --quiet rdkit
+          python tests/cheminfo_advanced_smoke.py
+
       - name: Scientific concordance gate (engine stats vs scipy/statsmodels)
         run: |
           python -m pip install --quiet numpy scipy statsmodels

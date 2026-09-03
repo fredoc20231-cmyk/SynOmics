@@ -714,6 +714,37 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     handler: (i) => runPythonScript('server/netbio.py', { ...i, task: 'rwr' }),
     parameters: { edges: { type: 'array', required: true, description: 'Edge list.' }, seeds: { type: 'array', required: true, description: 'Seed node ids.' }, restart: { type: 'number', description: 'Restart probability (default 0.15).' } },
   },
+  // --- Advanced cheminformatics (RDKit) ---
+  {
+    name: 'tanimoto_similarity', category: 'Cheminformatics',
+    description: 'Morgan-fingerprint Tanimoto similarity between two molecules (SMILES). Requires rdkit.',
+    handler: (i) => runPythonScript('server/cheminfo_advanced.py', { ...i, task: 'tanimoto' }),
+    parameters: { smiles1: { type: 'string', required: true, description: 'First SMILES.' }, smiles2: { type: 'string', required: true, description: 'Second SMILES.' } },
+  },
+  {
+    name: 'similarity_matrix', category: 'Cheminformatics',
+    description: 'Pairwise Tanimoto similarity matrix over a list of SMILES. Requires rdkit.',
+    handler: (i) => runPythonScript('server/cheminfo_advanced.py', { ...i, task: 'similarity_matrix' }),
+    parameters: { smiles: { type: 'array', required: true, description: 'List of SMILES (>=2).' } },
+  },
+  {
+    name: 'substructure_search', category: 'Cheminformatics',
+    description: 'Screen molecules for a SMARTS/SMILES substructure query. Requires rdkit.',
+    handler: (i) => runPythonScript('server/cheminfo_advanced.py', { ...i, task: 'substructure_search' }),
+    parameters: { query: { type: 'string', required: true, description: 'SMARTS or SMILES pattern.' }, smiles: { type: 'array', required: true, description: 'Molecules to screen.' } },
+  },
+  {
+    name: 'murcko_scaffold', category: 'Cheminformatics',
+    description: 'Bemis-Murcko scaffold (and generic scaffold) of a molecule. Requires rdkit.',
+    handler: (i) => runPythonScript('server/cheminfo_advanced.py', { ...i, task: 'murcko_scaffold' }),
+    parameters: { smiles: { type: 'string', required: true, description: 'Molecule SMILES.' } },
+  },
+  {
+    name: 'pains_filter', category: 'Cheminformatics',
+    description: 'Flag PAINS (pan-assay interference) substructures in molecules — screening triage. Requires rdkit.',
+    handler: (i) => runPythonScript('server/cheminfo_advanced.py', { ...i, task: 'pains_filter' }),
+    parameters: { smiles: { type: 'array', required: true, description: 'SMILES (string or list).' } },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));

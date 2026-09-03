@@ -666,6 +666,14 @@ app.get(['/api/synomics/idiscover', '/api/biomni/idiscover'], (req, res) => {
   });
 });
 
+// Advanced cheminformatics (RDKit) — single dispatch route.
+app.post(['/api/synomics/cheminfo', '/api/biomni/cheminfo'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/cheminfo_advanced.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
 // Network biology (networkx) — single dispatch route.
 app.post(['/api/synomics/netbio', '/api/biomni/netbio'], async (req, res) => {
   try {
