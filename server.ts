@@ -666,6 +666,14 @@ app.get(['/api/synomics/idiscover', '/api/biomni/idiscover'], (req, res) => {
   });
 });
 
+// Protein-structure analyses (biopython PDB) — single dispatch route.
+app.post(['/api/synomics/structure-tools', '/api/biomni/structure-tools'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/structure_tools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
 // Advanced microbiome — single dispatch route.
 app.post(['/api/synomics/microbiome-advanced', '/api/biomni/microbiome-advanced'], async (req, res) => {
   try {

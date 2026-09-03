@@ -826,6 +826,31 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     handler: (i) => runPythonScript('server/microbiome_advanced.py', { ...i, task: 'rarefaction' }),
     parameters: { counts: { type: 'object', required: true, description: 'sample -> {taxon: count}.' }, steps: { type: 'number', description: 'Depth steps (default 10).' } },
   },
+  // --- Protein structure (biopython PDB) ---
+  {
+    name: 'structure_summary', category: 'Structural biology',
+    description: 'PDB structure summary: chains, residue/atom counts. Requires biopython.',
+    handler: (i) => runPythonScript('server/structure_tools.py', { ...i, task: 'structure_summary' }),
+    parameters: { pdb: { type: 'string', required: true, description: 'PDB-format text.' } },
+  },
+  {
+    name: 'radius_of_gyration', category: 'Structural biology',
+    description: 'Radius of gyration (CA) — protein compactness — + center of mass. Requires biopython.',
+    handler: (i) => runPythonScript('server/structure_tools.py', { ...i, task: 'radius_of_gyration' }),
+    parameters: { pdb: { type: 'string', required: true, description: 'PDB-format text.' } },
+  },
+  {
+    name: 'contact_map', category: 'Structural biology',
+    description: 'CA-CA residue contact map under a distance threshold (+ contact order). Requires biopython.',
+    handler: (i) => runPythonScript('server/structure_tools.py', { ...i, task: 'contact_map' }),
+    parameters: { pdb: { type: 'string', required: true, description: 'PDB text.' }, threshold: { type: 'number', description: 'Contact distance Å (default 8).' }, minSeqSep: { type: 'number', description: 'Min sequence separation (default 3).' } },
+  },
+  {
+    name: 'atom_distance', category: 'Structural biology',
+    description: 'Distance between two atoms (chain/resid/atom) in a structure. Requires biopython.',
+    handler: (i) => runPythonScript('server/structure_tools.py', { ...i, task: 'distance' }),
+    parameters: { pdb: { type: 'string', required: true, description: 'PDB text.' }, atomA: { type: 'object', required: true, description: '{chain, resid, atom?}.' }, atomB: { type: 'object', required: true, description: '{chain, resid, atom?}.' } },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));

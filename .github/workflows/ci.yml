@@ -114,6 +114,11 @@ jobs:
           python -m pip install --quiet numpy scipy statsmodels
           python tests/microbiome_advanced_smoke.py
 
+      - name: Structural biology gate (summary/Rg/contact map/distance)
+        run: |
+          python -m pip install --quiet biopython numpy
+          python tests/structure_tools_smoke.py
+
       - name: Scientific concordance gate (engine stats vs scipy/statsmodels)
         run: |
           python -m pip install --quiet numpy scipy statsmodels
