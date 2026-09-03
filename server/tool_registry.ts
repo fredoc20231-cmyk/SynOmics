@@ -807,6 +807,25 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     handler: (i) => runPythonScript('server/variant_tools.py', { ...i, task: 'vcf_summary' }),
     parameters: { variants: { type: 'array', required: true, description: '[{chrom, ref, alt}, ...].' } },
   },
+  // --- Advanced microbiome ---
+  {
+    name: 'chao1_richness', category: 'Microbiome',
+    description: 'Chao1 bias-corrected richness estimator per sample. Requires numpy.',
+    handler: (i) => runPythonScript('server/microbiome_advanced.py', { ...i, task: 'chao1' }),
+    parameters: { counts: { type: 'object', required: true, description: 'sample -> {taxon: count}.' } },
+  },
+  {
+    name: 'differential_abundance', category: 'Microbiome',
+    description: 'Compositional differential abundance: CLR transform + Welch t-test per taxon + BH FDR (ALDEx2-style). Requires numpy/scipy/statsmodels.',
+    handler: (i) => runPythonScript('server/microbiome_advanced.py', { ...i, task: 'differential_abundance' }),
+    parameters: { counts: { type: 'object', required: true, description: 'sample -> {taxon: count}.' }, groups: { type: 'object', required: true, description: 'sample -> group label (two groups).' } },
+  },
+  {
+    name: 'rarefaction_curve', category: 'Microbiome',
+    description: 'Rarefaction curve (Hurlbert analytic expected richness vs depth) per sample. Requires numpy.',
+    handler: (i) => runPythonScript('server/microbiome_advanced.py', { ...i, task: 'rarefaction' }),
+    parameters: { counts: { type: 'object', required: true, description: 'sample -> {taxon: count}.' }, steps: { type: 'number', description: 'Depth steps (default 10).' } },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));
