@@ -522,6 +522,48 @@ export const TOOL_REGISTRY: ToolSpec[] = [
       seed: { type: 'number', description: 'Random seed (default 1337).' },
     },
   },
+  // --- Module B depth: advanced expression analyses (real, CI-gated) ---
+  {
+    name: 'nb_differential_expression',
+    category: 'Expression / differential analysis',
+    description: 'Negative-binomial GLM differential expression (DESeq2-style count model with per-gene dispersion + Wald test + BH FDR) — more rigorous than a t-test. Requires numpy + statsmodels.',
+    handler: (i) => runPythonScript('server/expression_advanced.py', { ...i, task: 'nb_de' }),
+    parameters: {
+      counts: { type: 'object', description: 'gene -> [integer counts per sample].', required: true },
+      conditions: { type: 'array', description: 'Per-sample condition labels (exactly two groups).', required: true },
+    },
+  },
+  {
+    name: 'gsea',
+    category: 'Expression / enrichment',
+    description: 'Gene-set enrichment analysis (GSEA prerank) on a ranked gene list vs supplied gene sets → ES/NES/p/FDR per set. Requires gseapy.',
+    handler: (i) => runPythonScript('server/expression_advanced.py', { ...i, task: 'gsea' }, 120000),
+    parameters: {
+      rnk: { type: 'object', description: 'gene -> ranking score.', required: true },
+      geneSets: { type: 'object', description: 'set name -> [genes].', required: true },
+      permutations: { type: 'number', description: 'Permutations (default 200).' },
+    },
+  },
+  {
+    name: 'batch_correct',
+    category: 'Expression / preprocessing',
+    description: 'Linear batch-effect removal (limma removeBatchEffect-style OLS): subtracts batch-indicator contributions while retaining biology. Requires numpy.',
+    handler: (i) => runPythonScript('server/expression_advanced.py', { ...i, task: 'batch_correct' }),
+    parameters: {
+      matrix: { type: 'array', description: 'samples x features matrix.', required: true },
+      batch: { type: 'array', description: 'per-sample batch labels.', required: true },
+    },
+  },
+  {
+    name: 'pca',
+    category: 'Expression / dimensionality reduction',
+    description: 'Principal component analysis with explained-variance ratios and sample scores. Requires numpy + scikit-learn.',
+    handler: (i) => runPythonScript('server/expression_advanced.py', { ...i, task: 'pca' }),
+    parameters: {
+      matrix: { type: 'array', description: 'samples x features matrix.', required: true },
+      nComponents: { type: 'number', description: 'Components to keep (default min(n,p,10)).' },
+    },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));

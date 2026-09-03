@@ -74,6 +74,11 @@ jobs:
           python -m pip install --quiet h5py numpy
           python tests/h5ad_smoke.py
 
+      - name: Advanced expression gate (NB DE, GSEA, batch correction, PCA)
+        run: |
+          python -m pip install --quiet numpy scipy scikit-learn statsmodels gseapy
+          python tests/expression_advanced_smoke.py
+
       - name: Scientific concordance gate (engine stats vs scipy/statsmodels)
         run: |
           python -m pip install --quiet numpy scipy statsmodels

@@ -666,6 +666,32 @@ app.get(['/api/synomics/idiscover', '/api/biomni/idiscover'], (req, res) => {
   });
 });
 
+// Module B depth — advanced expression analyses (NB DE, GSEA, batch correction, PCA).
+app.post(['/api/synomics/nb-differential-expression', '/api/biomni/nb-differential-expression'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/expression_advanced.py', { ...req.body, task: 'nb_de' }, 120000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/gsea', '/api/biomni/gsea'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/expression_advanced.py', { ...req.body, task: 'gsea' }, 120000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/batch-correct', '/api/biomni/batch-correct'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/expression_advanced.py', { ...req.body, task: 'batch_correct' });
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/pca', '/api/biomni/pca'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/expression_advanced.py', { ...req.body, task: 'pca' });
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
 // 4a1c. Self-optimizing compilation: Cython-accelerate a numeric kernel and
 // report the measured speedup (correctness asserted vs pure Python).
 app.post(['/api/synomics/accelerate', '/api/biomni/accelerate'], async (req, res) => {
