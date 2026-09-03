@@ -51,7 +51,11 @@ commit.)
   or contradictory, do not guess — ask a precise, targeted question.
 - Status: FASTA/FASTQ/VCF/CSV/TSV parsing implemented in
   `server/synomics_engine.py::ingest_file` (`POST /api/synomics/ingest-file`).
-  H5AD and the interactive clarification loop are still to build.
+  H5AD (single-cell AnnData) profiling implemented in `server/h5ad_profiler.py`
+  (`POST /api/synomics/ingest-h5ad`, accepts base64 bytes or a path) — reads real
+  cell/gene counts, X encoding, obs/var columns, and grouping candidates via h5py,
+  and HALTS with a precise clarification question when no unambiguous grouping
+  column exists. The broader interactive clarification loop is still to build.
 
 ### Module B — Analysis Depth Engine (exponential rigor)
 - **L1 Basic (1×):** QC, standard stats (DESeq2/edgeR-style DE, PCA, volcano).

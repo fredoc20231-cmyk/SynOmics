@@ -1159,6 +1159,32 @@ app.post(['/api/synomics/ingest-file', '/api/biomni/ingest-file'], async (req, r
   }
 });
 
+// 19b. Module A — H5AD (single-cell AnnData) profiling. Accepts base64 file bytes
+// (binary format) or a server-side path; runs a real structural profiling pass and
+// HALTS on ambiguity (no grouping column) instead of guessing the design.
+app.post(['/api/synomics/ingest-h5ad', '/api/biomni/ingest-h5ad'], async (req, res) => {
+  let tmpFile: string | null = null;
+  try {
+    const { contentBase64, path: providedPath } = req.body || {};
+    let targetPath = providedPath;
+    if (!targetPath) {
+      if (typeof contentBase64 !== 'string' || !contentBase64) {
+        return res.status(400).json({ status: 'error', message: 'Provide `contentBase64` (base64 of the .h5ad bytes) or a server-side `path`.' });
+      }
+      tmpFile = path.join(os.tmpdir(), `synomics_h5ad_${Date.now()}_${Math.random().toString(36).slice(2)}.h5ad`);
+      fs.writeFileSync(tmpFile, Buffer.from(contentBase64, 'base64'));
+      targetPath = tmpFile;
+    }
+    const result = await runPythonScript('server/h5ad_profiler.py', { path: targetPath }, 60000);
+    const code = result?.status === 'success' ? 200 : 422;
+    res.status(code).json(result);
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  } finally {
+    if (tmpFile) { try { fs.unlinkSync(tmpFile); } catch (_) { /* best effort */ } }
+  }
+});
+
 // 20. Galaxy / Nextflow DAG Scientific Workflow Execution & Pipeline Code Generator API
 app.post(['/api/synomics/dag-workflow-execute', '/api/biomni/dag-workflow-execute'], async (req, res) => {
   try {
