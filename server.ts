@@ -14,7 +14,7 @@ import { toolSchemasForLLM, invokeTool } from './server/tool_registry.ts';
 import { runPythonScript } from './server/engine_client.ts';
 import { ensemblGeneBySymbol, myGeneBySymbol, uniProtByGene, vepByRsId, type DbResult } from './server/external_db.ts';
 import { auditMiddleware, readAudit, auditLogPath } from './server/audit.ts';
-import { securityHeaders, rateLimit, startRateLimitSweeper, requestMetrics, metricsSnapshot, apiNotFound, errorHandler } from './server/production.ts';
+import { securityHeaders, rateLimit, startRateLimitSweeper, requestMetrics, metricsSnapshot, apiNotFound, errorHandler, requestId, accessLog } from './server/production.ts';
 
 dotenv.config();
 
@@ -32,7 +32,9 @@ const PORT = Number(process.env.PORT) || 3000;
 // Production hardening: security headers on every response, request metrics, and a
 // per-IP rate limit on the API surface (static assets are exempt).
 app.disable('x-powered-by');
+app.use(requestId());
 app.use(securityHeaders());
+app.use(accessLog({ apiOnly: true }));
 app.use(requestMetrics());
 app.use('/api', rateLimit({ windowMs: 60_000, max: Number(process.env.RATE_LIMIT_MAX) || 240 }));
 startRateLimitSweeper();
@@ -2251,8 +2253,20 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
+    // Vite emits content-hashed filenames under /assets — safe to cache immutably.
+    // index.html must never be cached so clients always pick up the latest bundle.
+    app.use(express.static(distPath, {
+      etag: true,
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith('index.html')) {
+          res.setHeader('Cache-Control', 'no-cache');
+        } else if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        }
+      },
+    }));
     app.get('*', (req, res) => {
+      res.setHeader('Cache-Control', 'no-cache');
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }

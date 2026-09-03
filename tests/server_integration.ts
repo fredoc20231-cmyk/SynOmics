@@ -65,6 +65,7 @@ async function main() {
     check('security header frame options', h.get('x-frame-options') === 'SAMEORIGIN');
     check('rate-limit header present', !!h.get('x-ratelimit-limit'));
     check('x-powered-by disabled', !h.get('x-powered-by'));
+    check('request-id header present', !!h.get('x-request-id'));
 
     // JSON 404 for unmatched API route (not the SPA fallback)
     const nf = await fetch(`${BASE}/api/nope-xyz`);

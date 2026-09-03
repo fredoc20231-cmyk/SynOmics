@@ -3,7 +3,7 @@
  * Exercises the real middleware with lightweight Express-shaped mocks.
  * Run: `npx tsx tests/production_smoke.ts`
  */
-import { securityHeaders, rateLimit, requestMetrics, metricsSnapshot, apiNotFound, errorHandler } from '../server/production.ts';
+import { securityHeaders, rateLimit, requestMetrics, metricsSnapshot, apiNotFound, errorHandler, requestId } from '../server/production.ts';
 
 let passed = 0;
 function check(name: string, cond: boolean) {
@@ -89,6 +89,18 @@ function mockReq(over: any = {}) {
   errorHandler()(Object.assign(new Error('boom'), { status: 400 }), mockReq() as any, res2 as any, () => {});
   check('error handler: respects err.status', res2.statusCode === 400);
   check('error handler: exposes message in dev', res2._json?.error === 'boom');
+}
+
+// 6. Request id: honors a safe inbound id, generates one otherwise.
+{
+  const res = mockRes();
+  requestId()(mockReq({ headers: { 'x-request-id': 'trace-abc.123' } }) as any, res as any, () => {});
+  check('request id: honors safe inbound id', res.headers['x-request-id'] === 'trace-abc.123');
+  const res2 = mockRes();
+  const req2: any = mockReq({ headers: { 'x-request-id': 'bad id with spaces!' } });
+  requestId()(req2, res2 as any, () => {});
+  check('request id: rejects unsafe inbound, generates one', !!res2.headers['x-request-id'] && res2.headers['x-request-id'] !== 'bad id with spaces!');
+  check('request id: attaches id to req', typeof req2.id === 'string' && req2.id.length > 0);
 }
 
 console.log(`\nALL ${passed} PRODUCTION-HARDENING TESTS PASSED`);

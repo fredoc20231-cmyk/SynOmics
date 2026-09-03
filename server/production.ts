@@ -5,7 +5,45 @@
  * metrics, and centralized 404 / error handlers. Everything here is real and
  * self-contained (no external packages), so it works in the locked-down build.
  */
+import { randomUUID } from 'crypto';
 import type { Request, Response, NextFunction } from 'express';
+
+// ---------------------------------------------------------------- request id
+/** Attach a correlation id to every request (honor an inbound X-Request-Id, else
+ *  generate one) and echo it back, so logs and clients can correlate a call. */
+export function requestId() {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const incoming = (req.headers['x-request-id'] as string | undefined)?.slice(0, 128);
+    const id = incoming && /^[\w.-]+$/.test(incoming) ? incoming : randomUUID();
+    (req as any).id = id;
+    res.setHeader('X-Request-Id', id);
+    next();
+  };
+}
+
+/** Structured JSON access log for the API surface (one line per finished request).
+ *  Container log drivers ingest stdout; keeps static-asset noise out by default. */
+export function accessLog(opts?: { apiOnly?: boolean }) {
+  const apiOnly = opts?.apiOnly ?? true;
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (apiOnly && !req.path.startsWith('/api')) return next();
+    const start = Date.now();
+    res.on('finish', () => {
+      const ip = (req.headers['x-forwarded-for'] as string || '').split(',')[0].trim() || req.socket.remoteAddress || '';
+      const line = {
+        t: new Date().toISOString(),
+        id: (req as any).id,
+        method: req.method,
+        path: req.originalUrl,
+        status: res.statusCode,
+        ms: Date.now() - start,
+        ip,
+      };
+      console.log(JSON.stringify(line));
+    });
+    next();
+  };
+}
 
 // ---------------------------------------------------------------- security headers
 /** Conservative, SPA-safe security headers. No strict CSP (would break the Vite
