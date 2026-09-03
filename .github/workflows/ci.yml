@@ -89,6 +89,11 @@ jobs:
           python -m pip install --quiet biopython
           python tests/seqtools_smoke.py
 
+      - name: Network biology gate (centrality/community/paths/stats/RWR)
+        run: |
+          python -m pip install --quiet networkx numpy
+          python tests/netbio_smoke.py
+
       - name: Scientific concordance gate (engine stats vs scipy/statsmodels)
         run: |
           python -m pip install --quiet numpy scipy statsmodels

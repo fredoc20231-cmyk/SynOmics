@@ -683,6 +683,37 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     handler: (i) => runPythonScript('server/seqtools.py', { ...i, task: 'codon_usage' }),
     parameters: { sequence: { type: 'string', required: true, description: 'Coding DNA sequence.' } },
   },
+  // --- Network biology (networkx) ---
+  {
+    name: 'network_centrality', category: 'Network biology',
+    description: 'Degree/betweenness/closeness/eigenvector/PageRank centrality per node + top hub. Requires networkx.',
+    handler: (i) => runPythonScript('server/netbio.py', { ...i, task: 'centrality' }),
+    parameters: { edges: { type: 'array', required: true, description: '[[u,v] or [u,v,weight], ...].' }, directed: { type: 'boolean', description: 'Directed graph (default false).' } },
+  },
+  {
+    name: 'community_detection', category: 'Network biology',
+    description: 'Greedy-modularity community detection with modularity score. Requires networkx.',
+    handler: (i) => runPythonScript('server/netbio.py', { ...i, task: 'community' }),
+    parameters: { edges: { type: 'array', required: true, description: '[[u,v] or [u,v,weight], ...].' } },
+  },
+  {
+    name: 'shortest_path', category: 'Network biology',
+    description: 'Shortest (optionally weighted) path between two nodes. Requires networkx.',
+    handler: (i) => runPythonScript('server/netbio.py', { ...i, task: 'shortest_path' }),
+    parameters: { edges: { type: 'array', required: true, description: 'Edge list.' }, source: { type: 'string', required: true, description: 'Source node.' }, target: { type: 'string', required: true, description: 'Target node.' }, weighted: { type: 'boolean', description: 'Use edge weights (default true).' } },
+  },
+  {
+    name: 'graph_stats', category: 'Network biology',
+    description: 'Graph statistics: nodes/edges/density/avg clustering/components/diameter. Requires networkx.',
+    handler: (i) => runPythonScript('server/netbio.py', { ...i, task: 'graph_stats' }),
+    parameters: { edges: { type: 'array', required: true, description: 'Edge list.' }, directed: { type: 'boolean', description: 'Directed graph.' } },
+  },
+  {
+    name: 'random_walk_restart', category: 'Network biology',
+    description: 'Random walk with restart (personalized PageRank) from seed nodes — network propagation / gene prioritization. Requires networkx.',
+    handler: (i) => runPythonScript('server/netbio.py', { ...i, task: 'rwr' }),
+    parameters: { edges: { type: 'array', required: true, description: 'Edge list.' }, seeds: { type: 'array', required: true, description: 'Seed node ids.' }, restart: { type: 'number', description: 'Restart probability (default 0.15).' } },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));
