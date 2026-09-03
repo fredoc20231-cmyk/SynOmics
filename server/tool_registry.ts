@@ -634,6 +634,55 @@ export const TOOL_REGISTRY: ToolSpec[] = [
       covariateNames: { type: 'array', description: 'Optional covariate names.' },
     },
   },
+  // --- Sequence & molecular biology (biopython) ---
+  {
+    name: 'translate_dna', category: 'Sequence / molecular biology',
+    description: 'Translate a DNA/RNA sequence to protein (NCBI codon tables). Requires biopython.',
+    handler: (i) => runPythonScript('server/seqtools.py', { ...i, task: 'translate' }),
+    parameters: { sequence: { type: 'string', required: true, description: 'Nucleotide sequence.' }, codonTable: { type: 'number', description: 'NCBI table id (default 1).' }, toStop: { type: 'boolean', description: 'Stop at first stop codon.' } },
+  },
+  {
+    name: 'reverse_complement', category: 'Sequence / molecular biology',
+    description: 'Reverse complement (and complement) of a DNA sequence. Requires biopython.',
+    handler: (i) => runPythonScript('server/seqtools.py', { ...i, task: 'revcomp' }),
+    parameters: { sequence: { type: 'string', required: true, description: 'DNA sequence.' } },
+  },
+  {
+    name: 'gc_content', category: 'Sequence / molecular biology',
+    description: 'GC content (%) and base composition of a sequence.',
+    handler: (i) => runPythonScript('server/seqtools.py', { ...i, task: 'gc_content' }),
+    parameters: { sequence: { type: 'string', required: true, description: 'Nucleotide sequence.' } },
+  },
+  {
+    name: 'orf_find', category: 'Sequence / molecular biology',
+    description: 'Find open reading frames (ATG→stop) on both strands / 3 frames, with translated protein. Requires biopython.',
+    handler: (i) => runPythonScript('server/seqtools.py', { ...i, task: 'orf_find' }),
+    parameters: { sequence: { type: 'string', required: true, description: 'DNA sequence.' }, minAminoAcids: { type: 'number', description: 'Minimum ORF length in aa (default 20).' } },
+  },
+  {
+    name: 'primer_tm', category: 'Sequence / molecular biology',
+    description: 'Primer melting temperature (nearest-neighbor or Wallace) + GC%. Requires biopython.',
+    handler: (i) => runPythonScript('server/seqtools.py', { ...i, task: 'primer_tm' }),
+    parameters: { primer: { type: 'string', required: true, description: 'Primer sequence.' }, method: { type: 'string', description: 'nn (default) or wallace.' } },
+  },
+  {
+    name: 'restriction_map', category: 'Sequence / molecular biology',
+    description: 'Restriction-enzyme cut sites over commercial enzymes (or a supplied subset). Requires biopython.',
+    handler: (i) => runPythonScript('server/seqtools.py', { ...i, task: 'restriction_map' }),
+    parameters: { sequence: { type: 'string', required: true, description: 'DNA sequence.' }, enzymes: { type: 'array', description: 'Optional enzyme-name filter.' } },
+  },
+  {
+    name: 'protein_params', category: 'Sequence / protein',
+    description: 'Protein parameters (MW, pI, GRAVY hydrophobicity, aromaticity, instability index, secondary-structure fractions). Requires biopython.',
+    handler: (i) => runPythonScript('server/seqtools.py', { ...i, task: 'protein_params' }),
+    parameters: { protein: { type: 'string', required: true, description: 'Amino-acid sequence.' } },
+  },
+  {
+    name: 'codon_usage', category: 'Sequence / molecular biology',
+    description: 'Codon counts and frequencies for a coding sequence.',
+    handler: (i) => runPythonScript('server/seqtools.py', { ...i, task: 'codon_usage' }),
+    parameters: { sequence: { type: 'string', required: true, description: 'Coding DNA sequence.' } },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));

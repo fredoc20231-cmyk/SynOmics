@@ -666,6 +666,14 @@ app.get(['/api/synomics/idiscover', '/api/biomni/idiscover'], (req, res) => {
   });
 });
 
+// Sequence & molecular-biology tools (biopython) — single dispatch route.
+app.post(['/api/synomics/seqtools', '/api/biomni/seqtools'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/seqtools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
 // Core biostatistics — single dispatch route (body.task selects the test).
 app.post(['/api/synomics/biostats', '/api/biomni/biostats'], async (req, res) => {
   try {
