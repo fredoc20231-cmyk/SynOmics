@@ -104,6 +104,11 @@ jobs:
           python -m pip install --quiet numpy scikit-learn
           python tests/ml_analysis_smoke.py
 
+      - name: Variant / population-genetics gate (HWE/allele freq/TsTv/VCF summary)
+        run: |
+          python -m pip install --quiet scipy
+          python tests/variant_tools_smoke.py
+
       - name: Scientific concordance gate (engine stats vs scipy/statsmodels)
         run: |
           python -m pip install --quiet numpy scipy statsmodels

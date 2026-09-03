@@ -666,6 +666,14 @@ app.get(['/api/synomics/idiscover', '/api/biomni/idiscover'], (req, res) => {
   });
 });
 
+// Variant / population genetics — single dispatch route.
+app.post(['/api/synomics/variant-tools', '/api/biomni/variant-tools'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/variant_tools.py', req.body, 30000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
 // Machine-learning analyses (scikit-learn) — single dispatch route.
 app.post(['/api/synomics/ml', '/api/biomni/ml'], async (req, res) => {
   try {

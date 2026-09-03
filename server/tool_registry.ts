@@ -782,6 +782,31 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     handler: (i) => runPythonScript('server/ml_analysis.py', { ...i, task: 'logistic' }),
     parameters: { X: { type: 'array', required: true, description: 'samples x features.' }, y: { type: 'array', required: true, description: 'Binary target 0/1.' } },
   },
+  // --- Variant / population genetics ---
+  {
+    name: 'hardy_weinberg', category: 'Population genetics',
+    description: 'Hardy-Weinberg equilibrium test from genotype counts (AA, Aa, aa): chi-square, p, allele freqs. Requires scipy.',
+    handler: (i) => runPythonScript('server/variant_tools.py', { ...i, task: 'hardy_weinberg' }),
+    parameters: { AA: { type: 'number', required: true, description: 'Homozygous-major count.' }, Aa: { type: 'number', required: true, description: 'Heterozygous count.' }, aa: { type: 'number', required: true, description: 'Homozygous-minor count.' } },
+  },
+  {
+    name: 'allele_frequency', category: 'Population genetics',
+    description: 'Allele + genotype frequencies from genotype counts.',
+    handler: (i) => runPythonScript('server/variant_tools.py', { ...i, task: 'allele_frequency' }),
+    parameters: { AA: { type: 'number', required: true, description: 'AA count.' }, Aa: { type: 'number', required: true, description: 'Aa count.' }, aa: { type: 'number', required: true, description: 'aa count.' } },
+  },
+  {
+    name: 'ts_tv_ratio', category: 'Genomics / variants',
+    description: 'Transition/transversion ratio from a list of SNVs ({ref, alt}).',
+    handler: (i) => runPythonScript('server/variant_tools.py', { ...i, task: 'ts_tv' }),
+    parameters: { variants: { type: 'array', required: true, description: '[{ref, alt}, ...].' } },
+  },
+  {
+    name: 'vcf_summary', category: 'Genomics / variants',
+    description: 'Summarize variants: SNV/indel counts, Ts/Tv, per-chromosome counts.',
+    handler: (i) => runPythonScript('server/variant_tools.py', { ...i, task: 'vcf_summary' }),
+    parameters: { variants: { type: 'array', required: true, description: '[{chrom, ref, alt}, ...].' } },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));
