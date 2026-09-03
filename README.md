@@ -225,10 +225,38 @@ code-execution sandbox, and a genuine plan→run→iterate agent loop).
 | `legacy/` | Prior science-first frontend-shell design docs, retained for provenance |
 | `.github/workflows/ci.yml` | Build + engine verification CI |
 
+## Production readiness
+
+Hardened and covered by CI:
+
+- **API security** — per-IP rate limiting, security headers (`X-Content-Type-Options`,
+  `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, HSTS in prod),
+  `x-powered-by` disabled, centralized JSON error/404 handlers, request-id
+  correlation, and structured JSON access logs.
+- **Ops endpoints** — `/api/health`, `/api/version`, `/api/ready` (probes the real
+  Python engine), `/api/metrics` (per-route count/latency/errors, uptime, RSS).
+- **Sandboxed execution** — `/api/synomics/python-exec` runs code under real OS
+  resource limits (CPU/memory/file), a wall-clock timeout, a stripped environment
+  (secrets not exposed), and an isolated cwd (`server/sandbox_runner.py`).
+- **Deployment** — env-driven `PORT`, two-stage `Dockerfile` (non-root, healthcheck),
+  graceful SIGTERM/SIGINT shutdown, immutable caching for hashed assets +
+  `no-cache` for `index.html`.
+- **Resilience** — top-level React `ErrorBoundary` (no white-screen on a UI fault).
+- **Reports** — HTML + DOCX + PDF (ReportLab) export.
+- **Verification** — build + `tsc --noEmit` + `ruff` + a server integration test
+  (boots the built server, hits the live stack) + per-engine test suites, all in CI.
+
+Requires product/infra decisions before a full commercial launch (intentionally
+not invented here): authentication / API keys / multi-tenancy, a managed database
+for session persistence (currently in-memory + optional Firebase), multi-instance
+rate-limit store (Redis), and a CD pipeline with managed secrets. The heavy science
+tiers (Module E CADD; Module B L2–L4) remain infra-gated (GPUs / external weights /
+scanpy worker) and fail honestly rather than fabricating.
+
 ## Known remaining work
 
 Tracked in detail in `SYNOMICS_FIXES_REPORT.md` and `INTEGRATION_ROADMAP.md`.
 Highlights: real external database integrations (Ensembl, UniProt, ClinVar,
 Open Targets, ChEMBL), real docking/ADMET workers (AutoDock Vina / RDKit,
-infra-gated), a hardened `python-exec` sandbox, and a real multi-step agent
-loop — plus removing the last frontend placeholder data (e.g. `DrugDiscoveryMode`).
+infra-gated), and the interactive data-clarification loop (Module A) beyond the
+current HALT-on-ambiguity profiling.
