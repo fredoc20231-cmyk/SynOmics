@@ -227,7 +227,21 @@ Bridges omics findings into molecular design + rigorous in-silico validation.
   `generateDomainIntelligence` fabricator have been removed.
 - Concordance: 7/7 engine statistics match scipy/statsmodels (VALIDATION_REPORT.md).
 - Lint gate: `ruff check server tests` (pyflakes/syntax/imports) runs in CI.
-- 43 real agent tools; 23 test suites in CI.
+- **Standard-bioinformatics breadth modules (real, CI-gated, added to close the
+  Biomni breadth gap):** advanced expression (`expression_advanced.py`: NB-GLM DE,
+  GSEA, batch correction, PCA), biostatistics (`biostats.py`: Fisher, chi-square,
+  ANOVA, correlation, multiple-testing, power, normality, ROC/AUC, log-rank, Cox),
+  sequence/molecular biology (`seqtools.py`: translate, revcomp, GC, ORF, primer Tm,
+  restriction map, protein params, codon usage), network biology (`netbio.py`:
+  centrality, community detection, shortest path, graph stats, RWR), advanced
+  cheminformatics (`cheminfo_advanced.py`: Tanimoto, similarity matrix, substructure
+  search, Murcko scaffold, PAINS), machine learning (`ml_analysis.py`: k-means,
+  hierarchical, t-SNE, RF importance, LASSO, logistic), variant/population genetics
+  (`variant_tools.py`: Hardy-Weinberg, allele frequency, Ts/Tv, VCF summary),
+  advanced microbiome (`microbiome_advanced.py`: Chao1, CLR differential abundance,
+  rarefaction), structural biology (`structure_tools.py`: summary, radius of
+  gyration, contact map, atom distance). Each validated against known ground truth.
+- 92 real agent tools; 35 test suites in CI.
 - Everything marked "to build" / "not implemented" above must not be faked.
 
 ## 6. Commands
