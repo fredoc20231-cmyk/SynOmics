@@ -564,6 +564,76 @@ export const TOOL_REGISTRY: ToolSpec[] = [
       nComponents: { type: 'number', description: 'Components to keep (default min(n,p,10)).' },
     },
   },
+  // --- Core biostatistics (real scipy/statsmodels/sklearn tests) ---
+  {
+    name: 'fisher_exact', category: 'Biostatistics',
+    description: "Fisher's exact test on a 2x2 contingency table (odds ratio + p). Requires scipy.",
+    handler: (i) => runPythonScript('server/biostats.py', { ...i, task: 'fisher_exact' }),
+    parameters: { table: { type: 'array', description: '2x2 contingency table.', required: true } },
+  },
+  {
+    name: 'chi_square', category: 'Biostatistics',
+    description: 'Chi-square test of independence on a contingency table. Requires scipy.',
+    handler: (i) => runPythonScript('server/biostats.py', { ...i, task: 'chi_square' }),
+    parameters: { table: { type: 'array', description: 'Contingency table (rows x cols).', required: true } },
+  },
+  {
+    name: 'anova', category: 'Biostatistics',
+    description: 'One-way ANOVA across >=2 numeric groups (F, p). Requires scipy.',
+    handler: (i) => runPythonScript('server/biostats.py', { ...i, task: 'anova' }),
+    parameters: { groups: { type: 'array', description: 'List of numeric arrays.', required: true } },
+  },
+  {
+    name: 'correlation', category: 'Biostatistics',
+    description: 'Pearson/Spearman/Kendall correlation for x,y, or a Pearson correlation matrix. Requires scipy.',
+    handler: (i) => runPythonScript('server/biostats.py', { ...i, task: 'correlation' }),
+    parameters: {
+      x: { type: 'array', description: 'First vector (with y).' }, y: { type: 'array', description: 'Second vector.' },
+      matrix: { type: 'array', description: 'Alternative: samples x features for a correlation matrix.' },
+      method: { type: 'string', description: 'pearson|spearman|kendall (default pearson).' },
+    },
+  },
+  {
+    name: 'multiple_testing', category: 'Biostatistics',
+    description: 'Multiple-testing correction (BH/Bonferroni/Holm/...) over p-values. Requires statsmodels.',
+    handler: (i) => runPythonScript('server/biostats.py', { ...i, task: 'multiple_testing' }),
+    parameters: { pvalues: { type: 'array', description: 'Raw p-values.', required: true }, method: { type: 'string', description: 'fdr_bh (default), bonferroni, holm, ...' } },
+  },
+  {
+    name: 'power_ttest', category: 'Biostatistics',
+    description: 'Two-sample t-test power analysis: give any two of effectSize/nobs/power, solves the third. Requires statsmodels.',
+    handler: (i) => runPythonScript('server/biostats.py', { ...i, task: 'power_ttest' }),
+    parameters: { effectSize: { type: 'number', description: "Cohen's d." }, nobs: { type: 'number', description: 'Per-group sample size.' }, power: { type: 'number', description: 'Target power.' } },
+  },
+  {
+    name: 'normality_test', category: 'Biostatistics',
+    description: 'Shapiro-Wilk + Kolmogorov-Smirnov normality tests. Requires scipy.',
+    handler: (i) => runPythonScript('server/biostats.py', { ...i, task: 'normality' }),
+    parameters: { x: { type: 'array', description: 'Numeric sample (>=3).', required: true } },
+  },
+  {
+    name: 'roc_auc', category: 'Biostatistics',
+    description: 'ROC curve + AUC for binary labels vs scores. Requires scikit-learn.',
+    handler: (i) => runPythonScript('server/biostats.py', { ...i, task: 'roc_auc' }),
+    parameters: { yTrue: { type: 'array', description: 'Binary labels 0/1.', required: true }, yScore: { type: 'array', description: 'Predicted scores.', required: true } },
+  },
+  {
+    name: 'logrank_test', category: 'Biostatistics / survival',
+    description: 'Two-group log-rank survival test (O-E, variance, chi-square, p, z). Requires scipy.',
+    handler: (i) => runPythonScript('server/biostats.py', { ...i, task: 'logrank' }),
+    parameters: { durations: { type: 'array', required: true, description: 'Follow-up times.' }, events: { type: 'array', required: true, description: 'Event 0/1.' }, groups: { type: 'array', required: true, description: 'Group 0/1.' } },
+  },
+  {
+    name: 'cox_regression', category: 'Biostatistics / survival',
+    description: 'Cox proportional-hazards regression (partial likelihood; per-covariate log HR, hazard ratio, p). Requires statsmodels.',
+    handler: (i) => runPythonScript('server/biostats.py', { ...i, task: 'cox' }),
+    parameters: {
+      durations: { type: 'array', required: true, description: 'Follow-up times.' },
+      events: { type: 'array', required: true, description: 'Event 0/1.' },
+      covariates: { type: 'array', required: true, description: 'samples x k covariate matrix.' },
+      covariateNames: { type: 'array', description: 'Optional covariate names.' },
+    },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));

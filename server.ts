@@ -666,6 +666,14 @@ app.get(['/api/synomics/idiscover', '/api/biomni/idiscover'], (req, res) => {
   });
 });
 
+// Core biostatistics — single dispatch route (body.task selects the test).
+app.post(['/api/synomics/biostats', '/api/biomni/biostats'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/biostats.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
 // Module B depth — advanced expression analyses (NB DE, GSEA, batch correction, PCA).
 app.post(['/api/synomics/nb-differential-expression', '/api/biomni/nb-differential-expression'], async (req, res) => {
   try {
