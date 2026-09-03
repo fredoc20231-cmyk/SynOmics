@@ -666,6 +666,14 @@ app.get(['/api/synomics/idiscover', '/api/biomni/idiscover'], (req, res) => {
   });
 });
 
+// Machine-learning analyses (scikit-learn) — single dispatch route.
+app.post(['/api/synomics/ml', '/api/biomni/ml'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/ml_analysis.py', req.body, 120000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
 // Advanced cheminformatics (RDKit) — single dispatch route.
 app.post(['/api/synomics/cheminfo', '/api/biomni/cheminfo'], async (req, res) => {
   try {

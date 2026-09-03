@@ -745,6 +745,43 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     handler: (i) => runPythonScript('server/cheminfo_advanced.py', { ...i, task: 'pains_filter' }),
     parameters: { smiles: { type: 'array', required: true, description: 'SMILES (string or list).' } },
   },
+  // --- Machine learning (scikit-learn) ---
+  {
+    name: 'kmeans_cluster', category: 'Machine learning',
+    description: 'K-means clustering with silhouette score + cluster centers. Requires scikit-learn.',
+    handler: (i) => runPythonScript('server/ml_analysis.py', { ...i, task: 'kmeans' }),
+    parameters: { X: { type: 'array', required: true, description: 'samples x features.' }, k: { type: 'number', description: 'Clusters (default 3).' } },
+  },
+  {
+    name: 'hierarchical_cluster', category: 'Machine learning',
+    description: 'Agglomerative (hierarchical) clustering + silhouette. Requires scikit-learn.',
+    handler: (i) => runPythonScript('server/ml_analysis.py', { ...i, task: 'hierarchical' }),
+    parameters: { X: { type: 'array', required: true, description: 'samples x features.' }, k: { type: 'number', description: 'Clusters (default 3).' }, linkage: { type: 'string', description: 'ward|complete|average|single.' } },
+  },
+  {
+    name: 'tsne_embed', category: 'Machine learning',
+    description: 't-SNE 2-D embedding for visualization. Requires scikit-learn.',
+    handler: (i) => runPythonScript('server/ml_analysis.py', { ...i, task: 'tsne' }),
+    parameters: { X: { type: 'array', required: true, description: 'samples x features.' }, perplexity: { type: 'number', description: 'Perplexity (auto by default).' } },
+  },
+  {
+    name: 'rf_feature_importance', category: 'Machine learning',
+    description: 'Random-Forest feature importances (classification or regression). Requires scikit-learn.',
+    handler: (i) => runPythonScript('server/ml_analysis.py', { ...i, task: 'rf_importance' }),
+    parameters: { X: { type: 'array', required: true, description: 'samples x features.' }, y: { type: 'array', required: true, description: 'Target.' }, featureNames: { type: 'array', description: 'Feature names.' }, classification: { type: 'boolean', description: 'Classification (default true).' } },
+  },
+  {
+    name: 'lasso_feature_select', category: 'Machine learning',
+    description: 'LASSO (L1) feature selection via cross-validated LassoCV — sparse predictors. Requires scikit-learn.',
+    handler: (i) => runPythonScript('server/ml_analysis.py', { ...i, task: 'lasso_select' }),
+    parameters: { X: { type: 'array', required: true, description: 'samples x features.' }, y: { type: 'array', required: true, description: 'Continuous target.' }, featureNames: { type: 'array', description: 'Feature names.' } },
+  },
+  {
+    name: 'logistic_classifier', category: 'Machine learning',
+    description: 'Cross-validated logistic-regression classifier (accuracy + AUC). Requires scikit-learn.',
+    handler: (i) => runPythonScript('server/ml_analysis.py', { ...i, task: 'logistic' }),
+    parameters: { X: { type: 'array', required: true, description: 'samples x features.' }, y: { type: 'array', required: true, description: 'Binary target 0/1.' } },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));
