@@ -5,7 +5,7 @@ SynOmics's **actual, verified** tool registry.
 
 **Sourcing & honesty note (read this):**
 - The **SynOmics** column lists *exact tool names from `server/tool_registry.ts`*
-  (151 tools at time of writing). Every one is backed by a real engine and a
+  (181 tools at time of writing). Every one is backed by a real engine and a
   CI-gated test that checks output against known ground truth — see
   `.github/workflows/ci.yml` and `tests/*`. Nothing here is a "random one-line"
   wrapper; each `✅` links to a named test suite that asserts a correct numeric
@@ -26,9 +26,9 @@ capability with no direct Biomni equivalent.
 | Platform | Tools | Verification |
 | --- | --- | --- |
 | Biomni (A1/E1) | ~150 | broad generalist toolbox |
-| **SynOmics** | **151** | **every tool CI-gated against ground truth** |
+| **SynOmics** | **181** | **every tool CI-gated against ground truth** |
 
-SynOmics now matches Biomni's headline tool count (151 vs ~150) while covering the
+SynOmics now exceeds Biomni's headline tool count (181 vs ~150) while covering the
 large majority of Biomni's *analysis* domains that run without specialized infra,
 **plus ~24 verifiable-AI / iDiscover engines Biomni has no equivalent for**. The
 remaining not-built items are overwhelmingly infra-gated wrappers (docking,
@@ -64,6 +64,12 @@ folding, read alignment, GPU single-cell) — listed at the bottom.
 | **Clinical epidemiology** | OR/RR, diagnostics, meta-analysis | `odds_ratio_rr`, `diagnostic_metrics`, `number_needed_to_treat`, `meta_analysis` | ✅ `clinical_tools_smoke` |
 | **Co-expression networks** | WGCNA | `wgcna_soft_threshold`, `wgcna_coexpression_modules`, `wgcna_module_eigengenes` | ✅ `wgcna_smoke` |
 | **Flow cytometry** | transform, compensation, gating | `flow_arcsinh_transform`, `flow_compensation`, `flow_gating_frequencies`, `flow_channel_summary` | ✅ `flow_tools_smoke` |
+| **Spatial statistics** | spatial autocorrelation, point patterns | `morans_i`, `gearys_c`, `getis_ord_general_g`, `ripleys_k`, `moran_permutation_test` | ✅ `spatial_tools_smoke` |
+| **Pharmacokinetics / kinetics** | NCA, compartmental, enzyme kinetics | `nca`, `one_compartment_fit`, `michaelis_menten`, `lineweaver_burk`, `competitive_inhibition_ki` | ✅ `pkpd_tools_smoke` |
+| **Bayesian inference** | conjugate updates, Bayes factors | `beta_binomial_update`, `normal_normal_update`, `poisson_gamma_update`, `bayesian_ab_test`, `bayes_factor_bic` | ✅ `bayes_tools_smoke` |
+| **Beta diversity / ordination** | Bray-Curtis, PCoA, PERMANOVA | `bray_curtis`, `jaccard_distance`, `pcoa`, `permanova`, `mantel_test` | ✅ `beta_diversity_smoke` |
+| **Power / sample size** | study design | `sample_size_two_means`, `power_two_means`, `sample_size_two_proportions`, `power_anova`, `sample_size_correlation` | ✅ `power_tools_smoke` |
+| **Genomic intervals** | BEDTools-style arithmetic | `interval_merge`, `interval_intersect`, `interval_subtract`, `interval_coverage`, `interval_nearest` | ✅ `genome_intervals_smoke` |
 | **Reporting** | report export | `generate_report` (HTML/DOCX/PDF), `provenance_manifest` | ✅ `report_smoke`, `provenance_smoke` |
 | **Lab automation** | protocols | `robotic_protocol`, `assay_quantify` | ✅ `robotics_smoke`, `vision_assay_smoke` |
 | **Verifiable-AI (no Biomni equivalent)** | — | `adversarial_validate`, `adversarial_swarm`, `adversarial_ml`, `causal_discovery`, `pathway_logic`, `pathway_logic_z3`, `edge_extraction`, `multiomic_consistency`, `boolean_attractors`, `circuit_verify`, `pde_residual`, `mml_select`, `tensor_compress`, `bayesian_update`, `accelerate_kernel` | ➕ 15 engines, all CI-gated |

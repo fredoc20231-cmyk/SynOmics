@@ -718,6 +718,44 @@ app.post(['/api/synomics/flow', '/api/biomni/flow'], async (req, res) => {
   } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
 });
 
+// Spatial stats / PK-PD / Bayesian / beta-diversity / power / genome-intervals — dispatch routes.
+app.post(['/api/synomics/spatial', '/api/biomni/spatial'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/spatial_tools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/pkpd', '/api/biomni/pkpd'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/pkpd_tools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/bayes', '/api/biomni/bayes'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/bayes_tools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/beta-diversity', '/api/biomni/beta-diversity'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/beta_diversity.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/power', '/api/biomni/power'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/power_tools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/genome-intervals', '/api/biomni/genome-intervals'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/genome_intervals.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
 // Enrichment / QC / proteomics — dispatch routes.
 app.post(['/api/synomics/enrichment', '/api/biomni/enrichment'], async (req, res) => {
   try {

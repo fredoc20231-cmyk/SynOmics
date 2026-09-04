@@ -249,7 +249,19 @@ Bridges omics findings into molecular design + rigorous in-silico validation.
   modules, module eigengenes), flow cytometry (`flow_tools.py`: arcsinh transform,
   spillover compensation, gating frequencies, channel summary). Each validated
   against known ground truth.
-- 151 real agent tools in `server/tool_registry.ts`; 39 test suites in CI, plus a
+- **Breadth wave 4 (real, CI-gated):** spatial statistics (`spatial_tools.py`:
+  Moran's I, Geary's C, Getis-Ord G, Ripley's K, Moran permutation test),
+  pharmacokinetics/enzyme kinetics (`pkpd_tools.py`: NCA, one-compartment fit,
+  Michaelis-Menten, Lineweaver-Burk, competitive-inhibition Ki), Bayesian inference
+  (`bayes_tools.py`: beta-binomial, normal-normal, Poisson-gamma conjugate updates,
+  Bayesian A/B test, BIC Bayes factor), beta-diversity/ordination
+  (`beta_diversity.py`: Bray-Curtis, Jaccard, PCoA, PERMANOVA, Mantel), statistical
+  power/sample size (`power_tools.py`: two-means, two-proportions, ANOVA,
+  correlation), genomic interval arithmetic (`genome_intervals.py`: merge,
+  intersect, subtract, coverage, nearest). Each validated against known ground
+  truth (e.g. d=0.5/power=0.8 → n≈64; Bray-Curtis of disjoint samples = 1.0;
+  Michaelis-Menten recovers Km=10; Moran's I = +1 for a perfectly clustered field).
+- 181 real agent tools in `server/tool_registry.ts`; 45 test suites in CI, plus a
   `tsc --noEmit` type-check gate. See `BIOMNI_COMPARISON.md` for the per-domain
   Biomni↔SynOmics coverage table.
 - Everything marked "to build" / "not implemented" above must not be faked.

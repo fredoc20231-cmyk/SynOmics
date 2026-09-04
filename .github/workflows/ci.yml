@@ -269,3 +269,31 @@ jobs:
         run: |
           python -m pip install --quiet numpy
           python tests/flow_tools_smoke.py
+
+      - name: Spatial statistics gate (Moran's I / Geary's C / Getis-Ord G / Ripley's K)
+        run: |
+          python -m pip install --quiet numpy scipy
+          python tests/spatial_tools_smoke.py
+
+      - name: PK/PD & enzyme kinetics gate (NCA / 1-compartment / Michaelis-Menten / Ki)
+        run: |
+          python -m pip install --quiet numpy scipy
+          python tests/pkpd_tools_smoke.py
+
+      - name: Bayesian inference gate (beta-binomial / normal-normal / poisson-gamma / A-B / BF)
+        run: |
+          python -m pip install --quiet numpy scipy
+          python tests/bayes_tools_smoke.py
+
+      - name: Beta-diversity gate (Bray-Curtis / Jaccard / PCoA / PERMANOVA / Mantel)
+        run: |
+          python -m pip install --quiet numpy scipy
+          python tests/beta_diversity_smoke.py
+
+      - name: Power / sample-size gate (means / proportions / ANOVA / correlation)
+        run: |
+          python -m pip install --quiet numpy scipy statsmodels
+          python tests/power_tools_smoke.py
+
+      - name: Genomic interval arithmetic gate (merge / intersect / subtract / coverage / nearest)
+        run: python tests/genome_intervals_smoke.py

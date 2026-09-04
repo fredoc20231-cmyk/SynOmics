@@ -1220,6 +1220,192 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     handler: (i) => runPythonScript('server/flow_tools.py', { ...i, task: 'channel_summary' }),
     parameters: { events: { type: 'array', required: true, description: 'events x channels matrix.' }, channels: { type: 'array', description: 'Channel names aligned to columns.' } },
   },
+  // --- Spatial statistics (numpy/scipy) ---
+  {
+    name: 'morans_i', category: 'Spatial statistics',
+    description: "Moran's I global spatial autocorrelation (+ expected I, z-score, normal p-value). Requires numpy.",
+    handler: (i) => runPythonScript('server/spatial_tools.py', { ...i, task: 'morans_i' }),
+    parameters: { values: { type: 'array', required: true, description: 'Numeric observation per location.' }, weights: { type: 'array', required: true, description: 'n x n spatial weight matrix.' } },
+  },
+  {
+    name: 'gearys_c', category: 'Spatial statistics',
+    description: "Geary's C spatial autocorrelation (~0 strong positive, 1 none). Requires numpy.",
+    handler: (i) => runPythonScript('server/spatial_tools.py', { ...i, task: 'gearys_c' }),
+    parameters: { values: { type: 'array', required: true, description: 'Numeric observation per location.' }, weights: { type: 'array', required: true, description: 'n x n spatial weight matrix.' } },
+  },
+  {
+    name: 'getis_ord_general_g', category: 'Spatial statistics',
+    description: 'Getis-Ord General G hot/cold-spot statistic on non-negative values. Requires numpy.',
+    handler: (i) => runPythonScript('server/spatial_tools.py', { ...i, task: 'getis_ord_general_g' }),
+    parameters: { values: { type: 'array', required: true, description: 'Non-negative value per location.' }, weights: { type: 'array', required: true, description: 'n x n spatial weight matrix.' } },
+  },
+  {
+    name: 'ripleys_k', category: 'Spatial statistics',
+    description: "Ripley's K / Besag L point-pattern clustering across radii. Requires numpy.",
+    handler: (i) => runPythonScript('server/spatial_tools.py', { ...i, task: 'ripleys_k' }),
+    parameters: { points: { type: 'array', required: true, description: 'List of [x,y] coordinates.' }, radii: { type: 'array', required: true, description: 'Radii to evaluate.' }, area: { type: 'number', required: true, description: 'Study-region area.' } },
+  },
+  {
+    name: 'moran_permutation_test', category: 'Spatial statistics',
+    description: "Permutation p-value for Moran's I (no normality assumption). Requires numpy.",
+    handler: (i) => runPythonScript('server/spatial_tools.py', { ...i, task: 'moran_permutation_test' }),
+    parameters: { values: { type: 'array', required: true, description: 'Numeric observation per location.' }, weights: { type: 'array', required: true, description: 'n x n spatial weight matrix.' }, nPermutations: { type: 'number', description: 'Permutations (default 999).' }, seed: { type: 'number', description: 'RNG seed.' } },
+  },
+  // --- Pharmacokinetics / enzyme kinetics (scipy) ---
+  {
+    name: 'nca', category: 'Pharmacokinetics',
+    description: 'Non-compartmental PK analysis: Cmax, Tmax, AUC(last/inf), kel, half-life, clearance. Requires scipy.',
+    handler: (i) => runPythonScript('server/pkpd_tools.py', { ...i, task: 'nca' }),
+    parameters: { time: { type: 'array', required: true, description: 'Sampling times.' }, conc: { type: 'array', required: true, description: 'Concentrations.' }, dose: { type: 'number', description: 'Dose (enables clearance).' } },
+  },
+  {
+    name: 'one_compartment_fit', category: 'Pharmacokinetics',
+    description: 'One-compartment IV bolus fit C(t)=(dose/Vd)e^(-kt) -> k, Vd, half-life, R^2. Requires scipy.',
+    handler: (i) => runPythonScript('server/pkpd_tools.py', { ...i, task: 'one_compartment_fit' }),
+    parameters: { time: { type: 'array', required: true, description: 'Sampling times.' }, conc: { type: 'array', required: true, description: 'Concentrations.' }, dose: { type: 'number', required: true, description: 'Administered dose.' } },
+  },
+  {
+    name: 'michaelis_menten', category: 'Pharmacokinetics',
+    description: 'Michaelis-Menten fit v=Vmax*S/(Km+S) -> Vmax, Km, R^2. Requires scipy.',
+    handler: (i) => runPythonScript('server/pkpd_tools.py', { ...i, task: 'michaelis_menten' }),
+    parameters: { substrate: { type: 'array', required: true, description: 'Substrate concentrations.' }, velocity: { type: 'array', required: true, description: 'Reaction velocities.' } },
+  },
+  {
+    name: 'lineweaver_burk', category: 'Pharmacokinetics',
+    description: 'Lineweaver-Burk linearization (1/v vs 1/S) -> Vmax, Km, slope, intercept. Requires numpy.',
+    handler: (i) => runPythonScript('server/pkpd_tools.py', { ...i, task: 'lineweaver_burk' }),
+    parameters: { substrate: { type: 'array', required: true, description: 'Substrate concentrations.' }, velocity: { type: 'array', required: true, description: 'Reaction velocities.' } },
+  },
+  {
+    name: 'competitive_inhibition_ki', category: 'Pharmacokinetics',
+    description: 'Estimate inhibition constant Ki from apparent Km vs inhibitor concentration. Requires numpy.',
+    handler: (i) => runPythonScript('server/pkpd_tools.py', { ...i, task: 'competitive_inhibition_ki' }),
+    parameters: { inhibitor: { type: 'array', required: true, description: 'Inhibitor concentrations [I].' }, km_apparent: { type: 'array', required: true, description: 'Apparent Km at each [I].' } },
+  },
+  // --- Bayesian inference (scipy) ---
+  {
+    name: 'beta_binomial_update', category: 'Bayesian inference',
+    description: 'Beta-Binomial conjugate update -> posterior params, mean, 95% credible interval. Requires scipy.',
+    handler: (i) => runPythonScript('server/bayes_tools.py', { ...i, task: 'beta_binomial_update' }),
+    parameters: { successes: { type: 'number', required: true, description: 'Observed successes.' }, trials: { type: 'number', required: true, description: 'Total trials.' }, priorAlpha: { type: 'number', description: 'Prior alpha (default 1).' }, priorBeta: { type: 'number', description: 'Prior beta (default 1).' } },
+  },
+  {
+    name: 'normal_normal_update', category: 'Bayesian inference',
+    description: 'Normal-Normal conjugate update (known variance) -> posterior mean/var + credible interval. Requires scipy.',
+    handler: (i) => runPythonScript('server/bayes_tools.py', { ...i, task: 'normal_normal_update' }),
+    parameters: { priorMean: { type: 'number', required: true, description: 'Prior mean.' }, priorVar: { type: 'number', required: true, description: 'Prior variance.' }, dataMean: { type: 'number', description: 'Observed mean (or provide data).' }, data: { type: 'array', description: 'Raw observations (alternative to dataMean).' }, sigma2: { type: 'number', description: 'Known per-obs variance.' }, n: { type: 'number', description: 'Sample size (default 1).' } },
+  },
+  {
+    name: 'poisson_gamma_update', category: 'Bayesian inference',
+    description: 'Poisson-Gamma conjugate update -> posterior shape/rate, mean, credible interval. Requires scipy.',
+    handler: (i) => runPythonScript('server/bayes_tools.py', { ...i, task: 'poisson_gamma_update' }),
+    parameters: { priorShape: { type: 'number', required: true, description: 'Prior gamma shape.' }, priorRate: { type: 'number', required: true, description: 'Prior gamma rate.' }, counts: { type: 'array', description: 'Poisson counts (or sumCounts+nObs).' }, sumCounts: { type: 'number', description: 'Sum of counts.' }, nObs: { type: 'number', description: 'Number of observations.' } },
+  },
+  {
+    name: 'bayesian_ab_test', category: 'Bayesian inference',
+    description: 'Bayesian A/B test on two Beta posteriors -> P(B>A), means, expected uplift (seeded Monte Carlo). Requires numpy.',
+    handler: (i) => runPythonScript('server/bayes_tools.py', { ...i, task: 'bayesian_ab_test' }),
+    parameters: { successesA: { type: 'number', required: true, description: 'Successes in A.' }, trialsA: { type: 'number', required: true, description: 'Trials in A.' }, successesB: { type: 'number', required: true, description: 'Successes in B.' }, trialsB: { type: 'number', required: true, description: 'Trials in B.' }, nSamples: { type: 'number', description: 'MC samples (default 100000).' }, seed: { type: 'number', description: 'RNG seed (default 0).' } },
+  },
+  {
+    name: 'bayes_factor_bic', category: 'Bayesian inference',
+    description: 'BIC-approximation Bayes factor BF10 for two nested models + Jeffreys evidence label.',
+    handler: (i) => runPythonScript('server/bayes_tools.py', { ...i, task: 'bayes_factor_bic' }),
+    parameters: { bic0: { type: 'number', required: true, description: 'BIC of H0 model.' }, bic1: { type: 'number', required: true, description: 'BIC of H1 model.' } },
+  },
+  // --- Beta diversity / ordination (numpy/scipy) ---
+  {
+    name: 'bray_curtis', category: 'Beta diversity',
+    description: 'Pairwise Bray-Curtis dissimilarity matrix across samples. Requires numpy.',
+    handler: (i) => runPythonScript('server/beta_diversity.py', { ...i, task: 'bray_curtis' }),
+    parameters: { matrix: { type: 'array', required: true, description: 'samples x features count matrix.' }, sampleIds: { type: 'array', description: 'Sample labels.' } },
+  },
+  {
+    name: 'jaccard_distance', category: 'Beta diversity',
+    description: 'Pairwise Jaccard dissimilarity on presence/absence (binarized at >0). Requires numpy.',
+    handler: (i) => runPythonScript('server/beta_diversity.py', { ...i, task: 'jaccard_distance' }),
+    parameters: { matrix: { type: 'array', required: true, description: 'samples x features matrix.' }, sampleIds: { type: 'array', description: 'Sample labels.' } },
+  },
+  {
+    name: 'pcoa', category: 'Beta diversity',
+    description: 'Principal Coordinates Analysis (classical MDS) on a distance matrix -> coords, eigenvalues, variance explained. Requires numpy.',
+    handler: (i) => runPythonScript('server/beta_diversity.py', { ...i, task: 'pcoa' }),
+    parameters: { distanceMatrix: { type: 'array', required: true, description: 'Square symmetric distance matrix.' }, nComponents: { type: 'number', description: 'Axes to return (default 2).' }, sampleIds: { type: 'array', description: 'Sample labels.' } },
+  },
+  {
+    name: 'permanova', category: 'Beta diversity',
+    description: 'PERMANOVA (Anderson 2001) pseudo-F + permutation p-value from a distance matrix + groups. Requires numpy.',
+    handler: (i) => runPythonScript('server/beta_diversity.py', { ...i, task: 'permanova' }),
+    parameters: { distanceMatrix: { type: 'array', required: true, description: 'Square symmetric distance matrix.' }, groups: { type: 'array', required: true, description: 'Group label per sample.' }, nPermutations: { type: 'number', description: 'Permutations (default 999).' }, seed: { type: 'number', description: 'RNG seed.' } },
+  },
+  {
+    name: 'mantel_test', category: 'Beta diversity',
+    description: 'Mantel correlation between two distance matrices + permutation p-value. Requires numpy.',
+    handler: (i) => runPythonScript('server/beta_diversity.py', { ...i, task: 'mantel_test' }),
+    parameters: { matrixA: { type: 'array', required: true, description: 'First distance matrix.' }, matrixB: { type: 'array', required: true, description: 'Second distance matrix (same shape).' }, nPermutations: { type: 'number', description: 'Permutations (default 999).' }, seed: { type: 'number', description: 'RNG seed.' } },
+  },
+  // --- Statistical power / sample size (statsmodels) ---
+  {
+    name: 'sample_size_two_means', category: 'Power analysis',
+    description: 'Required n per group for a two-sample t-test given Cohen d, alpha, power. Requires statsmodels.',
+    handler: (i) => runPythonScript('server/power_tools.py', { ...i, task: 'sample_size_two_means' }),
+    parameters: { effectSize: { type: 'number', required: true, description: "Cohen's d." }, alpha: { type: 'number', description: 'Significance (default 0.05).' }, power: { type: 'number', description: 'Target power (default 0.8).' }, ratio: { type: 'number', description: 'n2/n1 (default 1).' }, alternative: { type: 'string', description: "'two-sided'|'larger'|'smaller'." } },
+  },
+  {
+    name: 'power_two_means', category: 'Power analysis',
+    description: 'Achieved power of a two-sample t-test given d, n per group, alpha. Requires statsmodels.',
+    handler: (i) => runPythonScript('server/power_tools.py', { ...i, task: 'power_two_means' }),
+    parameters: { effectSize: { type: 'number', required: true, description: "Cohen's d." }, nPerGroup: { type: 'number', required: true, description: 'n in group 1.' }, alpha: { type: 'number', description: 'Significance (default 0.05).' }, ratio: { type: 'number', description: 'n2/n1 (default 1).' }, alternative: { type: 'string', description: "'two-sided'|'larger'|'smaller'." } },
+  },
+  {
+    name: 'sample_size_two_proportions', category: 'Power analysis',
+    description: 'Required n per group to detect p1 vs p2 (proportion effect size h). Requires statsmodels.',
+    handler: (i) => runPythonScript('server/power_tools.py', { ...i, task: 'sample_size_two_proportions' }),
+    parameters: { p1: { type: 'number', required: true, description: 'Proportion 1.' }, p2: { type: 'number', required: true, description: 'Proportion 2.' }, alpha: { type: 'number', description: 'Significance (default 0.05).' }, power: { type: 'number', description: 'Target power (default 0.8).' }, ratio: { type: 'number', description: 'n2/n1 (default 1).' }, alternative: { type: 'string', description: "'two-sided'|'larger'|'smaller'." } },
+  },
+  {
+    name: 'power_anova', category: 'Power analysis',
+    description: 'Power for a one-way ANOVA given k groups, Cohen f, n per group, alpha. Requires statsmodels.',
+    handler: (i) => runPythonScript('server/power_tools.py', { ...i, task: 'power_anova' }),
+    parameters: { groups: { type: 'number', required: true, description: 'Number of groups k.' }, effectSize: { type: 'number', required: true, description: "Cohen's f." }, nPerGroup: { type: 'number', required: true, description: 'n per group.' }, alpha: { type: 'number', description: 'Significance (default 0.05).' } },
+  },
+  {
+    name: 'sample_size_correlation', category: 'Power analysis',
+    description: 'Required n to detect a Pearson correlation r (Fisher z formula). Requires scipy.',
+    handler: (i) => runPythonScript('server/power_tools.py', { ...i, task: 'sample_size_correlation' }),
+    parameters: { r: { type: 'number', required: true, description: 'Target correlation.' }, alpha: { type: 'number', description: 'Significance (default 0.05).' }, power: { type: 'number', description: 'Target power (default 0.8).' }, alternative: { type: 'string', description: "'two-sided'|'one-sided'." } },
+  },
+  // --- Genomic interval arithmetic (BEDTools-style, stdlib) ---
+  {
+    name: 'interval_merge', category: 'Genomic intervals',
+    description: 'Merge overlapping/adjacent genomic intervals (half-open [start,end)).',
+    handler: (i) => runPythonScript('server/genome_intervals.py', { ...i, task: 'interval_merge' }),
+    parameters: { intervals: { type: 'array', required: true, description: 'List of [start,end] pairs.' }, minGap: { type: 'number', description: 'Merge neighbors within this gap (default 0).' } },
+  },
+  {
+    name: 'interval_intersect', category: 'Genomic intervals',
+    description: 'Intersections between two interval sets + total overlap bp.',
+    handler: (i) => runPythonScript('server/genome_intervals.py', { ...i, task: 'interval_intersect' }),
+    parameters: { a: { type: 'array', required: true, description: 'First interval set.' }, b: { type: 'array', required: true, description: 'Second interval set.' } },
+  },
+  {
+    name: 'interval_subtract', category: 'Genomic intervals',
+    description: 'Subtract interval set B from A (portions of A not covered by B).',
+    handler: (i) => runPythonScript('server/genome_intervals.py', { ...i, task: 'interval_subtract' }),
+    parameters: { a: { type: 'array', required: true, description: 'Source intervals.' }, b: { type: 'array', required: true, description: 'Intervals to subtract.' } },
+  },
+  {
+    name: 'interval_coverage', category: 'Genomic intervals',
+    description: 'Union coverage of intervals over a region -> covered bp + fraction (overlap-aware).',
+    handler: (i) => runPythonScript('server/genome_intervals.py', { ...i, task: 'interval_coverage' }),
+    parameters: { intervals: { type: 'array', required: true, description: 'Intervals to measure.' }, regionStart: { type: 'number', description: 'Region start (with regionEnd).' }, regionEnd: { type: 'number', description: 'Region end.' }, regionLength: { type: 'number', description: 'Region [0,length) alternative.' } },
+  },
+  {
+    name: 'interval_nearest', category: 'Genomic intervals',
+    description: 'Nearest feature interval + distance for each query interval (0 if overlapping).',
+    handler: (i) => runPythonScript('server/genome_intervals.py', { ...i, task: 'interval_nearest' }),
+    parameters: { query: { type: 'array', required: true, description: 'Query intervals.' }, features: { type: 'array', required: true, description: 'Candidate feature intervals.' } },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));
