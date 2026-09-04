@@ -1,0 +1,103 @@
+# ==============================================================================
+# SynOmics Dockerfile: Base Bioconda & Multi-Omics Tool Engine (CPU / high-mem)
+# Multi-Stage, Reproducible Bioconda & Conda-Forge Foundation
+#
+# Packages the real Python engine PLUS the external bioinformatics binaries that
+# the current sandboxed build cannot install (samtools, bwa, bedtools, fastp,
+# scanpy, cobra, opentrons). This is the worker image that makes the infra-gated
+# tools in CLAUDE.md real once deployed on a cluster with these binaries.
+# ==============================================================================
+
+# Stage 1: Conda environment resolution
+FROM mambaorg/micromamba:1.5.8-bookworm-slim AS builder
+
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    cmake \
+    git \
+    libgomp1 \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+USER micromamba
+WORKDIR /tmp/env
+
+COPY --chown=micromamba:micromamba <<EOF /tmp/env/environment.yml
+name: synomics-core
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python=3.11.8
+  - pip=24.0
+  - numpy=1.26.4
+  - scipy=1.12.0
+  - pandas=2.2.1
+  - scikit-learn=1.4.1.post1
+  - statsmodels=0.14.1
+  - numba=0.59.0
+  - h5py=3.10.0
+  - scanpy=1.10.0
+  - anndata=0.10.6
+  - rdkit=2023.09.5
+  - samtools=1.19.2
+  - bwa=0.7.17
+  - bedtools=2.31.1
+  - fastp=0.23.4
+  - biopython=1.83
+  - networkx=3.2.1
+  - gseapy=1.1.2
+  - pyyaml=6.0.1
+  - requests=2.31.0
+  - pip:
+      - celltypist==1.6.2
+      - mofapy2==0.7.0
+      - cobra==0.29.0
+      - PyLabRobot==0.1.3
+      - opentrons==7.2.1
+EOF
+
+RUN micromamba create -y -f /tmp/env/environment.yml && \
+    micromamba clean --all --yes
+
+# Stage 2: Hardened runtime container
+FROM debian:bookworm-slim AS runner
+
+LABEL description="Production multi-omics & bioinformatics computational engine (CPU/high-mem worker)"
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgomp1 \
+    libstdc++6 \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd -g 10001 synomics && \
+    useradd -u 10001 -g synomics -m -s /bin/bash synomics && \
+    mkdir -p /app /mnt/scratch /mnt/results && \
+    chown -R synomics:synomics /app /mnt/scratch /mnt/results
+
+COPY --from=builder /opt/conda/envs/synomics-core /opt/conda/envs/synomics-core
+ENV PATH="/opt/conda/envs/synomics-core/bin:$PATH"
+ENV PYTHONUNBUFFERED=1
+ENV NUMBA_CACHE_DIR=/tmp/numba_cache
+
+WORKDIR /app
+COPY --chown=synomics:synomics server/ /app/server/
+
+USER synomics
+
+# Healthcheck: verify the heavy scientific stack actually imports in the image.
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+  CMD python3 -c "import scanpy, rdkit, Bio, scipy, sklearn; print('OK')" || exit 1
+
+# The engine is a one-shot CLI: `synomics_engine.py <command>` with a JSON payload
+# on stdin (see server/engine_client.ts). The dispatcher overrides this CMD per
+# request. The default below runs a REAL built-in pairwise alignment (the command
+# supplies its own default sequences when stdin is empty) so `docker run <img>`
+# produces genuine engine output, not a fabricated or non-existent command.
+ENTRYPOINT ["python3", "server/synomics_engine.py"]
+CMD ["align_sequences"]

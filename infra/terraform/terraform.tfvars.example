@@ -1,0 +1,24 @@
+# ==============================================================================
+# SynOmics Enterprise - Example Terraform Variables Configuration
+# ==============================================================================
+
+project_id               = "synomics-enterprise-prod"
+region                   = "us-central1"
+environment              = "production"
+
+# Network Subnets & Secondary Ranges
+gke_subnet_cidr          = "10.100.0.0/20"
+gke_pods_cidr            = "10.101.0.0/16"
+gke_services_cidr        = "10.102.0.0/20"
+gke_master_cidr          = "172.16.0.0/28"
+filestore_reserved_cidr  = "10.200.0.0/29"
+cloud_run_connector_cidr = "10.8.0.0/28"
+
+# Node Pool Autoscaling Capacities
+enable_gke_autopilot     = false # Use hardware-tainted node pools for precision bioinformatics
+cpu_spot_node_count      = 25    # N2 Spot/Preemptible for BWA/GATK/FASTQ
+highmem_node_count       = 12    # N2D High-Mem for AnnData & Spatial
+gpu_a100_node_count      = 6     # NVIDIA A100 for ESMFold & OpenMM
+gpu_l4_node_count        = 10    # NVIDIA L4 for De Novo Drug Design
+
+api_dispatcher_image_url = "gcr.io/synomics-enterprise-prod/api-dispatcher:v2.4.0"

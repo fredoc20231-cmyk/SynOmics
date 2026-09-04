@@ -1,0 +1,181 @@
+# ==============================================================================
+# Kubernetes Deployments: Heterogeneous Multi-Omics Compute Workers
+# Strict Resource Quotas, Security Contexts, and Hardware Taints/Tolerations
+# ==============================================================================
+
+# 1. CPU-Optimized Bioinformatics Worker (BWA, GATK, FASTQ, PLINK2)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: synomics-cpu-worker
+  namespace: default
+  labels:
+    app.kubernetes.io/name: synomics-cpu-worker
+    synomics.ai/tier: cpu-bioinformatics
+spec:
+  replicas: {{ .Values.cpuWorker.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: synomics-cpu-worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: synomics-cpu-worker
+        synomics.ai/tier: cpu-bioinformatics
+    spec:
+      nodeSelector:
+{{ toYaml .Values.cpuWorker.nodeSelector | indent 8 }}
+      tolerations:
+{{ toYaml .Values.cpuWorker.tolerations | indent 8 }}
+      containers:
+        - name: cpu-engine
+          image: "{{ .Values.cpuWorker.image.repository }}:{{ .Values.cpuWorker.image.tag }}"
+          imagePullPolicy: {{ .Values.cpuWorker.image.pullPolicy }}
+          ports:
+            - containerPort: 50051
+              name: grpc
+          resources:
+{{ toYaml .Values.cpuWorker.resources | indent 12 }}
+          volumeMounts:
+            - name: scratch-volume
+              mountPath: /mnt/scratch
+          securityContext:
+            readOnlyRootFilesystem: false
+            runAsNonRoot: true
+            runAsUser: 10001
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+      volumes:
+        - name: scratch-volume
+          persistentVolumeClaim:
+            claimName: synomics-scratch-pvc
+---
+# 2. High-Memory Single-Cell & Spatial Worker (AnnData, Spatial, MOFA+)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: synomics-highmem-worker
+  namespace: default
+  labels:
+    app.kubernetes.io/name: synomics-highmem-worker
+    synomics.ai/tier: highmem-omics
+spec:
+  replicas: {{ .Values.highMemWorker.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: synomics-highmem-worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: synomics-highmem-worker
+        synomics.ai/tier: highmem-omics
+    spec:
+      nodeSelector:
+{{ toYaml .Values.highMemWorker.nodeSelector | indent 8 }}
+      tolerations:
+{{ toYaml .Values.highMemWorker.tolerations | indent 8 }}
+      containers:
+        - name: highmem-engine
+          image: "{{ .Values.highMemWorker.image.repository }}:{{ .Values.highMemWorker.image.tag }}"
+          imagePullPolicy: {{ .Values.highMemWorker.image.pullPolicy }}
+          ports:
+            - containerPort: 50051
+              name: grpc
+          resources:
+{{ toYaml .Values.highMemWorker.resources | indent 12 }}
+          volumeMounts:
+            - name: scratch-volume
+              mountPath: /mnt/scratch
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            allowPrivilegeEscalation: false
+      volumes:
+        - name: scratch-volume
+          persistentVolumeClaim:
+            claimName: synomics-scratch-pvc
+---
+# 3. GPU Deep Learning Worker (ESMFold, AlphaFold2, OpenMM)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: synomics-gpu-worker
+  namespace: default
+  labels:
+    app.kubernetes.io/name: synomics-gpu-worker
+    synomics.ai/tier: gpu-deeplearning
+spec:
+  replicas: {{ .Values.gpuWorker.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: synomics-gpu-worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: synomics-gpu-worker
+        synomics.ai/tier: gpu-deeplearning
+    spec:
+      nodeSelector:
+{{ toYaml .Values.gpuWorker.nodeSelector | indent 8 }}
+      tolerations:
+{{ toYaml .Values.gpuWorker.tolerations | indent 8 }}
+      containers:
+        - name: gpu-engine
+          image: "{{ .Values.gpuWorker.image.repository }}:{{ .Values.gpuWorker.image.tag }}"
+          imagePullPolicy: {{ .Values.gpuWorker.image.pullPolicy }}
+          ports:
+            - containerPort: 50051
+              name: grpc
+          resources:
+{{ toYaml .Values.gpuWorker.resources | indent 12 }}
+          volumeMounts:
+            - name: scratch-volume
+              mountPath: /mnt/scratch
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            allowPrivilegeEscalation: false
+      volumes:
+        - name: scratch-volume
+          persistentVolumeClaim:
+            claimName: synomics-scratch-pvc
+---
+# 4. gVisor Micro-VM Sandbox Worker (sandbox_execute)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: synomics-gvisor-sandbox
+  namespace: default
+  labels:
+    app.kubernetes.io/name: synomics-gvisor-sandbox
+    synomics.ai/tier: untrusted-sandbox
+spec:
+  replicas: {{ .Values.sandboxWorker.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: synomics-gvisor-sandbox
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: synomics-gvisor-sandbox
+        synomics.ai/tier: untrusted-sandbox
+    spec:
+      runtimeClassName: {{ .Values.sandboxWorker.runtimeClassName }}
+      nodeSelector:
+{{ toYaml .Values.sandboxWorker.nodeSelector | indent 8 }}
+      tolerations:
+{{ toYaml .Values.sandboxWorker.tolerations | indent 8 }}
+      containers:
+        - name: gvisor-sandbox
+          image: "{{ .Values.sandboxWorker.image.repository }}:{{ .Values.sandboxWorker.image.tag }}"
+          imagePullPolicy: {{ .Values.sandboxWorker.image.pullPolicy }}
+          resources:
+{{ toYaml .Values.sandboxWorker.resources | indent 12 }}
+          securityContext:
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 9999
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]

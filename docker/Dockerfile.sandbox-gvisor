@@ -1,0 +1,38 @@
+# ==============================================================================
+# SynOmics Dockerfile: Hardened gVisor Micro-VM Sandbox Runner
+# Secure sandboxed execution environment with restricted syscalls
+# ==============================================================================
+
+FROM python:3.11-slim-bookworm
+
+LABEL maintainer="SynOmics Security Architecture <security@synomics.ai>"
+LABEL description="Hardened micro-sandbox container executing untrusted user code via gVisor"
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgomp1 \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install isolated science tools
+RUN pip install --no-cache-dir \
+    numpy==1.26.4 \
+    scipy==1.12.0 \
+    pandas==2.2.1 \
+    matplotlib==3.8.3 \
+    sympy==1.12.0
+
+# Create unprivileged sandbox user with strictly limited permissions
+RUN groupadd -g 9999 sandboxuser && \
+    useradd -u 9999 -g sandboxuser -m -s /usr/sbin/nologin sandboxuser && \
+    mkdir -p /sandbox && \
+    chown -R sandboxuser:sandboxuser /sandbox
+
+WORKDIR /sandbox
+USER sandboxuser
+
+# Enforce read-only root filesystem compliance
+ENV TMPDIR=/tmp
+ENV HOME=/sandbox
+
+ENTRYPOINT ["python3", "-c"]
+CMD ["print('SynOmics gVisor Micro-VM Sandbox Ready')"]

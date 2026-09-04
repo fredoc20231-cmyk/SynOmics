@@ -1,0 +1,9 @@
+apiVersion: v2
+name: synomics-biocompute
+description: Helm Chart for SynOmics Multi-Omics Compute Workers, gVisor Sandbox & gRPC Dispatcher on GKE
+type: application
+version: 2.4.0
+appVersion: "2.4.0"
+maintainers:
+  - name: SynOmics Biofoundry Platform Engineering
+    email: eng@synomics.ai

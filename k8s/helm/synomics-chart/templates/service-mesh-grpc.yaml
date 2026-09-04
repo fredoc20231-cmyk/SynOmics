@@ -1,0 +1,37 @@
+# ==============================================================================
+# Kubernetes Services: Internal gRPC ClusterIP Mesh for Cloud Run Dispatcher
+# ==============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: synomics-grpc-router
+  namespace: default
+  labels:
+    app.kubernetes.io/name: synomics-grpc-router
+spec:
+  type: ClusterIP
+  clusterIP: 10.102.15.50
+  ports:
+    - port: 50051
+      targetPort: 50051
+      name: grpc
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: synomics-cpu-worker
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: synomics-gpu-router
+  namespace: default
+  labels:
+    app.kubernetes.io/name: synomics-gpu-router
+spec:
+  type: ClusterIP
+  ports:
+    - port: 50051
+      targetPort: 50051
+      name: grpc-gpu
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: synomics-gpu-worker

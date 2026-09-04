@@ -1,0 +1,47 @@
+# ==============================================================================
+# SynOmics Dockerfile: Production API Dispatcher (Cloud Run)
+# Multi-stage TypeScript build; esbuild bundles server.ts -> dist/server.mjs (ESM).
+#
+# NOTE: the repository root already ships a canonical single-container Dockerfile.
+# This file exists so cloudbuild.yaml can build the dispatcher as a named image in
+# the multi-image worker set; it must stay consistent with `npm run build`, which
+# emits dist/server.mjs (ESM) — NOT server.cjs.
+# ==============================================================================
+
+FROM node:20-bookworm-slim AS builder
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+# Runner Stage: lean production container
+FROM node:20-bookworm-slim AS runner
+
+WORKDIR /app
+ENV NODE_ENV=production
+# Cloud Run injects PORT; server.ts honors process.env.PORT (defaults to 3000).
+ENV PORT=8080
+
+# Minimal Python runtime for the zero-dependency core engine invoked via subprocess.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+# Compiled bundle + the Python engine sources it shells out to.
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/server ./server
+
+USER node
+EXPOSE 8080
+
+HEALTHCHECK --interval=20s --timeout=3s --start-period=10s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||8080)+'/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+
+CMD ["node", "dist/server.mjs"]

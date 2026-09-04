@@ -1,0 +1,72 @@
+# ==============================================================================
+# SynOmics Dockerfile: GPU-Accelerated Structural Biology & Molecular Dynamics
+# CUDA 12.2 + PyTorch + fair-esm (ESMFold) + OpenMM + PDBFixer + AutoDock Vina
+#
+# HONEST SCOPE: this image installs the real GPU toolchain, but the SynOmics
+# engine commands that would drive it (protein structure prediction, MD, docking
+# — Module E in CLAUDE.md) are NOT yet implemented. This image therefore exists as
+# the deployment target for those tools; its default command is a real readiness
+# probe of the installed toolchain, NOT a fabricated analysis result. Do not wire
+# it to a pipeline that claims folding/MD output until the engine command exists.
+# ==============================================================================
+
+FROM nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04 AS runtime
+
+LABEL description="GPU toolchain for protein structure prediction, MD & generative chemistry (Module E target)"
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.11 \
+    python3.11-dev \
+    python3-pip \
+    build-essential \
+    cmake \
+    git \
+    wget \
+    libgomp1 \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+
+RUN pip3 install --no-cache-dir \
+    torch==2.2.2+cu121 \
+    torchvision==0.17.2+cu121 \
+    torchaudio==2.2.2+cu121 \
+    --index-url https://download.pytorch.org/whl/cu121
+
+RUN pip3 install --no-cache-dir \
+    fair-esm==2.0.0 \
+    openmm==8.1.1 \
+    pdbfixer==1.9 \
+    biopython==1.83 \
+    rdkit==2023.9.5 \
+    scipy==1.12.0 \
+    numpy==1.26.4 \
+    py3Dmol==2.1.0 \
+    meeko==0.5.0
+
+# AutoDock Vina binary
+RUN wget -q https://github.com/ccsb-scripps/AutoDock-Vina/releases/download/v1.2.5/vina_1.2.5_linux_x86_64 -O /usr/local/bin/vina && \
+    chmod +x /usr/local/bin/vina
+
+RUN groupadd -g 10001 synomics && \
+    useradd -u 10001 -g synomics -m -s /bin/bash synomics && \
+    mkdir -p /app /mnt/scratch /mnt/models && \
+    chown -R synomics:synomics /app /mnt/scratch /mnt/models
+
+WORKDIR /app
+COPY --chown=synomics:synomics server/ /app/server/
+
+USER synomics
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
+
+# Real readiness probe: report the installed toolchain + whether a CUDA device is
+# actually visible. Honest by construction — reports False if no GPU is attached,
+# never claims capability it cannot back. Replace with a real engine command once
+# Module E structure/MD/docking pipelines are implemented.
+ENTRYPOINT ["python3", "-c"]
+CMD ["import torch, openmm, esm; print('SynOmics GPU image ready | torch', torch.__version__, '| cuda_available', torch.cuda.is_available(), '| openmm', openmm.__version__)"]

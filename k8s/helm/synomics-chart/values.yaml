@@ -1,0 +1,105 @@
+# ==============================================================================
+# SynOmics Helm Values: Production GKE Autopilot & Heterogeneous Node Pools
+# ==============================================================================
+
+global:
+  environment: production
+  projectID: synomics-enterprise-prod
+  region: us-central1
+
+# Storage & Scratch Volume
+storage:
+  filestoreNfsIp: "10.200.0.2"
+  filestoreShareName: "/scratch_volume"
+  pvcCapacity: 1Ti
+
+# 1. CPU-Optimized Bioinformatics Worker (BWA, GATK, FASTQ, PLINK2)
+cpuWorker:
+  replicaCount: 5
+  image:
+    repository: gcr.io/synomics-enterprise-prod/bioconda-engine
+    tag: v2.4.0
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: "4000m"
+      memory: "8Gi"
+    limits:
+      cpu: "16000m"
+      memory: "32Gi"
+  nodeSelector:
+    "synomics.ai/hardware-tier": "cpu-optimized"
+  tolerations:
+    - key: "workload"
+      operator: "Equal"
+      value: "cpu-bioinformatics"
+      effect: "NoSchedule"
+
+# 2. High-Memory Single-Cell & Spatial Worker (AnnData, Spatial, MOFA+, WGCNA)
+highMemWorker:
+  replicaCount: 3
+  image:
+    repository: gcr.io/synomics-enterprise-prod/bioconda-engine
+    tag: v2.4.0
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: "8000m"
+      memory: "32Gi"
+    limits:
+      cpu: "32000m"
+      memory: "128Gi"
+  nodeSelector:
+    "synomics.ai/hardware-tier": "high-memory"
+  tolerations:
+    - key: "workload"
+      operator: "Equal"
+      value: "highmem-omics"
+      effect: "NoSchedule"
+
+# 3. GPU-Accelerated Deep Learning Worker (ESMFold, AlphaFold2, OpenMM, Generative Chemistry)
+gpuWorker:
+  replicaCount: 2
+  image:
+    repository: gcr.io/synomics-enterprise-prod/gpu-deeplearning-engine
+    tag: v2.4.0
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: "8000m"
+      memory: "32Gi"
+      nvidia.com/gpu: "1"
+    limits:
+      cpu: "16000m"
+      memory: "64Gi"
+      nvidia.com/gpu: "1"
+  nodeSelector:
+    "synomics.ai/hardware-tier": "gpu-a100"
+  tolerations:
+    - key: "workload"
+      operator: "Equal"
+      value: "gpu-deeplearning"
+      effect: "NoSchedule"
+
+# 4. Untrusted Micro-VM Sandbox (gVisor RuntimeClass)
+sandboxWorker:
+  replicaCount: 3
+  image:
+    repository: gcr.io/synomics-enterprise-prod/gvisor-sandbox
+    tag: v2.4.0
+    pullPolicy: IfNotPresent
+  runtimeClassName: gvisor
+  resources:
+    requests:
+      cpu: "1000m"
+      memory: "2Gi"
+    limits:
+      cpu: "4000m"
+      memory: "8Gi"
+  nodeSelector:
+    "synomics.ai/hardware-tier": "sandbox-gvisor"
+  tolerations:
+    - key: "workload"
+      operator: "Equal"
+      value: "untrusted-sandbox"
+      effect: "NoSchedule"
