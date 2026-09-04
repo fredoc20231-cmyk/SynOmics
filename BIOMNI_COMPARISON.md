@@ -10,10 +10,13 @@ SynOmics's **actual, verified** tool registry.
   `.github/workflows/ci.yml` and `tests/*`. Nothing here is a "random one-line"
   wrapper; each `✅` links to a named test suite that asserts a correct numeric
   result, not merely that the code ran.
-- The **Biomni** column is organized by the domains/capabilities described in the
-  Biomni-A1/E1 paper (~150 tools, ~105 packages, ~59 databases). It is
-  **representative by domain, not a verbatim tool-by-tool registry** — I do not
-  have Biomni's exact tool list memorized and will not fabricate one.
+- The **Biomni** column is now grounded in Biomni's **actual source** (the
+  Apache-2.0 `Biomni-main` release, `biomni/tool/tool_description/*.py` and
+  `biomni/env_desc.py`), not the paper's summary. Verbatim counts from that code:
+  **224 registered agent tools**, **76 data-lake datasets**, **113 cataloged
+  software packages** (the paper's "~150 tools / ~59 DBs / ~105 packages" was an
+  earlier snapshot; the repo has since grown). Biomni's data lake auto-downloads
+  ~11 GB on first run.
 
 **Status key:** ✅ implemented + CI-verified in SynOmics · ⚠️ infra-gated (needs
 GPU / external binary / open egress — honestly stubbed, never faked) · ➕ SynOmics
@@ -23,16 +26,24 @@ capability with no direct Biomni equivalent.
 
 ## Headline
 
-| Platform | Tools | Verification |
-| --- | --- | --- |
-| Biomni (A1/E1) | ~150 | broad generalist toolbox |
-| **SynOmics** | **181** | **every tool CI-gated against ground truth** |
+| Platform | Registered tools | Data lake | Verification |
+| --- | --- | --- | --- |
+| Biomni (`Biomni-main`, Apache-2.0) | **224** | 76 datasets (~11 GB) + 113 pkgs | broad generalist toolbox; correctness not gated in-repo |
+| **SynOmics** | **181** | egress-gated live DB clients | **every tool CI-gated against ground truth** |
 
-SynOmics now exceeds Biomni's headline tool count (181 vs ~150) while covering the
-large majority of Biomni's *analysis* domains that run without specialized infra,
-**plus ~24 verifiable-AI / iDiscover engines Biomni has no equivalent for**. The
-remaining not-built items are overwhelmingly infra-gated wrappers (docking,
-folding, read alignment, GPU single-cell) — listed at the bottom.
+Honest read: **Biomni is broader** — more scientific domains (imaging, pathology,
+physiology, wet-lab), a huge downloadable data lake, and integration with heavy
+external software (docking, folding, scRNA embeddings, R packages, ~200 CLI
+bioinformatics tools). **SynOmics is narrower but harder-verified**: every one of
+its 181 tools runs real code checked against a known numeric answer in CI, and it
+adds **~24 verifiable-AI / iDiscover engines Biomni has no equivalent for**
+(adversarial validation, causal discovery, Z3 pathway proofs, PDE/circuit gates,
+optimal-transport reversion, federated ZKP). Where Biomni leans on an **LLM to
+decide scientific facts** (e.g. `annotate_celltype_scRNA` names clusters via a
+language model), SynOmics deliberately refuses that pattern under its
+zero-hallucination mandate. The gap to Biomni is overwhelmingly (a) infra-gated
+wrappers SynOmics honestly stubs (docking, folding, read alignment, GPU
+single-cell) and (b) the data lake — not core analysis math.
 
 ---
 
@@ -77,7 +88,53 @@ folding, read alignment, GPU single-cell) — listed at the bottom.
 
 ---
 
-## Not built — honestly infra-gated (needed to reach ~150 like Biomni)
+## Biomni's actual tool inventory (from `Biomni-main` source)
+
+Verbatim per-domain counts from `biomni/tool/tool_description/*.py`:
+
+| Biomni domain | Tools | SynOmics coverage |
+| --- | --- | --- |
+| database (query_uniprot/kegg/pdb/…) | 40 | partial (4 live clients, egress-gated) |
+| pharmacology (docking, ADMET, FDA, DDI) | 25 | partial (dose-response, descriptors; docking/ADMET infra-gated) |
+| genomics (scRNA embeddings, peak calling, motifs) | 19 | partial (DE/enrichment/intervals; GPU embeddings infra-gated) |
+| molecular_biology (cloning, primers, RE, ORF) | 18 | strong (seqtools + align) |
+| microbiology (growth, colonies, GLV, biofilm) | 12 | partial → **growth/GLV addable** |
+| physiology (cosinor, hemodynamics, imaging) | 11 | partial → **cosinor addable** |
+| immunology / bioimaging | 10 / 10 | partial (imaging is GPU/segmentation-gated) |
+| genetics (finemapping, prediction, phylogeny) | 9 | partial → **genomic prediction addable** |
+| synthetic_biology (codon opt, circuits, SBML) | 8 | partial → **codon optimization addable** |
+| literature (pubmed/arxiv/scholar/web) | 8 | none (egress + web-search gated) |
+| systems_biology (FBA, signaling, structures) | 7 | partial (ODE; FBA needs cobra) |
+| pathology / bioengineering | 7 / 7 | mostly wet-lab/imaging (out of scope) |
+| cancer_biology / biochemistry | 6 / 6 | partial → **enzyme/conservation addable** |
+| cell_biology / protocols / support | 5 / 4 / 3 | partial (REPL ≈ python-exec sandbox) |
+| lab_automation / glycoengineering / biophysics | 3 / 3 / 3 | partial → **glyco motifs addable** |
+
+## Genuinely useful analyses to add (found in Biomni, stack-compatible, real & verifiable)
+
+These are real, deterministic analyses Biomni exposes that SynOmics lacks and that
+run on the **already-installed** stack (biopython/numpy/scipy) — no GPU, no model
+weights, no egress. Each can be added as a CI-gated tool with ground-truth tests,
+same as the existing 181 (reimplemented cleanly, with attribution to Biomni's
+Apache-2.0 design where relevant — not vendored):
+
+| Candidate tool | Basis | Ground truth |
+| --- | --- | --- |
+| `n_glycosylation_motifs` | N-X-[S/T], X≠P sequon scan | deterministic regex on a known sequence |
+| `o_glycosylation_hotspots` | S/T density / propensity window | fixed positions on a test peptide |
+| `codon_optimize` | host codon-usage table → optimal codons + CAI | CAI=1.0 when already optimal |
+| `cosinor_analysis` | least-squares MESOR/amplitude/acrophase, period 24h | recover injected amplitude/phase |
+| `protein_conservation` | Shannon entropy per MSA column | 0 bits for a fully conserved column |
+| `logistic_growth_fit` / `gompertz_growth_fit` | microbial growth curve fit | recover known r, K, lag |
+| `lotka_volterra_simulate` | generalized LV ODE (scipy) | 2-species equilibrium at K |
+| `genomic_prediction_gblup` | ridge/GBLUP breeding-value model | recovers additive signal (R²) |
+
+Explicitly **not worth copying**: LLM-based cell-type naming (hallucination risk),
+docking/folding/embedding wrappers (already honestly infra-gated), and pure
+DB-query wrappers (become real when egress opens — SynOmics already has the client
+pattern for that).
+
+## Not built — honestly infra-gated (parity items requiring infra)
 
 These require a GPU / external binary / open network not present in the current
 build. They fail honestly at runtime and are **never faked**:
@@ -94,8 +151,8 @@ build. They fail honestly at runtime and are **never faked**:
 | Live external-DB happy paths (KEGG/Reactome/ChEMBL/OpenTargets) | blocked egress |
 
 These become real, CI-gated tools the moment a worker with the needed
-infra/credentials is connected (e.g. GCP GPU + binaries) — same pattern as the 109
-already shipped.
+infra/credentials is connected (e.g. GCP GPU + binaries) — same pattern as the 181
+already shipped, using the deployment scaffold in `DEPLOYMENT.md`.
 
 ---
 
