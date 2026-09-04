@@ -1008,6 +1008,106 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     handler: (i) => runPythonScript('server/proteomics_tools.py', { ...i, task: 'fragment_ions' }),
     parameters: { peptide: { type: 'string', required: true, description: 'Peptide sequence (>=2 aa).' } },
   },
+  // --- Phylogenetics (biopython) ---
+  {
+    name: 'phylo_distance_matrix', category: 'Phylogenetics',
+    description: 'Identity distance matrix from aligned sequences. Requires biopython.',
+    handler: (i) => runPythonScript('server/phylo_tools.py', { ...i, task: 'distance_matrix' }),
+    parameters: { sequences: { type: 'object', required: true, description: '{name: aligned_seq} (>=3, equal length).' } },
+  },
+  {
+    name: 'nj_tree', category: 'Phylogenetics',
+    description: 'Neighbor-joining phylogenetic tree (Newick). Requires biopython.',
+    handler: (i) => runPythonScript('server/phylo_tools.py', { ...i, task: 'nj_tree' }),
+    parameters: { sequences: { type: 'object', required: true, description: '{name: aligned_seq}.' } },
+  },
+  {
+    name: 'upgma_tree', category: 'Phylogenetics',
+    description: 'UPGMA phylogenetic tree (Newick). Requires biopython.',
+    handler: (i) => runPythonScript('server/phylo_tools.py', { ...i, task: 'upgma_tree' }),
+    parameters: { sequences: { type: 'object', required: true, description: '{name: aligned_seq}.' } },
+  },
+  {
+    name: 'patristic_distances', category: 'Phylogenetics',
+    description: 'Patristic (tree path) distances between all taxa from the NJ tree. Requires biopython.',
+    handler: (i) => runPythonScript('server/phylo_tools.py', { ...i, task: 'patristic' }),
+    parameters: { sequences: { type: 'object', required: true, description: '{name: aligned_seq}.' } },
+  },
+  // --- Pairwise alignment (biopython) ---
+  {
+    name: 'global_align', category: 'Alignment',
+    description: 'Needleman-Wunsch global alignment (score + % identity). Requires biopython.',
+    handler: (i) => runPythonScript('server/align_tools.py', { ...i, task: 'global_align' }),
+    parameters: { seq1: { type: 'string', required: true }, seq2: { type: 'string', required: true } },
+  },
+  {
+    name: 'local_align', category: 'Alignment',
+    description: 'Smith-Waterman local alignment (score + % identity). Requires biopython.',
+    handler: (i) => runPythonScript('server/align_tools.py', { ...i, task: 'local_align' }),
+    parameters: { seq1: { type: 'string', required: true }, seq2: { type: 'string', required: true } },
+  },
+  {
+    name: 'percent_identity', category: 'Alignment',
+    description: 'Percent identity from a global alignment. Requires biopython.',
+    handler: (i) => runPythonScript('server/align_tools.py', { ...i, task: 'percent_identity' }),
+    parameters: { seq1: { type: 'string', required: true }, seq2: { type: 'string', required: true } },
+  },
+  {
+    name: 'kmer_distance', category: 'Alignment',
+    description: 'Alignment-free k-mer Jaccard distance between two sequences.',
+    handler: (i) => runPythonScript('server/align_tools.py', { ...i, task: 'kmer_distance' }),
+    parameters: { seq1: { type: 'string', required: true }, seq2: { type: 'string', required: true }, k: { type: 'number', description: 'k-mer size (default 3).' } },
+  },
+  // --- Epigenomics ---
+  {
+    name: 'interval_jaccard', category: 'Epigenomics',
+    description: 'Base-pair Jaccard overlap between two genomic interval (peak) sets.',
+    handler: (i) => runPythonScript('server/epigenomics.py', { ...i, task: 'interval_jaccard' }),
+    parameters: { setA: { type: 'array', required: true, description: '[[start,end],...].' }, setB: { type: 'array', required: true, description: '[[start,end],...].' } },
+  },
+  {
+    name: 'pwm_scan', category: 'Epigenomics',
+    description: 'Scan a sequence for PWM (motif) log-odds hits above threshold. Requires numpy.',
+    handler: (i) => runPythonScript('server/epigenomics.py', { ...i, task: 'pwm_scan' }),
+    parameters: { pwm: { type: 'object', required: true, description: '{A,C,G,T: [per-position probs]}.' }, sequence: { type: 'string', required: true }, threshold: { type: 'number', description: 'Log-odds threshold (default 0).' } },
+  },
+  {
+    name: 'methylation_mvalues', category: 'Epigenomics',
+    description: 'Transform methylation beta values to M-values (logit2).',
+    handler: (i) => runPythonScript('server/epigenomics.py', { ...i, task: 'methylation_mvalues' }),
+    parameters: { betas: { type: 'array', required: true, description: 'Beta values (0..1).' } },
+  },
+  {
+    name: 'dmr_test', category: 'Epigenomics',
+    description: 'Differentially methylated sites: per-site Welch t-test + BH FDR. Requires numpy/scipy/statsmodels.',
+    handler: (i) => runPythonScript('server/epigenomics.py', { ...i, task: 'dmr_test' }),
+    parameters: { group1: { type: 'array', required: true, description: 'samples x sites beta matrix.' }, group2: { type: 'array', required: true, description: 'samples x sites beta matrix.' } },
+  },
+  // --- Immunoinformatics ---
+  {
+    name: 'repertoire_diversity', category: 'Immunoinformatics',
+    description: 'Immune-repertoire diversity: Shannon, Simpson, clonality, richness.',
+    handler: (i) => runPythonScript('server/immunoinformatics.py', { ...i, task: 'repertoire_diversity' }),
+    parameters: { clones: { type: 'object', required: true, description: '{clonotype: count}.' } },
+  },
+  {
+    name: 'vj_usage', category: 'Immunoinformatics',
+    description: 'V/J gene usage frequencies and top V-J pairings.',
+    handler: (i) => runPythonScript('server/immunoinformatics.py', { ...i, task: 'vj_usage' }),
+    parameters: { rearrangements: { type: 'array', required: true, description: '[{v, j}, ...].' } },
+  },
+  {
+    name: 'cdr3_spectratype', category: 'Immunoinformatics',
+    description: 'CDR3 length distribution (spectratype).',
+    handler: (i) => runPythonScript('server/immunoinformatics.py', { ...i, task: 'cdr3_spectratype' }),
+    parameters: { cdr3: { type: 'array', required: true, description: 'List of CDR3 sequences.' } },
+  },
+  {
+    name: 'repertoire_overlap', category: 'Immunoinformatics',
+    description: 'Overlap between two repertoires: Jaccard + Morisita-Horn index.',
+    handler: (i) => runPythonScript('server/immunoinformatics.py', { ...i, task: 'repertoire_overlap' }),
+    parameters: { repertoireA: { type: 'object', required: true, description: '{clonotype: count}.' }, repertoireB: { type: 'object', required: true, description: '{clonotype: count}.' } },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));

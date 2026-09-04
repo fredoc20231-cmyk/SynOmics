@@ -152,6 +152,24 @@ jobs:
       - name: Proteomics gate (peptide mass / tryptic digest / fragment ions)
         run: python tests/proteomics_tools_smoke.py
 
+      - name: Phylogenetics gate (distance matrix / NJ / UPGMA / patristic)
+        run: |
+          python -m pip install --quiet biopython numpy
+          python tests/phylo_tools_smoke.py
+
+      - name: Alignment gate (global / local / % identity / k-mer)
+        run: |
+          python -m pip install --quiet biopython
+          python tests/align_tools_smoke.py
+
+      - name: Epigenomics gate (interval Jaccard / PWM / M-values / DMR)
+        run: |
+          python -m pip install --quiet numpy scipy statsmodels
+          python tests/epigenomics_smoke.py
+
+      - name: Immunoinformatics gate (diversity / VJ usage / spectratype / overlap)
+        run: python tests/immunoinformatics_smoke.py
+
       - name: Scientific concordance gate (engine stats vs scipy/statsmodels)
         run: |
           python -m pip install --quiet numpy scipy statsmodels
