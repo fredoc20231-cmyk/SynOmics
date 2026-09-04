@@ -1485,6 +1485,13 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     handler: (i) => runPythonScript('server/rnaseq_pipeline.py', { ...i, task: 'rnaseq_deseq' }),
     parameters: { counts: { type: 'object', required: true, description: 'Gene count matrix {gene:[counts…]} or genes×samples array.' }, conditions: { type: 'array', required: true, description: 'Group label per sample (two groups).' }, samples: { type: 'array', description: 'Sample IDs aligned to columns.' }, reference: { type: 'string', description: 'Reference/control group level.' }, alpha: { type: 'number', description: 'FDR threshold (default 0.05).' }, minBaseMean: { type: 'number', description: 'Independent-filtering min base mean (default 1).' }, outputFormat: { type: 'string', description: "'report' | 'document' (adds .docx) | 'article' (full sections)." }, outputDir: { type: 'string', description: 'If set, write the full figures/tables/report bundle.' } },
   },
+  // --- Epitranscriptomics ---
+  {
+    name: 'm6a_drach_scan', category: 'Epitranscriptomics',
+    description: 'Scan an RNA/DNA transcript for the m6A DRACH consensus motif (D-R-A-C-H) and report candidate methylated-adenosine positions. Deterministic sequence analysis — no read data, no invented confidence scores. Emits an outcome bundle when outputDir is set.',
+    handler: (i) => runPythonScript('server/epitranscriptomics.py', { ...i, task: 'm6a_drach_scan' }),
+    parameters: { sequence: { type: 'string', required: true, description: 'RNA or DNA transcript sequence (A/C/G/U/T).' }, outputDir: { type: 'string', description: 'If set, write figures/tables/report bundle.' } },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));

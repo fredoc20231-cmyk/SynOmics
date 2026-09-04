@@ -303,7 +303,13 @@ Bridges omics findings into molecular design + rigorous in-silico validation.
   served): recovers known DE genes at ≥0.70 sensitivity with false-positive rate
   ≤0.10 at FDR<0.05. Honest scope: an independent NB-GLM implementation, not the R
   DESeq2 binary; upstream execution requires the bioconda worker image (DEPLOYMENT.md).
-- 193 real agent tools in `server/tool_registry.ts`; 53 test suites in CI, plus a
+- **Epitranscriptomics (`epitranscriptomics.py`):** `m6a_drach_scan` — deterministic
+  m6A DRACH consensus (D-R-A-C-H) motif scan reporting candidate methylated-adenosine
+  positions; no read data, no invented confidence scores (salvaged as the one REAL
+  piece of an uploaded "updated app" whose drug-discovery / neoantigen / retrosynthesis
+  "engines" were rejected as fabricators — canned SMILES, magic-number IC50/ΔG/SA
+  scores). Validated: GGACU at a known offset → central A at the expected position.
+- 194 real agent tools in `server/tool_registry.ts`; 55 test suites in CI, plus a
   `tsc --noEmit` type-check gate. See `BIOMNI_COMPARISON.md` for the per-domain
   Biomni↔SynOmics coverage table.
 - Everything marked "to build" / "not implemented" above must not be faked.

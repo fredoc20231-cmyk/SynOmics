@@ -803,6 +803,14 @@ app.post(['/api/synomics/rnaseq', '/api/biomni/rnaseq'], async (req, res) => {
   } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
 });
 
+// Epitranscriptomics — m6A DRACH consensus motif scan.
+app.post(['/api/synomics/epitranscriptomics', '/api/biomni/epitranscriptomics'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/epitranscriptomics.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
 // Skills System — curated multi-tool workflows (Skills layer).
 app.get(['/api/synomics/skills', '/api/biomni/skills'], (_req, res) => {
   try {
