@@ -11,6 +11,7 @@ import { BIOLOGICAL_ENTITIES, GO_ONTOLOGY_TREE, BIOTOOLS_REGISTRY, PREBUILT_PROT
 import { generateGroundedMultiAgentRun } from './server/grounded_multi_agent.ts';
 import { runAgent } from './server/agent_executor.ts';
 import { toolSchemasForLLM, invokeTool } from './server/tool_registry.ts';
+import { listSkills, runSkill } from './server/skills_registry.ts';
 import { runPythonScript } from './server/engine_client.ts';
 import { ensemblGeneBySymbol, myGeneBySymbol, uniProtByGene, vepByRsId, type DbResult } from './server/external_db.ts';
 import { auditMiddleware, readAudit, auditLogPath } from './server/audit.ts';
@@ -799,6 +800,21 @@ app.post(['/api/synomics/rnaseq', '/api/biomni/rnaseq'], async (req, res) => {
   try {
     const result = await runPythonScript('server/rnaseq_pipeline.py', req.body, 300000);
     res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
+// Skills System — curated multi-tool workflows (Skills layer).
+app.get(['/api/synomics/skills', '/api/biomni/skills'], (_req, res) => {
+  try {
+    res.json({ status: 'success', skills: listSkills() });
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/skill-run', '/api/biomni/skill-run'], async (req, res) => {
+  try {
+    const { skill, params } = req.body || {};
+    if (!skill) { res.status(400).json({ status: 'error', message: 'Provide `skill` (name).' }); return; }
+    const result = await runSkill(String(skill), params || {});
+    res.status(result.ok ? 200 : 400).json({ status: result.ok ? 'success' : 'error', ...result });
   } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
 });
 

@@ -1,0 +1,33 @@
+{
+  "name": "rnaseq-de-enrichment",
+  "title": "RNA-seq differential expression → pathway over-representation",
+  "description": "Curated workflow: run DESeq2-style differential expression on a gene count matrix, extract the significant genes, then test them for pathway/gene-set over-representation. Chains two real, CI-gated tools; every value passed between steps is a genuine computed output.",
+  "params": {
+    "counts": "Gene count matrix {gene:[counts...]} or genes×samples array (required).",
+    "conditions": "Two-group label per sample, aligned to columns (required).",
+    "reference": "Control/reference group level (optional).",
+    "geneSets": "{setName: [genes]} pathway/gene-set definitions for over-representation (required).",
+    "alpha": "FDR threshold for calling a gene significant (default 0.05)."
+  },
+  "steps": [
+    {
+      "id": "de",
+      "tool": "rnaseq_deseq",
+      "inputs": {
+        "counts": { "fromParams": "counts" },
+        "conditions": { "fromParams": "conditions" },
+        "reference": { "fromParams": "reference" },
+        "alpha": { "fromParams": "alpha" }
+      }
+    },
+    {
+      "id": "enrichment",
+      "tool": "over_representation",
+      "inputs": {
+        "query": { "transform": { "type": "sigGenes", "step": "de", "alpha": 0.05, "direction": "any" } },
+        "geneSets": { "fromParams": "geneSets" }
+      }
+    }
+  ],
+  "output": { "primary": "enrichment" }
+}

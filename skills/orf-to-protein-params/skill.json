@@ -1,0 +1,27 @@
+{
+  "name": "orf-to-protein-params",
+  "title": "ORF finding → protein biophysical parameters",
+  "description": "Curated workflow: find open reading frames in a DNA sequence, then compute biophysical parameters (MW, pI, GRAVY, instability) of the protein translated from the longest ORF. Demonstrates prior-step dot-path binding (orfs.0.protein). Chains two real, CI-gated tools; no fabrication.",
+  "params": {
+    "dna": "DNA sequence to scan for ORFs (required).",
+    "minAA": "Minimum ORF length in amino acids (optional)."
+  },
+  "steps": [
+    {
+      "id": "orf",
+      "tool": "orf_find",
+      "inputs": {
+        "sequence": { "fromParams": "dna" },
+        "minAA": { "fromParams": "minAA" }
+      }
+    },
+    {
+      "id": "props",
+      "tool": "protein_params",
+      "inputs": {
+        "protein": { "fromStep": { "step": "orf", "path": "orfs.0.protein" } }
+      }
+    }
+  ],
+  "output": { "primary": "props" }
+}
