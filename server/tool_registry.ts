@@ -957,6 +957,57 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     handler: (i) => runPythonScript('server/population_genetics.py', { ...i, task: 'maf_spectrum' }),
     parameters: { haplotypes: { type: 'array', required: true, description: '0/1 matrix (samples x sites).' } },
   },
+  // --- Enrichment (over-representation) ---
+  {
+    name: 'over_representation', category: 'Enrichment',
+    description: 'Hypergeometric over-representation analysis of a gene list vs gene sets (fold enrichment + BH FDR). Requires scipy/statsmodels.',
+    handler: (i) => runPythonScript('server/enrichment_tools.py', { ...i, task: 'ora' }),
+    parameters: { query: { type: 'array', required: true, description: 'Query gene list.' }, geneSets: { type: 'object', required: true, description: 'name -> [genes].' }, universe: { type: 'array', description: 'Background gene universe (optional).' } },
+  },
+  {
+    name: 'geneset_overlap', category: 'Enrichment',
+    description: 'Overlap between two gene sets (Jaccard + overlap coefficient + shared genes).',
+    handler: (i) => runPythonScript('server/enrichment_tools.py', { ...i, task: 'geneset_overlap' }),
+    parameters: { setA: { type: 'array', required: true, description: 'Gene set A.' }, setB: { type: 'array', required: true, description: 'Gene set B.' } },
+  },
+  // --- Quality control ---
+  {
+    name: 'fastq_quality', category: 'Quality control',
+    description: 'FASTQ per-base Phred quality profile, mean/min/max Q, %Q30, GC%. Requires numpy.',
+    handler: (i) => runPythonScript('server/qc_tools.py', { ...i, task: 'fastq_quality' }),
+    parameters: { fastq: { type: 'string', required: true, description: 'FASTQ text (4-line records).' } },
+  },
+  {
+    name: 'count_matrix_qc', category: 'Quality control',
+    description: 'scRNA/bulk count-matrix QC: library sizes, genes detected, mito %. Requires numpy.',
+    handler: (i) => runPythonScript('server/qc_tools.py', { ...i, task: 'count_matrix_qc' }),
+    parameters: { counts: { type: 'array', required: true, description: 'cells x genes matrix.' }, genes: { type: 'array', description: 'Gene names (for mito %).' } },
+  },
+  {
+    name: 'outlier_mad', category: 'Quality control',
+    description: 'Median-absolute-deviation (modified z-score) outlier detection. Requires numpy.',
+    handler: (i) => runPythonScript('server/qc_tools.py', { ...i, task: 'outlier_mad' }),
+    parameters: { x: { type: 'array', required: true, description: 'Numeric values.' }, threshold: { type: 'number', description: 'Modified-z threshold (default 3.5).' } },
+  },
+  // --- Proteomics utilities ---
+  {
+    name: 'peptide_mass', category: 'Proteomics',
+    description: 'Peptide monoisotopic mass + singly/doubly-charged m/z.',
+    handler: (i) => runPythonScript('server/proteomics_tools.py', { ...i, task: 'peptide_mass' }),
+    parameters: { peptide: { type: 'string', required: true, description: 'Amino-acid sequence.' } },
+  },
+  {
+    name: 'tryptic_digest', category: 'Proteomics',
+    description: 'In-silico trypsin digestion (cut after K/R not before P) with peptide masses.',
+    handler: (i) => runPythonScript('server/proteomics_tools.py', { ...i, task: 'tryptic_digest' }),
+    parameters: { protein: { type: 'string', required: true, description: 'Protein sequence.' }, missedCleavages: { type: 'number', description: 'Allowed missed cleavages (default 0).' } },
+  },
+  {
+    name: 'fragment_ions', category: 'Proteomics',
+    description: 'b/y fragment-ion ladder (singly charged) for a peptide — MS/MS annotation.',
+    handler: (i) => runPythonScript('server/proteomics_tools.py', { ...i, task: 'fragment_ions' }),
+    parameters: { peptide: { type: 'string', required: true, description: 'Peptide sequence (>=2 aa).' } },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));

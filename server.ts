@@ -666,6 +666,26 @@ app.get(['/api/synomics/idiscover', '/api/biomni/idiscover'], (req, res) => {
   });
 });
 
+// Enrichment / QC / proteomics — dispatch routes.
+app.post(['/api/synomics/enrichment', '/api/biomni/enrichment'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/enrichment_tools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/qc', '/api/biomni/qc'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/qc_tools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/proteomics', '/api/biomni/proteomics'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/proteomics_tools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
 // Regression / dimensionality-reduction / population-genetics — dispatch routes.
 app.post(['/api/synomics/regression', '/api/biomni/regression'], async (req, res) => {
   try {

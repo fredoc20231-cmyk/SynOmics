@@ -139,6 +139,19 @@ jobs:
           python -m pip install --quiet numpy
           python tests/population_genetics_smoke.py
 
+      - name: Enrichment gate (hypergeometric ORA + gene-set overlap)
+        run: |
+          python -m pip install --quiet numpy scipy statsmodels
+          python tests/enrichment_tools_smoke.py
+
+      - name: QC gate (FASTQ quality / count-matrix QC / MAD outliers)
+        run: |
+          python -m pip install --quiet numpy
+          python tests/qc_tools_smoke.py
+
+      - name: Proteomics gate (peptide mass / tryptic digest / fragment ions)
+        run: python tests/proteomics_tools_smoke.py
+
       - name: Scientific concordance gate (engine stats vs scipy/statsmodels)
         run: |
           python -m pip install --quiet numpy scipy statsmodels
