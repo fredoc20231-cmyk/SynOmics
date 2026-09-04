@@ -666,6 +666,26 @@ app.get(['/api/synomics/idiscover', '/api/biomni/idiscover'], (req, res) => {
   });
 });
 
+// Regression / dimensionality-reduction / population-genetics — dispatch routes.
+app.post(['/api/synomics/regression', '/api/biomni/regression'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/regression_tools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/dimreduction', '/api/biomni/dimreduction'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/dimreduction_tools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/popgen', '/api/biomni/popgen'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/population_genetics.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
 // Dose-response / pharmacology curve fitting — single dispatch route.
 app.post(['/api/synomics/dose-response', '/api/biomni/dose-response'], async (req, res) => {
   try {

@@ -124,6 +124,21 @@ jobs:
           python -m pip install --quiet scipy numpy
           python tests/doseresponse_smoke.py
 
+      - name: Regression gate (OLS/logistic/Poisson/mixed/robust)
+        run: |
+          python -m pip install --quiet numpy scipy statsmodels pandas
+          python tests/regression_tools_smoke.py
+
+      - name: Dimensionality reduction gate (MDS/ICA/NMF/FA/kernel-PCA)
+        run: |
+          python -m pip install --quiet numpy scikit-learn
+          python tests/dimreduction_tools_smoke.py
+
+      - name: Population genetics gate (pi/Tajima's D/Fst/LD/MAF)
+        run: |
+          python -m pip install --quiet numpy
+          python tests/population_genetics_smoke.py
+
       - name: Scientific concordance gate (engine stats vs scipy/statsmodels)
         run: |
           python -m pip install --quiet numpy scipy statsmodels

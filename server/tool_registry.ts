@@ -864,6 +864,99 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     handler: (i) => runPythonScript('server/doseresponse.py', { ...i, task: 'auc' }),
     parameters: { x: { type: 'array', required: true, description: 'x values.' }, y: { type: 'array', required: true, description: 'y values.' } },
   },
+  // --- Regression models (statsmodels) ---
+  {
+    name: 'ols_regression', category: 'Regression',
+    description: 'Ordinary least squares linear regression (coefficients, p-values, R^2). Requires statsmodels.',
+    handler: (i) => runPythonScript('server/regression_tools.py', { ...i, task: 'ols' }),
+    parameters: { X: { type: 'array', required: true, description: 'samples x features.' }, y: { type: 'array', required: true, description: 'Continuous target.' }, featureNames: { type: 'array', description: 'Feature names.' } },
+  },
+  {
+    name: 'logistic_glm', category: 'Regression',
+    description: 'Logistic regression (GLM binomial): coefficients, odds ratios, AIC. Requires statsmodels.',
+    handler: (i) => runPythonScript('server/regression_tools.py', { ...i, task: 'logistic_glm' }),
+    parameters: { X: { type: 'array', required: true, description: 'samples x features.' }, y: { type: 'array', required: true, description: 'Binary 0/1 target.' }, featureNames: { type: 'array', description: 'Feature names.' } },
+  },
+  {
+    name: 'poisson_glm', category: 'Regression',
+    description: 'Poisson regression (GLM) for count outcomes: coefficients, rate ratios. Requires statsmodels.',
+    handler: (i) => runPythonScript('server/regression_tools.py', { ...i, task: 'poisson_glm' }),
+    parameters: { X: { type: 'array', required: true, description: 'samples x features.' }, y: { type: 'array', required: true, description: 'Count target.' }, featureNames: { type: 'array', description: 'Feature names.' } },
+  },
+  {
+    name: 'mixed_effects_model', category: 'Regression',
+    description: 'Linear mixed-effects model (random intercept per group). Requires statsmodels+pandas.',
+    handler: (i) => runPythonScript('server/regression_tools.py', { ...i, task: 'mixedlm' }),
+    parameters: { X: { type: 'array', required: true, description: 'samples x features.' }, y: { type: 'array', required: true, description: 'Continuous target.' }, groups: { type: 'array', required: true, description: 'Grouping labels.' }, featureNames: { type: 'array', description: 'Feature names.' } },
+  },
+  {
+    name: 'robust_regression', category: 'Regression',
+    description: 'Robust regression (Huber M-estimator) resistant to outliers. Requires statsmodels.',
+    handler: (i) => runPythonScript('server/regression_tools.py', { ...i, task: 'robust_regression' }),
+    parameters: { X: { type: 'array', required: true, description: 'samples x features.' }, y: { type: 'array', required: true, description: 'Continuous target.' }, featureNames: { type: 'array', description: 'Feature names.' } },
+  },
+  // --- Dimensionality reduction (scikit-learn) ---
+  {
+    name: 'mds_embed', category: 'Dimensionality reduction',
+    description: 'Multidimensional scaling (MDS) embedding. Requires scikit-learn.',
+    handler: (i) => runPythonScript('server/dimreduction_tools.py', { ...i, task: 'mds' }),
+    parameters: { matrix: { type: 'array', required: true, description: 'samples x features.' }, nComponents: { type: 'number', description: 'Components (default 2).' } },
+  },
+  {
+    name: 'ica_decompose', category: 'Dimensionality reduction',
+    description: 'Independent Component Analysis (FastICA) — separate independent sources. Requires scikit-learn.',
+    handler: (i) => runPythonScript('server/dimreduction_tools.py', { ...i, task: 'ica' }),
+    parameters: { matrix: { type: 'array', required: true, description: 'samples x features.' }, nComponents: { type: 'number', description: 'Components.' } },
+  },
+  {
+    name: 'nmf_decompose', category: 'Dimensionality reduction',
+    description: 'Non-negative matrix factorization (NMF) for non-negative data (metagenes/signatures). Requires scikit-learn.',
+    handler: (i) => runPythonScript('server/dimreduction_tools.py', { ...i, task: 'nmf' }),
+    parameters: { matrix: { type: 'array', required: true, description: 'Non-negative samples x features.' }, nComponents: { type: 'number', description: 'Components.' } },
+  },
+  {
+    name: 'factor_analysis', category: 'Dimensionality reduction',
+    description: 'Factor analysis latent-factor extraction. Requires scikit-learn.',
+    handler: (i) => runPythonScript('server/dimreduction_tools.py', { ...i, task: 'factor_analysis' }),
+    parameters: { matrix: { type: 'array', required: true, description: 'samples x features.' }, nComponents: { type: 'number', description: 'Factors.' } },
+  },
+  {
+    name: 'kernel_pca', category: 'Dimensionality reduction',
+    description: 'Kernel PCA (nonlinear) embedding. Requires scikit-learn.',
+    handler: (i) => runPythonScript('server/dimreduction_tools.py', { ...i, task: 'kernel_pca' }),
+    parameters: { matrix: { type: 'array', required: true, description: 'samples x features.' }, kernel: { type: 'string', description: 'rbf|poly|sigmoid|cosine (default rbf).' }, nComponents: { type: 'number', description: 'Components.' } },
+  },
+  // --- Population genetics ---
+  {
+    name: 'nucleotide_diversity', category: 'Population genetics',
+    description: 'Nucleotide diversity (pi) from a 0/1 haplotype matrix. Requires numpy.',
+    handler: (i) => runPythonScript('server/population_genetics.py', { ...i, task: 'nucleotide_diversity' }),
+    parameters: { haplotypes: { type: 'array', required: true, description: '0/1 matrix (samples x sites).' } },
+  },
+  {
+    name: 'tajimas_d', category: 'Population genetics',
+    description: "Tajima's D neutrality test statistic from a haplotype matrix. Requires numpy.",
+    handler: (i) => runPythonScript('server/population_genetics.py', { ...i, task: 'tajimas_d' }),
+    parameters: { haplotypes: { type: 'array', required: true, description: '0/1 matrix (>=4 samples).' } },
+  },
+  {
+    name: 'fst', category: 'Population genetics',
+    description: 'Fixation index (Fst) between two populations from 0/1 matrices. Requires numpy.',
+    handler: (i) => runPythonScript('server/population_genetics.py', { ...i, task: 'fst' }),
+    parameters: { pop1: { type: 'array', required: true, description: '0/1 matrix pop1.' }, pop2: { type: 'array', required: true, description: '0/1 matrix pop2 (same sites).' } },
+  },
+  {
+    name: 'linkage_disequilibrium', category: 'Population genetics',
+    description: 'LD between two loci (D and r^2). Requires numpy.',
+    handler: (i) => runPythonScript('server/population_genetics.py', { ...i, task: 'ld_r2' }),
+    parameters: { locusA: { type: 'array', required: true, description: '0/1 per individual.' }, locusB: { type: 'array', required: true, description: '0/1 per individual.' } },
+  },
+  {
+    name: 'maf_spectrum', category: 'Population genetics',
+    description: 'Minor-allele-frequency spectrum (histogram) from a haplotype matrix. Requires numpy.',
+    handler: (i) => runPythonScript('server/population_genetics.py', { ...i, task: 'maf_spectrum' }),
+    parameters: { haplotypes: { type: 'array', required: true, description: '0/1 matrix (samples x sites).' } },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));
