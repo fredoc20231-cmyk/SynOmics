@@ -692,6 +692,32 @@ app.post(['/api/synomics/immuno', '/api/biomni/immuno'], async (req, res) => {
   } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
 });
 
+// Time series / clinical / WGCNA / flow cytometry — dispatch routes.
+app.post(['/api/synomics/timeseries', '/api/biomni/timeseries'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/timeseries_tools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/clinical', '/api/biomni/clinical'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/clinical_tools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/wgcna', '/api/biomni/wgcna'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/wgcna.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/flow', '/api/biomni/flow'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/flow_tools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
 // Enrichment / QC / proteomics — dispatch routes.
 app.post(['/api/synomics/enrichment', '/api/biomni/enrichment'], async (req, res) => {
   try {

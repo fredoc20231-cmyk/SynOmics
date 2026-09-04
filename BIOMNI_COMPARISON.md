@@ -5,7 +5,7 @@ SynOmics's **actual, verified** tool registry.
 
 **Sourcing & honesty note (read this):**
 - The **SynOmics** column lists *exact tool names from `server/tool_registry.ts`*
-  (109 tools at time of writing). Every one is backed by a real engine and a
+  (151 tools at time of writing). Every one is backed by a real engine and a
   CI-gated test that checks output against known ground truth — see
   `.github/workflows/ci.yml` and `tests/*`. Nothing here is a "random one-line"
   wrapper; each `✅` links to a named test suite that asserts a correct numeric
@@ -26,12 +26,13 @@ capability with no direct Biomni equivalent.
 | Platform | Tools | Verification |
 | --- | --- | --- |
 | Biomni (A1/E1) | ~150 | broad generalist toolbox |
-| **SynOmics** | **109** | **every tool CI-gated against ground truth** |
+| **SynOmics** | **151** | **every tool CI-gated against ground truth** |
 
-SynOmics covers the large majority of Biomni's *analysis* domains that run without
-specialized infra, **plus ~24 verifiable-AI / iDiscover engines Biomni has no
-equivalent for**. The remaining gap to ~150 is overwhelmingly infra-gated wrappers
-(docking, folding, read alignment, GPU single-cell) — listed at the bottom.
+SynOmics now matches Biomni's headline tool count (151 vs ~150) while covering the
+large majority of Biomni's *analysis* domains that run without specialized infra,
+**plus ~24 verifiable-AI / iDiscover engines Biomni has no equivalent for**. The
+remaining not-built items are overwhelmingly infra-gated wrappers (docking,
+folding, read alignment, GPU single-cell) — listed at the bottom.
 
 ---
 
@@ -59,6 +60,10 @@ equivalent for**. The remaining gap to ~150 is overwhelmingly infra-gated wrappe
 | **Proteomics (MS/MS)** | fragmentation | `mass_spec` | ✅ `engine_smoke` |
 | **Single-cell** | scanpy markers | `single_cell` (markers), `ingest_file`/H5AD profiling | ✅ `engine_smoke`, `h5ad_smoke` |
 | **External databases** | Ensembl/UniProt/… | `db_ensembl_gene`, `db_gene_annotation`, `db_protein_uniprot`, `db_variant_vep` | ✅ `external_db_smoke` (normalizers; live path egress-gated) |
+| **Time series / signal** | ACF, spectral, change-point | `autocorrelation`, `cross_correlation`, `changepoint_cusum`, `periodicity_fft`, `lowess_trend`, `linear_detrend`, `moving_average` | ✅ `timeseries_tools_smoke` |
+| **Clinical epidemiology** | OR/RR, diagnostics, meta-analysis | `odds_ratio_rr`, `diagnostic_metrics`, `number_needed_to_treat`, `meta_analysis` | ✅ `clinical_tools_smoke` |
+| **Co-expression networks** | WGCNA | `wgcna_soft_threshold`, `wgcna_coexpression_modules`, `wgcna_module_eigengenes` | ✅ `wgcna_smoke` |
+| **Flow cytometry** | transform, compensation, gating | `flow_arcsinh_transform`, `flow_compensation`, `flow_gating_frequencies`, `flow_channel_summary` | ✅ `flow_tools_smoke` |
 | **Reporting** | report export | `generate_report` (HTML/DOCX/PDF), `provenance_manifest` | ✅ `report_smoke`, `provenance_smoke` |
 | **Lab automation** | protocols | `robotic_protocol`, `assay_quantify` | ✅ `robotics_smoke`, `vision_assay_smoke` |
 | **Verifiable-AI (no Biomni equivalent)** | — | `adversarial_validate`, `adversarial_swarm`, `adversarial_ml`, `causal_discovery`, `pathway_logic`, `pathway_logic_z3`, `edge_extraction`, `multiomic_consistency`, `boolean_attractors`, `circuit_verify`, `pde_residual`, `mml_select`, `tensor_compress`, `bayesian_update`, `accelerate_kernel` | ➕ 15 engines, all CI-gated |

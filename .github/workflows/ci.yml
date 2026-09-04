@@ -25,6 +25,9 @@ jobs:
       - name: Install npm dependencies
         run: npm install
 
+      - name: Type-check (tsc --noEmit, catches ToolParam/registry type errors)
+        run: npm run lint
+
       - name: Type-check + build (frontend + server bundle)
         run: npm run build
 
@@ -246,3 +249,23 @@ jobs:
         run: |
           python -m pip install --quiet cython
           python tests/accelerate_smoke.py
+
+      - name: Time-series / signal gate (ACF/CCF/CUSUM/FFT/LOWESS/detrend/MA)
+        run: |
+          python -m pip install --quiet numpy scipy statsmodels
+          python tests/timeseries_tools_smoke.py
+
+      - name: Clinical epidemiology gate (OR/RR/NNT/diagnostic metrics/meta-analysis)
+        run: |
+          python -m pip install --quiet numpy scipy
+          python tests/clinical_tools_smoke.py
+
+      - name: WGCNA gate (soft-threshold/co-expression modules/module eigengenes)
+        run: |
+          python -m pip install --quiet numpy scipy scikit-learn
+          python tests/wgcna_smoke.py
+
+      - name: Flow cytometry gate (arcsinh/compensation/gating/channel summary)
+        run: |
+          python -m pip install --quiet numpy
+          python tests/flow_tools_smoke.py

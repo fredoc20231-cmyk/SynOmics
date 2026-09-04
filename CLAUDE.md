@@ -241,7 +241,17 @@ Bridges omics findings into molecular design + rigorous in-silico validation.
   advanced microbiome (`microbiome_advanced.py`: Chao1, CLR differential abundance,
   rarefaction), structural biology (`structure_tools.py`: summary, radius of
   gyration, contact map, atom distance). Each validated against known ground truth.
-- 92 real agent tools; 35 test suites in CI.
+- **Breadth wave 3b (real, CI-gated):** time-series/signal (`timeseries_tools.py`:
+  autocorrelation, cross-correlation, CUSUM change-point, FFT periodicity, LOWESS,
+  linear detrend, moving average), clinical epidemiology (`clinical_tools.py`: odds
+  ratio/relative risk, diagnostic metrics, number-needed-to-treat, inverse-variance
+  meta-analysis), WGCNA co-expression (`wgcna.py`: soft-threshold, co-expression
+  modules, module eigengenes), flow cytometry (`flow_tools.py`: arcsinh transform,
+  spillover compensation, gating frequencies, channel summary). Each validated
+  against known ground truth.
+- 151 real agent tools in `server/tool_registry.ts`; 39 test suites in CI, plus a
+  `tsc --noEmit` type-check gate. See `BIOMNI_COMPARISON.md` for the per-domain
+  Biomni↔SynOmics coverage table.
 - Everything marked "to build" / "not implemented" above must not be faked.
 
 ## 6. Commands

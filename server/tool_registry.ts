@@ -1108,6 +1108,118 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     handler: (i) => runPythonScript('server/immunoinformatics.py', { ...i, task: 'repertoire_overlap' }),
     parameters: { repertoireA: { type: 'object', required: true, description: '{clonotype: count}.' }, repertoireB: { type: 'object', required: true, description: '{clonotype: count}.' } },
   },
+  // --- Time series / signal analysis (numpy/scipy/statsmodels) ---
+  {
+    name: 'autocorrelation', category: 'Time series / signal',
+    description: 'Autocorrelation function (ACF) of a series up to maxLag. Requires numpy.',
+    handler: (i) => runPythonScript('server/timeseries_tools.py', { ...i, task: 'autocorrelation' }),
+    parameters: { x: { type: 'array', required: true, description: 'Numeric series (>=3 values).' }, maxLag: { type: 'number', description: 'Maximum lag (default min(n-1,20)).' } },
+  },
+  {
+    name: 'cross_correlation', category: 'Time series / signal',
+    description: 'Normalized cross-correlation between two equal-length series; reports best lag/correlation. Requires numpy.',
+    handler: (i) => runPythonScript('server/timeseries_tools.py', { ...i, task: 'cross_correlation' }),
+    parameters: { x: { type: 'array', required: true, description: 'First series.' }, y: { type: 'array', required: true, description: 'Second series (same length).' }, maxLag: { type: 'number', description: 'Maximum +/- lag.' } },
+  },
+  {
+    name: 'changepoint_cusum', category: 'Time series / signal',
+    description: 'CUSUM change-point detection with bootstrap significance. Requires numpy.',
+    handler: (i) => runPythonScript('server/timeseries_tools.py', { ...i, task: 'changepoint_cusum' }),
+    parameters: { x: { type: 'array', required: true, description: 'Numeric series.' }, nBootstrap: { type: 'number', description: 'Bootstrap iterations (default 500).' }, seed: { type: 'number', description: 'RNG seed.' } },
+  },
+  {
+    name: 'periodicity_fft', category: 'Time series / signal',
+    description: 'Dominant frequency/period via FFT power spectrum. Requires numpy.',
+    handler: (i) => runPythonScript('server/timeseries_tools.py', { ...i, task: 'periodicity_fft' }),
+    parameters: { x: { type: 'array', required: true, description: 'Numeric series.' }, dt: { type: 'number', description: 'Sample spacing (default 1.0).' } },
+  },
+  {
+    name: 'lowess_trend', category: 'Time series / signal',
+    description: 'LOWESS locally-weighted smoothing trend. Requires statsmodels.',
+    handler: (i) => runPythonScript('server/timeseries_tools.py', { ...i, task: 'lowess_trend' }),
+    parameters: { y: { type: 'array', required: true, description: 'Response values.' }, x: { type: 'array', description: 'Optional x (defaults to index).' }, frac: { type: 'number', description: 'Smoothing span fraction (default 0.3).' } },
+  },
+  {
+    name: 'linear_detrend', category: 'Time series / signal',
+    description: 'Remove a least-squares linear trend; returns slope, intercept, residuals. Requires numpy.',
+    handler: (i) => runPythonScript('server/timeseries_tools.py', { ...i, task: 'linear_detrend' }),
+    parameters: { y: { type: 'array', required: true, description: 'Response values.' }, x: { type: 'array', description: 'Optional x (defaults to index).' } },
+  },
+  {
+    name: 'moving_average', category: 'Time series / signal',
+    description: 'Simple moving average (valid convolution) over a window. Requires numpy.',
+    handler: (i) => runPythonScript('server/timeseries_tools.py', { ...i, task: 'moving_average' }),
+    parameters: { y: { type: 'array', required: true, description: 'Numeric series.' }, window: { type: 'number', description: 'Window size (default 3).' } },
+  },
+  // --- Clinical epidemiology / diagnostics (numpy/scipy) ---
+  {
+    name: 'odds_ratio_rr', category: 'Clinical epidemiology',
+    description: 'Odds ratio, relative risk, ARR, NNT with 95% CIs from a 2x2 table (Haldane-corrected for zeros).',
+    handler: (i) => runPythonScript('server/clinical_tools.py', { ...i, task: 'odds_ratio_rr' }),
+    parameters: { table: { type: 'array', required: true, description: '2x2 [[exposed_event, exposed_noevent],[unexposed_event, unexposed_noevent]].' } },
+  },
+  {
+    name: 'diagnostic_metrics', category: 'Clinical epidemiology',
+    description: 'Sensitivity/specificity/PPV/NPV/accuracy/F1/Youden J from tp,fp,fn,tn counts.',
+    handler: (i) => runPythonScript('server/clinical_tools.py', { ...i, task: 'diagnostic_metrics' }),
+    parameters: { tp: { type: 'number', required: true, description: 'True positives.' }, fp: { type: 'number', required: true, description: 'False positives.' }, fn: { type: 'number', required: true, description: 'False negatives.' }, tn: { type: 'number', required: true, description: 'True negatives.' } },
+  },
+  {
+    name: 'number_needed_to_treat', category: 'Clinical epidemiology',
+    description: 'Number needed to treat from control vs treated event rates (ARR -> NNT).',
+    handler: (i) => runPythonScript('server/clinical_tools.py', { ...i, task: 'number_needed_to_treat' }),
+    parameters: { controlEventRate: { type: 'number', required: true, description: 'Control event rate 0..1.' }, treatedEventRate: { type: 'number', required: true, description: 'Treated event rate 0..1.' } },
+  },
+  {
+    name: 'meta_analysis', category: 'Clinical epidemiology',
+    description: 'Inverse-variance fixed-effect meta-analysis: pooled effect, 95% CI, Cochran Q, I^2. Requires numpy.',
+    handler: (i) => runPythonScript('server/clinical_tools.py', { ...i, task: 'meta_analysis' }),
+    parameters: { studies: { type: 'array', required: true, description: '[{effect, se}, ...] (>=2 studies).' } },
+  },
+  // --- WGCNA co-expression network analysis (numpy/scipy/sklearn) ---
+  {
+    name: 'wgcna_soft_threshold', category: 'Systems biology / WGCNA',
+    description: 'Pick a soft-threshold power by scale-free topology fit (R^2 vs connectivity). Requires numpy.',
+    handler: (i) => runPythonScript('server/wgcna.py', { ...i, task: 'soft_threshold' }),
+    parameters: { expression: { type: 'array', required: true, description: 'samples x genes matrix.' }, powers: { type: 'array', description: 'Candidate powers (default [1,2,4,6,8,10,12]).' } },
+  },
+  {
+    name: 'wgcna_coexpression_modules', category: 'Systems biology / WGCNA',
+    description: 'Detect co-expression modules via |corr|^beta adjacency + hierarchical clustering. Requires scipy.',
+    handler: (i) => runPythonScript('server/wgcna.py', { ...i, task: 'coexpression_modules' }),
+    parameters: { expression: { type: 'array', required: true, description: 'samples x genes matrix.' }, power: { type: 'number', description: 'Soft-threshold power (default 6).' }, nModules: { type: 'number', description: 'Target module count (default 3).' }, geneNames: { type: 'array', description: 'Gene names aligned to columns.' } },
+  },
+  {
+    name: 'wgcna_module_eigengenes', category: 'Systems biology / WGCNA',
+    description: 'Module eigengenes (PC1 per module) with variance explained. Requires scikit-learn.',
+    handler: (i) => runPythonScript('server/wgcna.py', { ...i, task: 'module_eigengenes' }),
+    parameters: { expression: { type: 'array', required: true, description: 'samples x genes matrix.' }, moduleAssignments: { type: 'object', required: true, description: '{module: [geneNames]}.' }, geneNames: { type: 'array', description: 'Gene names aligned to columns.' } },
+  },
+  // --- Flow cytometry (numpy) ---
+  {
+    name: 'flow_arcsinh_transform', category: 'Flow cytometry',
+    description: 'Arcsinh (biexponential-style) transform of event x channel intensities. Requires numpy.',
+    handler: (i) => runPythonScript('server/flow_tools.py', { ...i, task: 'arcsinh_transform' }),
+    parameters: { events: { type: 'array', required: true, description: 'events x channels matrix.' }, cofactor: { type: 'number', description: 'Arcsinh cofactor (default 150).' } },
+  },
+  {
+    name: 'flow_compensation', category: 'Flow cytometry',
+    description: 'Fluorescence compensation via spillover-matrix inverse. Requires numpy.',
+    handler: (i) => runPythonScript('server/flow_tools.py', { ...i, task: 'compensation' }),
+    parameters: { events: { type: 'array', required: true, description: 'events x channels matrix.' }, spillover: { type: 'array', required: true, description: 'channels x channels spillover matrix.' } },
+  },
+  {
+    name: 'flow_gating_frequencies', category: 'Flow cytometry',
+    description: 'AND-combined threshold gating -> population frequency (%). Requires numpy.',
+    handler: (i) => runPythonScript('server/flow_tools.py', { ...i, task: 'gating_frequencies' }),
+    parameters: { events: { type: 'array', required: true, description: 'events x channels matrix.' }, gates: { type: 'array', required: true, description: '[{channel, min?, max?}, ...] AND-combined.' }, channels: { type: 'array', description: 'Channel names aligned to columns.' } },
+  },
+  {
+    name: 'flow_channel_summary', category: 'Flow cytometry',
+    description: 'Per-channel median/mean/CV/p95 summary of flow events. Requires numpy.',
+    handler: (i) => runPythonScript('server/flow_tools.py', { ...i, task: 'channel_summary' }),
+    parameters: { events: { type: 'array', required: true, description: 'events x channels matrix.' }, channels: { type: 'array', description: 'Channel names aligned to columns.' } },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));
