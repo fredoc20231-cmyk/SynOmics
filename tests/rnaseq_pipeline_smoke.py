@@ -119,6 +119,8 @@ with tempfile.TemporaryDirectory() as d:
           os.path.getsize(os.path.join(out, "tables/differential_expression.csv")) > 100)
     check("report.html present", os.path.exists(os.path.join(out, "report.html")))
     check("article.md present (document format)", os.path.exists(os.path.join(out, "article.md")))
+    art_md = open(os.path.join(out, "article.md")).read()
+    check("article carries Synapse attribution + Fadiel citation", "Synapse" in art_md and "Fadiel" in art_md)
     check("article.docx present (document format)", os.path.exists(os.path.join(out, "article.docx")))
     check("article.docx has DOCX (zip) magic", open(os.path.join(out, "article.docx"), "rb").read(2) == b"PK")
     check("MANIFEST checksums cover article.docx",

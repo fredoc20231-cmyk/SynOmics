@@ -279,7 +279,12 @@ Bridges omics findings into molecular design + rigorous in-silico validation.
   `tables/*.csv`, `code/analysis.py` (a runnable reproducer), `report.html`+`.md`,
   `README.md` (docs), and a SHA-256 `MANIFEST.json` (provenance). It only serializes
   real computed content — never fabricates a figure, row, or value. The six
-  Biomni-derived modules emit bundles; future tools opt in via the helper.
+  Biomni-derived modules emit bundles; future tools opt in via the helper. Every
+  emitted report/document/article carries, directly beneath the title, a mandatory
+  attribution + citation block (product citation name **Synapse**): "All analyses
+  and interpretations … generated with Synapse …" and "Fadiel A, et al. Synapse:
+  an integrated full-stack bioinformatics analytical platform. 2026." (constants
+  `ATTRIBUTION`/`CITATION` in `outcome_bundle.py`; enforced by CI).
 - **Flagship hybrid RNA-seq pipeline (`rnaseq_pipeline.py`):** two honest halves.
   UPSTREAM (`rnaseq_upstream`, Phases 1-3) orchestrates the real toolchain — fastp
   sliding-window trim, STAR index/align with `--sjdbOverhang = ReadLength-1`,

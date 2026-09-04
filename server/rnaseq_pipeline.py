@@ -594,10 +594,17 @@ def _emit_bundle(output_dir, p, result, genes, samples, mat, normed, sf, base_me
 
 
 def _article_markdown(result, samples, ref, treat, alpha_fdr, var_exp, top_up, top_dn, methods):
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from outcome_bundle import ATTRIBUTION, CITATION
+
     def _g(rs):
         return "; ".join(f"*{r['gene']}* (log2FC {r['log2FoldChangeShrunk']}, padj {r['padj']})" for r in rs) or "none"
     return "\n".join([
         f"# Differential Expression Analysis of {treat} versus {ref} by Hybrid RNA-seq",
+        "",
+        ATTRIBUTION,
+        "",
+        f"*Citation: {CITATION.replace('**', '').replace('*', '')}*",
         "",
         "## Abstract",
         f"We profiled {result['nSamples']} samples and quantified {result['nGenes']} genes. "
@@ -650,10 +657,16 @@ def _article_docx(result, ref, treat, alpha_fdr, methods, top_up, top_dn):
         from docx.shared import RGBColor
     except Exception:  # noqa: BLE001
         return None
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from outcome_bundle import ATTRIBUTION, CITATION
     doc = Document()
     h = doc.add_heading(f"Differential Expression: {treat} vs {ref}", level=0)
     for run in h.runs:
         run.font.color.rgb = RGBColor(0x0A, 0x19, 0x2F)
+    attrib = doc.add_paragraph()
+    attrib.add_run(ATTRIBUTION.replace("**", "")).italic = True
+    cite = doc.add_paragraph()
+    cite.add_run("Citation: " + CITATION.replace("**", "").replace("*", "")).italic = True
     doc.add_heading("Abstract", level=1)
     doc.add_paragraph(
         f"{result['nSamples']} samples; {result['nGenes']} genes quantified, {result['nTested']} tested. "
