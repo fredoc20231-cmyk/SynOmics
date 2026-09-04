@@ -756,6 +756,44 @@ app.post(['/api/synomics/genome-intervals', '/api/biomni/genome-intervals'], asy
   } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
 });
 
+// Biomni-derived outcome-bundle tools: glyco / codon / conservation / chrono / growth / genomic-prediction.
+app.post(['/api/synomics/glyco', '/api/biomni/glyco'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/glyco_tools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/codon', '/api/biomni/codon'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/codon_tools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/conservation', '/api/biomni/conservation'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/conservation_tools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/chrono', '/api/biomni/chrono'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/chrono_tools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/growth', '/api/biomni/growth'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/growth_dynamics.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/genomic-prediction', '/api/biomni/genomic-prediction'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/genomic_prediction.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
 // Enrichment / QC / proteomics — dispatch routes.
 app.post(['/api/synomics/enrichment', '/api/biomni/enrichment'], async (req, res) => {
   try {

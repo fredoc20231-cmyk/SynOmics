@@ -1406,6 +1406,66 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     handler: (i) => runPythonScript('server/genome_intervals.py', { ...i, task: 'interval_nearest' }),
     parameters: { query: { type: 'array', required: true, description: 'Query intervals.' }, features: { type: 'array', required: true, description: 'Candidate feature intervals.' } },
   },
+  // --- Glycoengineering (Biomni-derived; each emits a Biomni-style outcome bundle when outputDir set) ---
+  {
+    name: 'n_glycosylation_motifs', category: 'Glycoengineering',
+    description: 'Scan a protein sequence for N-linked glycosylation sequons (N-X-[S/T], X≠Pro).',
+    handler: (i) => runPythonScript('server/glyco_tools.py', { ...i, task: 'n_glycosylation_motifs' }),
+    parameters: { sequence: { type: 'string', required: true, description: 'Protein sequence.' }, allowOverlap: { type: 'boolean', description: 'Count overlapping sequons (default false).' }, outputDir: { type: 'string', description: 'If set, write figures/tables/code/report bundle.' } },
+  },
+  {
+    name: 'o_glycosylation_hotspots', category: 'Glycoengineering',
+    description: 'Sliding-window Ser/Thr-rich O-glycosylation hotspot scan.',
+    handler: (i) => runPythonScript('server/glyco_tools.py', { ...i, task: 'o_glycosylation_hotspots' }),
+    parameters: { sequence: { type: 'string', required: true, description: 'Protein sequence.' }, window: { type: 'number', description: 'Window size (default 10).' }, threshold: { type: 'number', description: 'Min S/T fraction to flag (default 0.5).' }, outputDir: { type: 'string', description: 'If set, write outcome bundle.' } },
+  },
+  // --- Synthetic biology: codon optimization ---
+  {
+    name: 'codon_optimize', category: 'Synthetic biology',
+    description: 'Codon-optimize a coding DNA sequence for a host and report CAI before/after.',
+    handler: (i) => runPythonScript('server/codon_tools.py', { ...i, task: 'codon_optimize' }),
+    parameters: { sequence: { type: 'string', required: true, description: 'Coding DNA (length multiple of 3).' }, hostCodonUsage: { type: 'object', required: true, description: '{codon: relativeFrequency} host usage table.' }, outputDir: { type: 'string', description: 'If set, write outcome bundle.' } },
+  },
+  // --- Biochemistry: sequence conservation ---
+  {
+    name: 'protein_conservation', category: 'Biochemistry',
+    description: 'Per-column Shannon-entropy conservation across a pre-aligned protein MSA.',
+    handler: (i) => runPythonScript('server/conservation_tools.py', { ...i, task: 'protein_conservation' }),
+    parameters: { sequences: { type: 'array', required: true, description: 'Equal-length aligned protein sequences.' }, outputDir: { type: 'string', description: 'If set, write outcome bundle.' } },
+  },
+  // --- Chronobiology: cosinor ---
+  {
+    name: 'cosinor_analysis', category: 'Chronobiology',
+    description: 'Single-component cosinor fit → MESOR, amplitude, acrophase, R² for circadian data.',
+    handler: (i) => runPythonScript('server/chrono_tools.py', { ...i, task: 'cosinor_analysis' }),
+    parameters: { time: { type: 'array', required: true, description: 'Sample times.' }, values: { type: 'array', required: true, description: 'Measured values (same length).' }, period: { type: 'number', description: 'Cycle length (default 24).' }, outputDir: { type: 'string', description: 'If set, write outcome bundle.' } },
+  },
+  // --- Microbial growth dynamics ---
+  {
+    name: 'logistic_growth_fit', category: 'Growth dynamics',
+    description: 'Fit a logistic growth curve → carrying capacity K, rate r, N0, R². Requires scipy.',
+    handler: (i) => runPythonScript('server/growth_dynamics.py', { ...i, task: 'logistic_growth_fit' }),
+    parameters: { time: { type: 'array', required: true, description: 'Observation times.' }, population: { type: 'array', required: true, description: 'Population at each time.' }, outputDir: { type: 'string', description: 'If set, write outcome bundle.' } },
+  },
+  {
+    name: 'gompertz_growth_fit', category: 'Growth dynamics',
+    description: 'Fit a Zwietering-Gompertz growth curve → asymptote A, max rate mu, lag, R². Requires scipy.',
+    handler: (i) => runPythonScript('server/growth_dynamics.py', { ...i, task: 'gompertz_growth_fit' }),
+    parameters: { time: { type: 'array', required: true, description: 'Observation times.' }, population: { type: 'array', required: true, description: 'Population at each time.' }, outputDir: { type: 'string', description: 'If set, write outcome bundle.' } },
+  },
+  {
+    name: 'lotka_volterra_simulate', category: 'Growth dynamics',
+    description: 'Integrate generalized Lotka-Volterra dynamics for n interacting species. Requires scipy.',
+    handler: (i) => runPythonScript('server/growth_dynamics.py', { ...i, task: 'lotka_volterra_simulate' }),
+    parameters: { initialAbundances: { type: 'array', required: true, description: 'Initial abundance per species.' }, growthRates: { type: 'array', required: true, description: 'Intrinsic growth rate per species.' }, interactionMatrix: { type: 'array', required: true, description: 'n×n interaction coefficients.' }, timePoints: { type: 'array', required: true, description: 'Increasing evaluation times.' }, outputDir: { type: 'string', description: 'If set, write outcome bundle.' } },
+  },
+  // --- Genomic prediction ---
+  {
+    name: 'gblup', category: 'Genomic prediction',
+    description: 'Genomic prediction (GBLUP / ridge) of breeding values with CV/hold-out accuracy. Requires scikit-learn.',
+    handler: (i) => runPythonScript('server/genomic_prediction.py', { ...i, task: 'gblup' }),
+    parameters: { genotypes: { type: 'array', required: true, description: 'individuals × markers dosage matrix.' }, phenotypes: { type: 'array', required: true, description: 'Phenotype per individual.' }, lambdaReg: { type: 'number', description: 'Ridge penalty (default = #markers).' }, testIndices: { type: 'array', description: 'Hold-out indices (else 5-fold CV).' }, outputDir: { type: 'string', description: 'If set, write outcome bundle.' } },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));

@@ -261,7 +261,26 @@ Bridges omics findings into molecular design + rigorous in-silico validation.
   intersect, subtract, coverage, nearest). Each validated against known ground
   truth (e.g. d=0.5/power=0.8 → n≈64; Bray-Curtis of disjoint samples = 1.0;
   Michaelis-Menten recovers Km=10; Moran's I = +1 for a perfectly clustered field).
-- 181 real agent tools in `server/tool_registry.ts`; 45 test suites in CI, plus a
+- **Biomni-derived wave (real, CI-gated, with outcome bundles):** glycoengineering
+  (`glyco_tools.py`: N/O-glycosylation motif scans), synthetic biology
+  (`codon_tools.py`: codon optimization + CAI), biochemistry
+  (`conservation_tools.py`: per-column Shannon-entropy conservation), chronobiology
+  (`chrono_tools.py`: cosinor MESOR/amplitude/acrophase), microbial growth
+  (`growth_dynamics.py`: logistic + Gompertz fits, generalized Lotka-Volterra),
+  genomic prediction (`genomic_prediction.py`: GBLUP/ridge breeding values). Designs
+  adapted from the Apache-2.0 Biomni project; implementations original + validated
+  against known ground truth (e.g. cosinor recovers MESOR=10/amplitude=5; GBLUP
+  accuracy r>0.9 on signal, ~0 on pure noise; conservation entropy 0 bits for a
+  conserved column, 2 bits for 4 equiprobable residues).
+- **Outcome bundles (Biomni-style output structure):** `server/outcome_bundle.py`
+  writes, per invocation (when a tool is called with `outputDir`), a structured
+  bundle mirroring Biomni's Results→artifacts shape: `result.json` +
+  `research_log.md` (Results), `figures/*.png|svg` (matplotlib on the §2 palette),
+  `tables/*.csv`, `code/analysis.py` (a runnable reproducer), `report.html`+`.md`,
+  `README.md` (docs), and a SHA-256 `MANIFEST.json` (provenance). It only serializes
+  real computed content — never fabricates a figure, row, or value. The six
+  Biomni-derived modules emit bundles; future tools opt in via the helper.
+- 190 real agent tools in `server/tool_registry.ts`; 52 test suites in CI, plus a
   `tsc --noEmit` type-check gate. See `BIOMNI_COMPARISON.md` for the per-domain
   Biomni↔SynOmics coverage table.
 - Everything marked "to build" / "not implemented" above must not be faked.

@@ -5,7 +5,7 @@ SynOmics's **actual, verified** tool registry.
 
 **Sourcing & honesty note (read this):**
 - The **SynOmics** column lists *exact tool names from `server/tool_registry.ts`*
-  (181 tools at time of writing). Every one is backed by a real engine and a
+  (190 tools at time of writing). Every one is backed by a real engine and a
   CI-gated test that checks output against known ground truth — see
   `.github/workflows/ci.yml` and `tests/*`. Nothing here is a "random one-line"
   wrapper; each `✅` links to a named test suite that asserts a correct numeric
@@ -29,13 +29,13 @@ capability with no direct Biomni equivalent.
 | Platform | Registered tools | Data lake | Verification |
 | --- | --- | --- | --- |
 | Biomni (`Biomni-main`, Apache-2.0) | **224** | 76 datasets (~11 GB) + 113 pkgs | broad generalist toolbox; correctness not gated in-repo |
-| **SynOmics** | **181** | egress-gated live DB clients | **every tool CI-gated against ground truth** |
+| **SynOmics** | **190** | egress-gated live DB clients | **every tool CI-gated against ground truth** |
 
 Honest read: **Biomni is broader** — more scientific domains (imaging, pathology,
 physiology, wet-lab), a huge downloadable data lake, and integration with heavy
 external software (docking, folding, scRNA embeddings, R packages, ~200 CLI
 bioinformatics tools). **SynOmics is narrower but harder-verified**: every one of
-its 181 tools runs real code checked against a known numeric answer in CI, and it
+its 190 tools runs real code checked against a known numeric answer in CI, and it
 adds **~24 verifiable-AI / iDiscover engines Biomni has no equivalent for**
 (adversarial validation, causal discovery, Z3 pathway proofs, PDE/circuit gates,
 optimal-transport reversion, federated ZKP). Where Biomni leans on an **LLM to
@@ -85,6 +85,17 @@ single-cell) and (b) the data lake — not core analysis math.
 | **Lab automation** | protocols | `robotic_protocol`, `assay_quantify` | ✅ `robotics_smoke`, `vision_assay_smoke` |
 | **Verifiable-AI (no Biomni equivalent)** | — | `adversarial_validate`, `adversarial_swarm`, `adversarial_ml`, `causal_discovery`, `pathway_logic`, `pathway_logic_z3`, `edge_extraction`, `multiomic_consistency`, `boolean_attractors`, `circuit_verify`, `pde_residual`, `mml_select`, `tensor_compress`, `bayesian_update`, `accelerate_kernel` | ➕ 15 engines, all CI-gated |
 | **iDiscover frontiers (no Biomni equivalent)** | — | `cellular_reversion` (OT), `gflownet_sample`, `hyper_causal_discovery`, `federated_zkp` | ➕ 4 engines, all CI-gated |
+| **Glycoengineering** | N/O-glycosylation motifs | `n_glycosylation_motifs`, `o_glycosylation_hotspots` | ✅ `glyco_tools_smoke` (Biomni-derived) |
+| **Synthetic biology** | codon optimization | `codon_optimize` (host CAI) | ✅ `codon_tools_smoke` (Biomni-derived) |
+| **Biochemistry (conservation)** | MSA conservation | `protein_conservation` (Shannon entropy) | ✅ `conservation_tools_smoke` (Biomni-derived) |
+| **Chronobiology** | cosinor rhythms | `cosinor_analysis` | ✅ `chrono_tools_smoke` (Biomni-derived) |
+| **Microbial growth dynamics** | growth curves, GLV | `logistic_growth_fit`, `gompertz_growth_fit`, `lotka_volterra_simulate` | ✅ `growth_dynamics_smoke` (Biomni-derived) |
+| **Genomic prediction** | GBLUP breeding values | `gblup` | ✅ `genomic_prediction_smoke` (Biomni-derived) |
+
+The six Biomni-derived domains above also emit a **Biomni-style outcome bundle**
+(Results → `figures/` png+svg, `tables/` csv, `code/analysis.py`, `report.html`+`.md`,
+`README.md`, SHA-256 `MANIFEST.json`) when called with `outputDir` — see
+`server/outcome_bundle.py` (`outcome_bundle_smoke`).
 
 ---
 
@@ -110,13 +121,12 @@ Verbatim per-domain counts from `biomni/tool/tool_description/*.py`:
 | cell_biology / protocols / support | 5 / 4 / 3 | partial (REPL ≈ python-exec sandbox) |
 | lab_automation / glycoengineering / biophysics | 3 / 3 / 3 | partial → **glyco motifs addable** |
 
-## Genuinely useful analyses to add (found in Biomni, stack-compatible, real & verifiable)
+## Analyses adopted from Biomni — now BUILT (stack-compatible, real & verifiable)
 
-These are real, deterministic analyses Biomni exposes that SynOmics lacks and that
-run on the **already-installed** stack (biopython/numpy/scipy) — no GPU, no model
-weights, no egress. Each can be added as a CI-gated tool with ground-truth tests,
-same as the existing 181 (reimplemented cleanly, with attribution to Biomni's
-Apache-2.0 design where relevant — not vendored):
+These real, deterministic analyses were found in the Biomni source and are now
+shipped in SynOmics — reimplemented cleanly (attributed to Biomni's Apache-2.0
+design, not vendored), each CI-gated with ground-truth tests and emitting a full
+outcome bundle. **All ✅ built.**
 
 | Candidate tool | Basis | Ground truth |
 | --- | --- | --- |
@@ -151,7 +161,7 @@ build. They fail honestly at runtime and are **never faked**:
 | Live external-DB happy paths (KEGG/Reactome/ChEMBL/OpenTargets) | blocked egress |
 
 These become real, CI-gated tools the moment a worker with the needed
-infra/credentials is connected (e.g. GCP GPU + binaries) — same pattern as the 181
+infra/credentials is connected (e.g. GCP GPU + binaries) — same pattern as the 190
 already shipped, using the deployment scaffold in `DEPLOYMENT.md`.
 
 ---

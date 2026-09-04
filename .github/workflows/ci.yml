@@ -297,3 +297,38 @@ jobs:
 
       - name: Genomic interval arithmetic gate (merge / intersect / subtract / coverage / nearest)
         run: python tests/genome_intervals_smoke.py
+
+      - name: Outcome bundle gate (Biomni-style figures/tables/code/report/docs writer)
+        run: |
+          python -m pip install --quiet matplotlib
+          python tests/outcome_bundle_smoke.py
+
+      - name: Glycoengineering gate (N/O-glycosylation motifs + outcome bundle)
+        run: |
+          python -m pip install --quiet numpy matplotlib
+          python tests/glyco_tools_smoke.py
+
+      - name: Codon optimization gate (host CAI before/after + bundle)
+        run: |
+          python -m pip install --quiet numpy matplotlib
+          python tests/codon_tools_smoke.py
+
+      - name: Protein conservation gate (Shannon entropy per MSA column + bundle)
+        run: |
+          python -m pip install --quiet numpy matplotlib
+          python tests/conservation_tools_smoke.py
+
+      - name: Chronobiology gate (cosinor MESOR/amplitude/acrophase + bundle)
+        run: |
+          python -m pip install --quiet numpy matplotlib
+          python tests/chrono_tools_smoke.py
+
+      - name: Growth dynamics gate (logistic / Gompertz / Lotka-Volterra + bundle)
+        run: |
+          python -m pip install --quiet numpy scipy matplotlib
+          python tests/growth_dynamics_smoke.py
+
+      - name: Genomic prediction gate (GBLUP/ridge accuracy signal-vs-noise + bundle)
+        run: |
+          python -m pip install --quiet numpy scikit-learn matplotlib
+          python tests/genomic_prediction_smoke.py
