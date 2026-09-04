@@ -5,7 +5,7 @@ SynOmics's **actual, verified** tool registry.
 
 **Sourcing & honesty note (read this):**
 - The **SynOmics** column lists *exact tool names from `server/tool_registry.ts`*
-  (190 tools at time of writing). Every one is backed by a real engine and a
+  (193 tools at time of writing). Every one is backed by a real engine and a
   CI-gated test that checks output against known ground truth — see
   `.github/workflows/ci.yml` and `tests/*`. Nothing here is a "random one-line"
   wrapper; each `✅` links to a named test suite that asserts a correct numeric
@@ -29,13 +29,13 @@ capability with no direct Biomni equivalent.
 | Platform | Registered tools | Data lake | Verification |
 | --- | --- | --- | --- |
 | Biomni (`Biomni-main`, Apache-2.0) | **224** | 76 datasets (~11 GB) + 113 pkgs | broad generalist toolbox; correctness not gated in-repo |
-| **SynOmics** | **190** | egress-gated live DB clients | **every tool CI-gated against ground truth** |
+| **SynOmics** | **193** | egress-gated live DB clients | **every tool CI-gated against ground truth** |
 
 Honest read: **Biomni is broader** — more scientific domains (imaging, pathology,
 physiology, wet-lab), a huge downloadable data lake, and integration with heavy
 external software (docking, folding, scRNA embeddings, R packages, ~200 CLI
 bioinformatics tools). **SynOmics is narrower but harder-verified**: every one of
-its 190 tools runs real code checked against a known numeric answer in CI, and it
+its 193 tools runs real code checked against a known numeric answer in CI, and it
 adds **~24 verifiable-AI / iDiscover engines Biomni has no equivalent for**
 (adversarial validation, causal discovery, Z3 pathway proofs, PDE/circuit gates,
 optimal-transport reversion, federated ZKP). Where Biomni leans on an **LLM to
@@ -81,6 +81,7 @@ single-cell) and (b) the data lake — not core analysis math.
 | **Beta diversity / ordination** | Bray-Curtis, PCoA, PERMANOVA | `bray_curtis`, `jaccard_distance`, `pcoa`, `permanova`, `mantel_test` | ✅ `beta_diversity_smoke` |
 | **Power / sample size** | study design | `sample_size_two_means`, `power_two_means`, `sample_size_two_proportions`, `power_anova`, `sample_size_correlation` | ✅ `power_tools_smoke` |
 | **Genomic intervals** | BEDTools-style arithmetic | `interval_merge`, `interval_intersect`, `interval_subtract`, `interval_coverage`, `interval_nearest` | ✅ `genome_intervals_smoke` |
+| **RNA-seq (end-to-end flagship)** | fastp→STAR/salmon→DESeq2 workflow | `rnaseq_upstream` (fastp/STAR/minimap2/stringtie/salmon orchestrator, honest), `rnaseq_tximport`, `rnaseq_deseq` (median-of-ratios → NB-GLM Wald → BH → LFC shrink → PCA + 9 figures + tables + report/DOCX/article) | ✅ `rnaseq_pipeline_smoke` (recovers spike-in DE truth) |
 | **Reporting** | report export | `generate_report` (HTML/DOCX/PDF), `provenance_manifest` | ✅ `report_smoke`, `provenance_smoke` |
 | **Lab automation** | protocols | `robotic_protocol`, `assay_quantify` | ✅ `robotics_smoke`, `vision_assay_smoke` |
 | **Verifiable-AI (no Biomni equivalent)** | — | `adversarial_validate`, `adversarial_swarm`, `adversarial_ml`, `causal_discovery`, `pathway_logic`, `pathway_logic_z3`, `edge_extraction`, `multiomic_consistency`, `boolean_attractors`, `circuit_verify`, `pde_residual`, `mml_select`, `tensor_compress`, `bayesian_update`, `accelerate_kernel` | ➕ 15 engines, all CI-gated |
@@ -161,7 +162,7 @@ build. They fail honestly at runtime and are **never faked**:
 | Live external-DB happy paths (KEGG/Reactome/ChEMBL/OpenTargets) | blocked egress |
 
 These become real, CI-gated tools the moment a worker with the needed
-infra/credentials is connected (e.g. GCP GPU + binaries) — same pattern as the 190
+infra/credentials is connected (e.g. GCP GPU + binaries) — same pattern as the 193
 already shipped, using the deployment scaffold in `DEPLOYMENT.md`.
 
 ---

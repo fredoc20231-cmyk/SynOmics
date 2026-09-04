@@ -1466,6 +1466,25 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     handler: (i) => runPythonScript('server/genomic_prediction.py', { ...i, task: 'gblup' }),
     parameters: { genotypes: { type: 'array', required: true, description: 'individuals × markers dosage matrix.' }, phenotypes: { type: 'array', required: true, description: 'Phenotype per individual.' }, lambdaReg: { type: 'number', description: 'Ridge penalty (default = #markers).' }, testIndices: { type: 'array', description: 'Hold-out indices (else 5-fold CV).' }, outputDir: { type: 'string', description: 'If set, write outcome bundle.' } },
   },
+  // --- Flagship hybrid RNA-seq pipeline ---
+  {
+    name: 'rnaseq_upstream', category: 'RNA-seq pipeline',
+    description: 'Hybrid short+long-read RNA-seq upstream orchestrator (Phases 1-3: fastp trim, STAR index/align with --sjdbOverhang=RL-1, minimap2 -ax splice fed the short-read SJ map, stringtie --merge/gffcompare, decoy-aware salmon index+quant). Builds the exact real commands; runs binaries when present, else returns an honest per-step "unavailable" plan (never fabricates counts).',
+    handler: (i) => runPythonScript('server/rnaseq_pipeline.py', { ...i, task: 'rnaseq_upstream' }),
+    parameters: { readLength: { type: 'number', description: 'Short-read length (sets STAR --sjdbOverhang = RL-1).' }, longPlatform: { type: 'string', description: "'nanopore' (Q10) or 'pacbio_hifi' (Q20)." }, referenceFasta: { type: 'string', description: 'Reference genome FASTA path.' }, annotationGtf: { type: 'string', description: 'Reference GTF path.' }, read1: { type: 'string', description: 'Short-read R1 FASTQ.' }, read2: { type: 'string', description: 'Short-read R2 FASTQ.' }, longReads: { type: 'string', description: 'Long-read FASTQ.' }, samples: { type: 'array', description: 'Sample IDs for stringtie merge.' }, execute: { type: 'boolean', description: 'Run available binaries (default false = plan only).' } },
+  },
+  {
+    name: 'rnaseq_tximport', category: 'RNA-seq pipeline',
+    description: 'Phase 4a: summarize transcript-level salmon quantifications to gene-level counts (lengthScaledTPM-style) via a tx2gene map.',
+    handler: (i) => runPythonScript('server/rnaseq_pipeline.py', { ...i, task: 'rnaseq_tximport' }),
+    parameters: { quant: { type: 'object', required: true, description: '{sample:{transcript:{counts,effLength}}}.' }, tx2gene: { type: 'object', required: true, description: '{transcript: gene} map.' } },
+  },
+  {
+    name: 'rnaseq_deseq', category: 'RNA-seq pipeline',
+    description: 'Phase 4b flagship: DESeq2-style differential expression (median-of-ratios size factors → mean-dispersion trend + shrinkage → per-gene NB-GLM Wald test → BH FDR → normal-prior log2FC shrinkage → VST/PCA). Emits the full figure set (PCA, MA, volcano, dispersion, p-value hist, sample-distance & top-gene heatmaps, size factors, library sizes), result tables, and a report/document/article via the outcome bundle. Requires statsmodels.',
+    handler: (i) => runPythonScript('server/rnaseq_pipeline.py', { ...i, task: 'rnaseq_deseq' }),
+    parameters: { counts: { type: 'object', required: true, description: 'Gene count matrix {gene:[counts…]} or genes×samples array.' }, conditions: { type: 'array', required: true, description: 'Group label per sample (two groups).' }, samples: { type: 'array', description: 'Sample IDs aligned to columns.' }, reference: { type: 'string', description: 'Reference/control group level.' }, alpha: { type: 'number', description: 'FDR threshold (default 0.05).' }, minBaseMean: { type: 'number', description: 'Independent-filtering min base mean (default 1).' }, outputFormat: { type: 'string', description: "'report' | 'document' (adds .docx) | 'article' (full sections)." }, outputDir: { type: 'string', description: 'If set, write the full figures/tables/report bundle.' } },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));

@@ -113,6 +113,7 @@ def build_bundle(
     code=None,
     methods="",
     interpretation="",
+    attachments=None,
 ):
     """Write a full outcome bundle and return a manifest dict.
 
@@ -128,6 +129,13 @@ def build_bundle(
     code : str | None       a standalone, runnable Python reproducer script
     methods : str           methods prose for the report
     interpretation : str    interpretation prose for the report
+    attachments : list[dict] | None
+        Extra pre-rendered artifacts to include in the bundle + manifest, each
+        {"category": <one of figures/tables/code/report/docs/results>,
+         "filename": <relative path under output_dir>,
+         "content": <str (text) | bytes (binary)>}. Used e.g. for a DOCX document
+         or a full article.md the caller rendered itself. Only real content —
+         never fabricated.
     """
     os.makedirs(output_dir, exist_ok=True)
     fig_dir = os.path.join(output_dir, "figures")
@@ -256,6 +264,21 @@ def build_bundle(
     with open(readme_path, "w") as fh:
         fh.write("\n".join(readme) + "\n")
     artifacts["docs"].append("README.md")
+
+    # --- Extra attachments (caller-rendered: DOCX document, article.md, …) ---
+    if attachments:
+        for att in attachments:
+            cat = att.get("category", "docs")
+            if cat not in artifacts:
+                artifacts[cat] = []
+            rel = att["filename"]
+            dest = os.path.join(output_dir, rel)
+            os.makedirs(os.path.dirname(dest) or output_dir, exist_ok=True)
+            content = att["content"]
+            mode = "wb" if isinstance(content, (bytes, bytearray)) else "w"
+            with open(dest, mode) as fh:
+                fh.write(content)
+            artifacts[cat].append(rel)
 
     # --- Manifest with checksums (provenance) ---
     all_rel = [a for group in artifacts.values() for a in group]

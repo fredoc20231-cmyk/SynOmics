@@ -280,7 +280,25 @@ Bridges omics findings into molecular design + rigorous in-silico validation.
   `README.md` (docs), and a SHA-256 `MANIFEST.json` (provenance). It only serializes
   real computed content — never fabricates a figure, row, or value. The six
   Biomni-derived modules emit bundles; future tools opt in via the helper.
-- 190 real agent tools in `server/tool_registry.ts`; 52 test suites in CI, plus a
+- **Flagship hybrid RNA-seq pipeline (`rnaseq_pipeline.py`):** two honest halves.
+  UPSTREAM (`rnaseq_upstream`, Phases 1-3) orchestrates the real toolchain — fastp
+  sliding-window trim, STAR index/align with `--sjdbOverhang = ReadLength-1`,
+  minimap2 `-ax splice` fed the short-read `SJ.out.tab`, stringtie `--merge` /
+  gffcompare, decoy-aware `salmon index` + `salmon quant --validateMappings
+  --seqBias --gcBias`; it builds the EXACT commands and runs binaries when present,
+  else returns an honest per-step "unavailable" plan (never fabricates counts;
+  no aligner binaries exist in this build). DOWNSTREAM (`rnaseq_deseq`, Phase 4)
+  is a real, self-contained DESeq2-*style* engine (median-of-ratios size factors →
+  parametric mean-dispersion trend + shrinkage → per-gene NB-GLM Wald test → BH FDR
+  → normal-prior log2FC shrinkage → VST/PCA) plus `rnaseq_tximport` (transcript→gene
+  lengthScaledTPM). It emits the full figure set (PCA, MA, volcano, dispersion,
+  p-value histogram, size factors, library sizes, sample-distance & top-gene
+  heatmaps), result tables, and a report / DOCX document / full scientific article
+  (`outputFormat`). Validated on a labeled NB spike-in fixture (`tests/`, never
+  served): recovers known DE genes at ≥0.70 sensitivity with false-positive rate
+  ≤0.10 at FDR<0.05. Honest scope: an independent NB-GLM implementation, not the R
+  DESeq2 binary; upstream execution requires the bioconda worker image (DEPLOYMENT.md).
+- 193 real agent tools in `server/tool_registry.ts`; 53 test suites in CI, plus a
   `tsc --noEmit` type-check gate. See `BIOMNI_COMPARISON.md` for the per-domain
   Biomni↔SynOmics coverage table.
 - Everything marked "to build" / "not implemented" above must not be faked.

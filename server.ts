@@ -794,6 +794,14 @@ app.post(['/api/synomics/genomic-prediction', '/api/biomni/genomic-prediction'],
   } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
 });
 
+// Flagship hybrid RNA-seq pipeline (upstream orchestrator + DESeq2-style DE + report/document/article).
+app.post(['/api/synomics/rnaseq', '/api/biomni/rnaseq'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/rnaseq_pipeline.py', req.body, 300000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
 // Enrichment / QC / proteomics — dispatch routes.
 app.post(['/api/synomics/enrichment', '/api/biomni/enrichment'], async (req, res) => {
   try {
