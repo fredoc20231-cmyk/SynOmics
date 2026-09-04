@@ -1038,25 +1038,25 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     name: 'global_align', category: 'Alignment',
     description: 'Needleman-Wunsch global alignment (score + % identity). Requires biopython.',
     handler: (i) => runPythonScript('server/align_tools.py', { ...i, task: 'global_align' }),
-    parameters: { seq1: { type: 'string', required: true }, seq2: { type: 'string', required: true } },
+    parameters: { seq1: { type: 'string', required: true, description: 'First sequence.' }, seq2: { type: 'string', required: true, description: 'Second sequence.' } },
   },
   {
     name: 'local_align', category: 'Alignment',
     description: 'Smith-Waterman local alignment (score + % identity). Requires biopython.',
     handler: (i) => runPythonScript('server/align_tools.py', { ...i, task: 'local_align' }),
-    parameters: { seq1: { type: 'string', required: true }, seq2: { type: 'string', required: true } },
+    parameters: { seq1: { type: 'string', required: true, description: 'First sequence.' }, seq2: { type: 'string', required: true, description: 'Second sequence.' } },
   },
   {
     name: 'percent_identity', category: 'Alignment',
     description: 'Percent identity from a global alignment. Requires biopython.',
     handler: (i) => runPythonScript('server/align_tools.py', { ...i, task: 'percent_identity' }),
-    parameters: { seq1: { type: 'string', required: true }, seq2: { type: 'string', required: true } },
+    parameters: { seq1: { type: 'string', required: true, description: 'First sequence.' }, seq2: { type: 'string', required: true, description: 'Second sequence.' } },
   },
   {
     name: 'kmer_distance', category: 'Alignment',
     description: 'Alignment-free k-mer Jaccard distance between two sequences.',
     handler: (i) => runPythonScript('server/align_tools.py', { ...i, task: 'kmer_distance' }),
-    parameters: { seq1: { type: 'string', required: true }, seq2: { type: 'string', required: true }, k: { type: 'number', description: 'k-mer size (default 3).' } },
+    parameters: { seq1: { type: 'string', required: true, description: 'First sequence.' }, seq2: { type: 'string', required: true, description: 'Second sequence.' }, k: { type: 'number', description: 'k-mer size (default 3).' } },
   },
   // --- Epigenomics ---
   {
@@ -1069,7 +1069,7 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     name: 'pwm_scan', category: 'Epigenomics',
     description: 'Scan a sequence for PWM (motif) log-odds hits above threshold. Requires numpy.',
     handler: (i) => runPythonScript('server/epigenomics.py', { ...i, task: 'pwm_scan' }),
-    parameters: { pwm: { type: 'object', required: true, description: '{A,C,G,T: [per-position probs]}.' }, sequence: { type: 'string', required: true }, threshold: { type: 'number', description: 'Log-odds threshold (default 0).' } },
+    parameters: { pwm: { type: 'object', required: true, description: '{A,C,G,T: [per-position probs]}.' }, sequence: { type: 'string', required: true, description: 'Sequence to scan.' }, threshold: { type: 'number', description: 'Log-odds threshold (default 0).' } },
   },
   {
     name: 'methylation_mvalues', category: 'Epigenomics',
