@@ -309,7 +309,17 @@ Bridges omics findings into molecular design + rigorous in-silico validation.
   piece of an uploaded "updated app" whose drug-discovery / neoantigen / retrosynthesis
   "engines" were rejected as fabricators — canned SMILES, magic-number IC50/ΔG/SA
   scores). Validated: GGACU at a known offset → central A at the expected position.
-- 194 real agent tools in `server/tool_registry.ts`; 55 test suites in CI, plus a
+- **Single-cell dynamics + spatial (adopted from open-source repos, real & stack-only):**
+  RNA velocity (`rna_velocity.py`: `velocity_estimate` steady-state degradation rate
+  gamma + v=u−gamma·s + R²; `velocity_stream_projection` cosine-correlation embedding
+  kernel) adapted from dynamo/scVelo — numpy only, validated (known gamma recovered,
+  induced cells → positive velocity). Spatial deconvolution (`spatial_deconvolution.py`:
+  `nnls_deconvolution` per-spot cell-type proportions via scipy NNLS;
+  `ot_map_cells_to_spots` entropic-OT cell↔spot mapping via POT) — the deterministic,
+  torch-free form of Tangram's goal; validated (known mixtures + cell origins recovered).
+  Honest exclusions from the same review: scvi-tools / torchdrug / Tangram-deep are
+  torch/GPU-gated (not runnable here) and were NOT adopted as functional.
+- 198 real agent tools in `server/tool_registry.ts`; 57 test suites in CI, plus a
   `tsc --noEmit` type-check gate. See `BIOMNI_COMPARISON.md` for the per-domain
   Biomni↔SynOmics coverage table.
 - Everything marked "to build" / "not implemented" above must not be faked.

@@ -1492,6 +1492,32 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     handler: (i) => runPythonScript('server/epitranscriptomics.py', { ...i, task: 'm6a_drach_scan' }),
     parameters: { sequence: { type: 'string', required: true, description: 'RNA or DNA transcript sequence (A/C/G/U/T).' }, outputDir: { type: 'string', description: 'If set, write figures/tables/report bundle.' } },
   },
+  // --- Single-cell RNA velocity (dynamo/scVelo steady-state; numpy) ---
+  {
+    name: 'velocity_estimate', category: 'Single-cell dynamics',
+    description: 'RNA velocity: per-gene steady-state degradation rate gamma (through-origin u~s fit) and velocity v = u - gamma*s, with per-gene R^2. numpy only (dynamo/scVelo-style). Emits an outcome bundle (phase portrait + per-gene table) when outputDir is set.',
+    handler: (i) => runPythonScript('server/rna_velocity.py', { ...i, task: 'velocity_estimate' }),
+    parameters: { unspliced: { type: 'object', required: true, description: 'Unspliced counts {gene:[cells]} or genes×cells matrix.' }, spliced: { type: 'object', required: true, description: 'Spliced counts, same shape.' }, mode: { type: 'string', description: "'steady_state' (extreme-quantile) or 'deterministic' (all cells)." }, quantile: { type: 'number', description: 'Top-spliced fraction for steady-state fit (default 0.05).' }, geneNames: { type: 'array', description: 'Gene names if matrices are given.' }, outputDir: { type: 'string', description: 'If set, write outcome bundle.' } },
+  },
+  {
+    name: 'velocity_stream_projection', category: 'Single-cell dynamics',
+    description: 'Project high-dimensional RNA velocities onto a 2-D embedding via a cosine-correlation transition kernel (scVelo-style), yielding per-cell velocity arrows. numpy only.',
+    handler: (i) => runPythonScript('server/rna_velocity.py', { ...i, task: 'velocity_stream_projection' }),
+    parameters: { expression: { type: 'object', required: true, description: 'Spliced/smoothed expression {gene:[cells]} or genes×cells.' }, velocity: { type: 'object', required: true, description: 'Velocity matrix, same shape (from velocity_estimate).' }, embedding: { type: 'array', required: true, description: 'cells×2 embedding coordinates.' }, nNeighbors: { type: 'number', description: 'kNN in expression space (default 10).' }, sigma: { type: 'number', description: 'Kernel bandwidth (default 0.05).' }, outputDir: { type: 'string', description: 'If set, write outcome bundle.' } },
+  },
+  // --- Spatial transcriptomics deconvolution / mapping (Tangram goal; scipy/POT) ---
+  {
+    name: 'nnls_deconvolution', category: 'Spatial transcriptomics',
+    description: 'Per-spot cell-type proportions by non-negative least squares of the spot profile onto reference cell-type signatures (SPOTlight/NNLS-style). Requires scipy.',
+    handler: (i) => runPythonScript('server/spatial_deconvolution.py', { ...i, task: 'nnls_deconvolution' }),
+    parameters: { spots: { type: 'array', required: true, description: 'spots×genes expression matrix.' }, signatures: { type: 'array', required: true, description: 'cellTypes×genes reference signature matrix.' }, cellTypes: { type: 'array', description: 'Cell-type names aligned to signature rows.' }, spotIds: { type: 'array', description: 'Spot IDs aligned to rows.' } },
+  },
+  {
+    name: 'ot_map_cells_to_spots', category: 'Spatial transcriptomics',
+    description: 'Map single cells onto spatial spots via entropic optimal transport with a (1 − cosine similarity) cost on shared genes (deterministic Tangram-goal alternative). Returns a probabilistic cell×spot map. Requires POT.',
+    handler: (i) => runPythonScript('server/spatial_deconvolution.py', { ...i, task: 'ot_map_cells_to_spots' }),
+    parameters: { cells: { type: 'array', required: true, description: 'cells×genes expression matrix.' }, spots: { type: 'array', required: true, description: 'spots×genes expression matrix (shared genes).' }, reg: { type: 'number', description: 'Sinkhorn entropic regularization (default 0.05).' }, spotIds: { type: 'array', description: 'Spot IDs aligned to rows.' } },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));

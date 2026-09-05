@@ -347,3 +347,13 @@ jobs:
         run: |
           python -m pip install --quiet matplotlib
           python tests/epitranscriptomics_smoke.py
+
+      - name: RNA velocity gate (steady-state gamma recovery + embedding projection)
+        run: |
+          python -m pip install --quiet numpy scipy matplotlib
+          python tests/rna_velocity_smoke.py
+
+      - name: Spatial deconvolution gate (NNLS mixture recovery + OT cell→spot mapping)
+        run: |
+          python -m pip install --quiet numpy scipy pot matplotlib
+          python tests/spatial_deconvolution_smoke.py

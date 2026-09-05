@@ -811,6 +811,20 @@ app.post(['/api/synomics/epitranscriptomics', '/api/biomni/epitranscriptomics'],
   } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
 });
 
+// Single-cell RNA velocity (dynamo/scVelo steady-state) + spatial deconvolution (Tangram goal).
+app.post(['/api/synomics/rna-velocity', '/api/biomni/rna-velocity'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/rna_velocity.py', req.body, 120000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/spatial-deconvolution', '/api/biomni/spatial-deconvolution'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/spatial_deconvolution.py', req.body, 120000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
 // Skills System — curated multi-tool workflows (Skills layer).
 app.get(['/api/synomics/skills', '/api/biomni/skills'], (_req, res) => {
   try {
