@@ -1779,6 +1779,37 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     handler: (i) => runPythonScript('server/cell_motility_tools.py', { ...i, task: 'cluster_motility_patterns' }),
     parameters: { tracks: { type: 'array', required: true, description: 'List of trajectories.' }, nClusters: { type: 'number', description: 'KMeans clusters (default 2).' }, dt: { type: 'number', description: 'Time per step (default 1).' }, pixelSize: { type: 'number', description: 'Units per pixel (default 1).' } },
   },
+  // --- Quantitative proteomics (numpy/scipy/scikit-learn) ---
+  {
+    name: 'maxlfq_quantify', category: 'Proteomics',
+    description: 'MaxLFQ-style label-free protein quantification: pairwise median peptide log2-ratios → least-squares abundance profile anchored to summed intensity. Requires numpy. Validated: recovers a known 1:2:4 sample ratio; samples with no linking peptide → null (never imputed).',
+    handler: (i) => runPythonScript('server/proteomics_tools.py', { ...i, task: 'maxlfq_quantify' }),
+    parameters: { peptides: { type: 'object', required: true, description: '{proteinId: [[pep1_s1, pep1_s2, ...], ...]} peptide intensities per protein (peptides×samples).' }, sampleNames: { type: 'array', description: 'Sample column names.' }, treatZeroAsMissing: { type: 'boolean', description: 'Treat 0 intensity as missing (default true).' } },
+  },
+  {
+    name: 'normalize_intensities', category: 'Proteomics',
+    description: 'Median or quantile normalization of a samples×features intensity matrix (log or linear space). Requires numpy. Validated: median-norm equalizes sample medians; quantile-norm makes all samples share one distribution.',
+    handler: (i) => runPythonScript('server/proteomics_tools.py', { ...i, task: 'normalize_intensities' }),
+    parameters: { matrix: { type: 'array', required: true, description: 'samples×features intensity matrix.' }, method: { type: 'string', description: "'median' or 'quantile' (default median)." }, logSpace: { type: 'boolean', description: 'Operate in log2 space (default false).' }, treatZeroAsMissing: { type: 'boolean', description: 'Treat 0 as missing (default false).' } },
+  },
+  {
+    name: 'impute_missing', category: 'Proteomics',
+    description: 'Missing-value imputation: deterministic k-NN (scikit-learn), column-min fraction, or seeded MinProb (down-shifted normal). Requires numpy (+scikit-learn for knn). Validated: fills exactly the missing cells, leaves observed unchanged, MinProb seed-reproducible.',
+    handler: (i) => runPythonScript('server/proteomics_tools.py', { ...i, task: 'impute_missing' }),
+    parameters: { matrix: { type: 'array', required: true, description: 'samples×features matrix (missing = null/0).' }, method: { type: 'string', description: "'knn', 'min', or 'minprob' (default knn)." }, k: { type: 'number', description: 'k for knn (default 5).' }, fraction: { type: 'number', description: 'Fraction of column min for min (default 1.0).' }, shift: { type: 'number', description: 'MinProb down-shift in SDs (default 1.8).' }, width: { type: 'number', description: 'MinProb width in SDs (default 0.3).' }, seed: { type: 'number', description: 'MinProb RNG seed (default 0).' }, treatZeroAsMissing: { type: 'boolean', description: 'Treat 0 as missing (default true).' } },
+  },
+  {
+    name: 'differential_abundance', category: 'Proteomics',
+    description: 'Two-group Welch t-test per protein on log2 intensities + BH FDR + log2FC (B vs A). Requires numpy+scipy. Validated: recovers a spiked 4× up-regulated protein (log2FC≈+2, padj<0.05); flat protein not significant.',
+    handler: (i) => runPythonScript('server/proteomics_tools.py', { ...i, task: 'differential_abundance' }),
+    parameters: { groupA: { type: 'object', required: true, description: '{proteinId: [intensities...]} condition A.' }, groupB: { type: 'object', required: true, description: '{proteinId: [intensities...]} condition B.' }, alreadyLog2: { type: 'boolean', description: 'Inputs are already log2 (default false).' } },
+  },
+  {
+    name: 'tmt_protein_rollup', category: 'Proteomics',
+    description: 'TMT/iTRAQ reporter-ion PSM→protein rollup (median or sum) with optional per-channel median normalization. Requires numpy. Validated: recovers known per-channel medians; channel-norm equalizes channel medians.',
+    handler: (i) => runPythonScript('server/proteomics_tools.py', { ...i, task: 'tmt_protein_rollup' }),
+    parameters: { psms: { type: 'object', required: true, description: '{proteinId: [[ch1, ch2, ...], ...]} reporter intensities (PSMs×channels).' }, method: { type: 'string', description: "'median' or 'sum' (default median)." }, normalizeChannels: { type: 'boolean', description: 'Median-normalize channels (default true).' }, channelNames: { type: 'array', description: 'Channel/tag names.' } },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));

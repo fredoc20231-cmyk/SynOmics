@@ -353,7 +353,21 @@ Bridges omics findings into molecular design + rigorous in-silico validation.
   clustering). Validated against known ground truth (optical flow recovers a 3-px
   shift → meanFlowX≈2.92; 5 Hz synthetic signal → beatFreq=4.6875 Hz; straight-line
   track → directionalityRatio=1.0; KMeans ARI=1 on separated motility classes).
-- 239 real agent tools in `server/tool_registry.ts`; 72 test suites in CI, plus a
+- **Quantitative proteomics wave (real, CI-gated; numpy/scipy/scikit-learn):**
+  `proteomics_tools.py` — `maxlfq_quantify` (MaxLFQ-style label-free protein
+  quantification: pairwise median peptide log2-ratios → least-squares abundance
+  profile per connected component, anchored to summed intensity; unlinked samples
+  reported null, never imputed), `normalize_intensities` (median / quantile
+  normalization, log or linear), `impute_missing` (deterministic k-NN, column-min
+  fraction, or seeded MinProb down-shifted normal), `differential_abundance`
+  (two-group Welch t-test on log2 intensities + BH FDR + log2FC),
+  `tmt_protein_rollup` (TMT/iTRAQ reporter-ion PSM→protein median/sum rollup +
+  per-channel median normalization). Validated against known ground truth (MaxLFQ
+  recovers a 1:2:4 sample ratio and anchors to the summed intensity; median-norm
+  equalizes sample medians; quantile-norm makes all samples share one distribution;
+  Welch recovers a spiked 4× up-regulated protein at padj<0.05 while a flat protein
+  stays non-significant; TMT rollup recovers known per-channel medians).
+- 244 real agent tools in `server/tool_registry.ts`; 73 test suites in CI, plus a
   `tsc --noEmit` type-check gate. See `BIOMNI_COMPARISON.md` for the per-domain
   Biomni↔SynOmics coverage table.
 - Everything marked "to build" / "not implemented" above must not be faked.

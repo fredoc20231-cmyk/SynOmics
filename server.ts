@@ -923,6 +923,14 @@ app.post(['/api/synomics/cell-motility', '/api/biomni/cell-motility'], async (re
   } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
 });
 
+// Quantitative proteomics (MaxLFQ / normalization / imputation / diff-abundance / TMT) — dispatch route.
+app.post(['/api/synomics/proteomics', '/api/biomni/proteomics'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/proteomics_tools.py', req.body, 120000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
 // Skills System — curated multi-tool workflows (Skills layer).
 app.get(['/api/synomics/skills', '/api/biomni/skills'], (_req, res) => {
   try {
