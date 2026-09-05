@@ -319,7 +319,23 @@ Bridges omics findings into molecular design + rigorous in-silico validation.
   torch-free form of Tangram's goal; validated (known mixtures + cell origins recovered).
   Honest exclusions from the same review: scvi-tools / torchdrug / Tangram-deep are
   torch/GPU-gated (not runnable here) and were NOT adopted as functional.
-- 198 real agent tools in `server/tool_registry.ts`; 57 test suites in CI, plus a
+- **Advanced wave (real, CI-gated; from the OSS ecosystem + the Biomni source-mining
+  workflow's vetted ADOPT list — reimplemented cleanly, fabricated sub-outputs dropped):**
+  trajectory inference (`trajectory.py`: diffusion + MST pseudotime), gene-regulatory-
+  network inference (`grn_inference.py`: GENIE3, ARACNe+DPI), multi-omics integration
+  (`multiomics_integration.py`: SNF, CCA, joint NMF), statistical genetics
+  (`mendelian_randomization.py`: MR-IVW, MR-Egger), RNA secondary structure
+  (`rna_structure_tools.py`: dot-bracket features), enzyme kinetics & compartmental PK
+  (`enzyme_pk_tools.py`: protease Michaelis-Menten from time-course, bi-exponential PK),
+  dissolution kinetics (`dissolution_tools.py`), systems-biology dynamics
+  (`systems_dynamics_tools.py`: dimerization equilibrium, gene-circuit & signaling ODEs),
+  biosignal analysis (`biosignal_tools.py`: ABR/calcium/hemodynamic waveforms),
+  molecular biology (`molbio_tools.py`: in-silico PCR, restriction digest, mutation
+  finding, primer design, primer binding scan). Each validated against known ground
+  truth (e.g. SNF ARI=1; MR-IVW recovers causal 0.5 while Egger flags pleiotropy;
+  GENIE3 ranks the true regulator; ARACNe DPI prunes the indirect edge; pseudotime
+  Spearman ρ=1.0; dissolution t50=2.5 h; Michaelis-Menten recovers Vmax=100/Km=10).
+- 222 real agent tools in `server/tool_registry.ts`; 67 test suites in CI, plus a
   `tsc --noEmit` type-check gate. See `BIOMNI_COMPARISON.md` for the per-domain
   Biomni↔SynOmics coverage table.
 - Everything marked "to build" / "not implemented" above must not be faked.

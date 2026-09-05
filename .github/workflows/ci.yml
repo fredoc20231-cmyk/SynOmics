@@ -380,3 +380,26 @@ jobs:
 
       - name: RNA secondary-structure gate (dot-bracket feature extraction)
         run: python tests/rna_structure_tools_smoke.py
+
+      - name: Enzyme kinetics / PK gate (Michaelis-Menten from time-course + bi-exponential PK)
+        run: |
+          python -m pip install --quiet numpy scipy
+          python tests/enzyme_pk_tools_smoke.py
+
+      - name: Dissolution kinetics gate (4-model fit + t50 + transport mechanism)
+        run: |
+          python -m pip install --quiet numpy scipy
+          python tests/dissolution_tools_smoke.py
+
+      - name: Systems dynamics gate (dimerization equilibrium + gene-circuit + signaling ODEs)
+        run: |
+          python -m pip install --quiet numpy scipy
+          python tests/systems_dynamics_tools_smoke.py
+
+      - name: Biosignal gate (ABR P1 / calcium transient tau / hemodynamic HR)
+        run: |
+          python -m pip install --quiet numpy scipy
+          python tests/biosignal_tools_smoke.py
+
+      - name: Molecular biology gate (in-silico PCR / digest / mutations / primer design / binding scan)
+        run: python tests/molbio_tools_smoke.py

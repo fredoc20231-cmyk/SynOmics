@@ -1583,6 +1583,95 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     handler: (i) => runPythonScript('server/rna_structure_tools.py', { ...i, task: 'analyze_rna_secondary_structure_features' }),
     parameters: { dot_bracket_structure: { type: 'string', required: true, description: "Dot-bracket structure, e.g. '(((...)))'; supports (), [], {} and '.'." } },
   },
+  // --- Enzyme kinetics & compartmental PK (scipy) ---
+  {
+    name: 'protease_kinetics', category: 'Pharmacokinetics',
+    description: 'Michaelis-Menten enzymology from a fluorescence time-course matrix: initial velocities (polyfit) → Vmax, Km, kcat, catalytic efficiency (kcat/Km). Requires scipy. Validated: recovers Vmax=100/Km=10.',
+    handler: (i) => runPythonScript('server/enzyme_pk_tools.py', { ...i, task: 'protease_kinetics' }),
+    parameters: { time_points: { type: 'array', required: true, description: 'Shared time axis.' }, fluorescence_data: { type: 'array', required: true, description: '2D rows=substrate concentrations × cols=time.' }, substrate_concentrations: { type: 'array', required: true, description: 'One concentration per row (uM).' }, enzyme_concentration: { type: 'number', required: true, description: 'Total enzyme (uM).' }, initial_fraction: { type: 'number', description: 'Leading fraction for initial-velocity fit (default 0.2).' } },
+  },
+  {
+    name: 'bi_exponential_pk', category: 'Pharmacokinetics',
+    description: 'Two-phase (distribution + elimination) PK fit C(t)=A·e^(−αt)+B·e^(−βt) → half-lives. Requires scipy. Validated: recovers α/β and elimination t½.',
+    handler: (i) => runPythonScript('server/enzyme_pk_tools.py', { ...i, task: 'bi_exponential_pk' }),
+    parameters: { time: { type: 'array', required: true, description: 'Sampling times.' }, concentration: { type: 'array', required: true, description: 'Concentrations (same length).' } },
+  },
+  // --- Drug dissolution / release kinetics (scipy) ---
+  {
+    name: 'drug_release_kinetics', category: 'Pharmacology',
+    description: 'Fit 4 dissolution models (zero-order, first-order, Higuchi, Korsmeyer-Peppas), pick best by R², derive t50 + transport mechanism. Requires scipy. Validated: t50=2.5 h on a zero-order profile.',
+    handler: (i) => runPythonScript('server/dissolution_tools.py', { ...i, task: 'drug_release_kinetics' }),
+    parameters: { time_points: { type: 'array', required: true, description: 'Times (h), ascending, ≥4.' }, concentration_data: { type: 'array', required: true, description: 'Cumulative release/amount (same length).' }, total_drug_loaded: { type: 'number', description: 'Total loaded; if set, normalize to % released.' }, drug_name: { type: 'string', description: 'Label (default Drug).' } },
+  },
+  // --- Systems biology dynamics (numpy/scipy ODE) ---
+  {
+    name: 'protein_dimerization_equilibrium', category: 'Systems biology',
+    description: 'Monomer↔dimer (2M↔D) equilibrium: solve free monomer from mass balance → dimer conc + fraction dimerized. Supports a titration series. numpy. Validated: mass balance exact; strong/weak-binding limits.',
+    handler: (i) => runPythonScript('server/systems_dynamics_tools.py', { ...i, task: 'protein_dimerization_equilibrium' }),
+    parameters: { kd: { type: 'number', required: true, description: 'Dissociation constant (uM).' }, totalConcentration: { type: 'number', description: 'Total protein (uM), single-point mode.' }, totalConcentrations: { type: 'array', description: 'Titration series (uM); returns arrays.' } },
+  },
+  {
+    name: 'simulate_gene_circuit_with_growth_feedback', category: 'Systems biology',
+    description: 'ODE of gene expression with growth dilution: dP/dt = k_tx − (k_deg + growth)·P. Requires scipy. Validated: approaches analytic steady state k_tx/(k_deg+growth).',
+    handler: (i) => runPythonScript('server/systems_dynamics_tools.py', { ...i, task: 'simulate_gene_circuit_with_growth_feedback' }),
+    parameters: { k_transcription: { type: 'number', required: true, description: 'Transcription rate.' }, k_degradation: { type: 'number', required: true, description: 'Degradation rate.' }, growthRate: { type: 'number', required: true, description: 'Growth dilution rate.' }, initial: { type: 'number', description: 'Initial level (default 0).' }, tMax: { type: 'number', description: 'End time (default 50).' }, nPoints: { type: 'number', description: 'Output points (default 200).' } },
+  },
+  {
+    name: 'simulate_protein_signaling_network', category: 'Systems biology',
+    description: 'Linear activation cascade ODE (stage i activated by stage i−1) driven by a sustained stimulus. Requires scipy. Validated: each stage reaches its analytic cascade fixed point.',
+    handler: (i) => runPythonScript('server/systems_dynamics_tools.py', { ...i, task: 'simulate_protein_signaling_network' }),
+    parameters: { stimulus: { type: 'number', required: true, description: 'Sustained input to stage 0.' }, nStages: { type: 'number', description: 'Cascade length (default 3).' }, rates: { type: 'array', description: 'Per-stage activation rates.' }, deactivationRates: { type: 'array', description: 'Per-stage deactivation rates.' }, initial: { type: 'number', description: 'Initial level (default 0).' }, tMax: { type: 'number', description: 'End time (default 50).' }, nPoints: { type: 'number', description: 'Output points (default 200).' } },
+  },
+  // --- Biosignal / physiological waveform analysis (scipy.signal) ---
+  {
+    name: 'abr_waveform_p1_metrics', category: 'Biosignal analysis',
+    description: 'Auditory brainstem response P1 metrics (dominant-peak latency + amplitude) via peak detection. Requires scipy. Validated: latency within 0.2 ms of a known peak.',
+    handler: (i) => runPythonScript('server/biosignal_tools.py', { ...i, task: 'abr_waveform_p1_metrics' }),
+    parameters: { signal: { type: 'array', required: true, description: 'ABR voltage samples.' }, samplingRateHz: { type: 'number', required: true, description: 'Sampling rate (Hz).' } },
+  },
+  {
+    name: 'calcium_transient_dynamics', category: 'Biosignal analysis',
+    description: 'Ca²⁺ transient metrics: baseline, peak amplitude, time-to-peak, exponential decay τ (curve fit) + R². Requires scipy. Validated: recovers τ=0.5 s.',
+    handler: (i) => runPythonScript('server/biosignal_tools.py', { ...i, task: 'calcium_transient_dynamics' }),
+    parameters: { time: { type: 'array', required: true, description: 'Time vector (s).' }, signal: { type: 'array', required: true, description: 'Fluorescence trace (F or dF/F).' } },
+  },
+  {
+    name: 'hemodynamic_waveform', category: 'Biosignal analysis',
+    description: 'Arterial pressure waveform metrics: systolic/diastolic/MAP + heart rate from beat detection. Requires scipy. Validated: HR=60, systolic=120, diastolic=40 on a synthetic waveform.',
+    handler: (i) => runPythonScript('server/biosignal_tools.py', { ...i, task: 'hemodynamic_waveform' }),
+    parameters: { signal: { type: 'array', required: true, description: 'Arterial pressure samples.' }, samplingRateHz: { type: 'number', required: true, description: 'Sampling rate (Hz).' } },
+  },
+  // --- Molecular biology / cloning (stdlib) ---
+  {
+    name: 'in_silico_pcr', category: 'Molecular biology',
+    description: 'In-silico PCR: locate forward/reverse primers on template + reverse strand and return the amplicon + length. Honest error if a primer is absent.',
+    handler: (i) => runPythonScript('server/molbio_tools.py', { ...i, task: 'in_silico_pcr' }),
+    parameters: { template: { type: 'string', required: true, description: 'DNA template.' }, forwardPrimer: { type: 'string', required: true, description: 'Forward primer.' }, reversePrimer: { type: 'string', required: true, description: 'Reverse primer.' } },
+  },
+  {
+    name: 'restriction_digest_fragments', category: 'Molecular biology',
+    description: 'Restriction digest → fragment list (start/end/length/sequence). Built-in EcoRI/BamHI/HindIII or a custom recognitionSite; linear or circular.',
+    handler: (i) => runPythonScript('server/molbio_tools.py', { ...i, task: 'restriction_digest_fragments' }),
+    parameters: { sequence: { type: 'string', required: true, description: 'DNA sequence.' }, enzyme: { type: 'string', description: 'EcoRI | BamHI | HindIII.' }, recognitionSite: { type: 'string', description: 'Custom recognition site (e.g. GAATTC).' }, circular: { type: 'boolean', description: 'Treat as circular (default false).' }, cutOffset: { type: 'number', description: 'Cut offset for custom sites.' } },
+  },
+  {
+    name: 'find_sequence_mutations', category: 'Molecular biology',
+    description: 'Compare two equal-length (aligned) sequences → substitution list + percent identity. Honest error if lengths differ.',
+    handler: (i) => runPythonScript('server/molbio_tools.py', { ...i, task: 'find_sequence_mutations' }),
+    parameters: { reference: { type: 'string', required: true, description: 'Reference sequence.' }, query: { type: 'string', required: true, description: 'Query sequence (same length).' } },
+  },
+  {
+    name: 'design_primer', category: 'Molecular biology',
+    description: 'Design forward/reverse primers from a sequence, choosing lengths whose Tm is closest to target (Wallace / GC rule). Returns primers, Tm, GC%.',
+    handler: (i) => runPythonScript('server/molbio_tools.py', { ...i, task: 'design_primer' }),
+    parameters: { sequence: { type: 'string', required: true, description: 'Template DNA.' }, targetTm: { type: 'number', description: 'Target Tm °C (default 60).' }, minLen: { type: 'number', description: 'Min primer length (default 18).' }, maxLen: { type: 'number', description: 'Max primer length (default 25).' } },
+  },
+  {
+    name: 'primer_binding_scan', category: 'Molecular biology',
+    description: 'Scan both template strands for primer binding sites allowing up to maxMismatches; returns sites (strand/start/mismatches) + count.',
+    handler: (i) => runPythonScript('server/molbio_tools.py', { ...i, task: 'primer_binding_scan' }),
+    parameters: { template: { type: 'string', required: true, description: 'DNA template.' }, primer: { type: 'string', required: true, description: 'Primer sequence.' }, maxMismatches: { type: 'number', description: 'Allowed mismatches (default 0).' } },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));

@@ -857,6 +857,38 @@ app.post(['/api/synomics/rna-structure', '/api/biomni/rna-structure'], async (re
   } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
 });
 
+// Enzyme-PK / dissolution / systems-dynamics / biosignal / molecular-biology — dispatch routes.
+app.post(['/api/synomics/enzyme-pk', '/api/biomni/enzyme-pk'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/enzyme_pk_tools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/dissolution', '/api/biomni/dissolution'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/dissolution_tools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/systems-dynamics', '/api/biomni/systems-dynamics'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/systems_dynamics_tools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/biosignal', '/api/biomni/biosignal'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/biosignal_tools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/molbio', '/api/biomni/molbio'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/molbio_tools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
 // Skills System — curated multi-tool workflows (Skills layer).
 app.get(['/api/synomics/skills', '/api/biomni/skills'], (_req, res) => {
   try {
