@@ -1835,6 +1835,75 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     handler: (i) => runPythonScript('server/spatial_neighborhood.py', { ...i, task: 'neighbor_composition' }),
     parameters: { coordinates: { type: 'array', required: true, description: 'N×2 or N×3 cell positions.' }, labels: { type: 'array', required: true, description: 'Cell-type label per cell.' }, k: { type: 'number', description: 'kNN neighbors (default 6).' } },
   },
+  // --- ADMET / med-chem drug-likeness (RDKit; real descriptors, no fabricated predictions) ---
+  {
+    name: 'admet_profile', category: 'Drug discovery',
+    description: '13-descriptor ADMET/physicochemical panel from SMILES (MW, logP, TPSA, HBD/HBA, rotatable bonds, aromatic rings, FractionCsp3, molar refractivity, heavy atoms, formal charge, rings, QED) via RDKit. Batch-safe; invalid SMILES → honest error entry. Validated: aspirin QED=0.55, TPSA=63.6.',
+    handler: (i) => runPythonScript('server/admet_tools.py', { ...i, task: 'admet_profile' }),
+    parameters: { smiles: { type: 'string', description: 'Single molecule SMILES.' }, smilesList: { type: 'array', description: 'Batch of SMILES strings (alt to smiles).' } },
+  },
+  {
+    name: 'druglikeness_rules', category: 'Drug discovery',
+    description: 'Apply Lipinski Ro5, Veber, Ghose, Egan and Muegge drug-likeness rule sets to a SMILES; per-rule pass/fail + exact violated criteria (RDKit). Validated: aspirin passes Lipinski with 0 violations.',
+    handler: (i) => runPythonScript('server/admet_tools.py', { ...i, task: 'druglikeness_rules' }),
+    parameters: { smiles: { type: 'string', required: true, description: 'Molecule SMILES.' } },
+  },
+  {
+    name: 'synthetic_accessibility', category: 'Drug discovery',
+    description: 'Ertl synthetic-accessibility (SA) score (1=easy … 10=hard) via the RDKit SA_Score contrib + interpretation. Real published algorithm. Validated: ethanol SA≈1.98 (easy).',
+    handler: (i) => runPythonScript('server/admet_tools.py', { ...i, task: 'synthetic_accessibility' }),
+    parameters: { smiles: { type: 'string', required: true, description: 'Molecule SMILES.' } },
+  },
+  {
+    name: 'structural_alerts', category: 'Drug discovery',
+    description: 'PAINS + BRENK + NIH structural-alert / toxicophore screen via RDKit FilterCatalog → matched alerts with descriptions. Validated: catechol flags ≥1 alert; clean molecules return 0.',
+    handler: (i) => runPythonScript('server/admet_tools.py', { ...i, task: 'structural_alerts' }),
+    parameters: { smiles: { type: 'string', required: true, description: 'Molecule SMILES.' } },
+  },
+  // --- Drug repurposing (CMap signature + chemical similarity; real algorithms) ---
+  {
+    name: 'connectivity_score', category: 'Drug repurposing',
+    description: 'CMap connectivity score (Lamb et al. 2006): weighted-KS enrichment of query up/down gene sets against a drug reference signature. Negative = drug REVERSES the disease signature (repurposing candidate). Requires numpy. Validated: sign flips +0.965/−0.965 on mimic vs reversed signatures.',
+    handler: (i) => runPythonScript('server/drug_repurposing.py', { ...i, task: 'connectivity_score' }),
+    parameters: { upGenes: { type: 'array', required: true, description: 'Query up-regulated gene IDs.' }, downGenes: { type: 'array', required: true, description: 'Query down-regulated gene IDs.' }, referenceSignature: { type: 'object', required: true, description: '{gene: score} drug differential-expression signature.' } },
+  },
+  {
+    name: 'signature_reversal_screen', category: 'Drug repurposing',
+    description: 'Rank a library of drug signatures by how strongly they reverse a disease signature (reversalScore = −Spearman ρ over shared genes). Requires numpy+scipy. Validated: exact-negation drug ranks #1 (reversalScore≈+1), identical drug last (≈−1).',
+    handler: (i) => runPythonScript('server/drug_repurposing.py', { ...i, task: 'signature_reversal_screen' }),
+    parameters: { diseaseSignature: { type: 'object', required: true, description: '{gene: log2fc} disease signature.' }, drugSignatures: { type: 'object', required: true, description: '{drugName: {gene: log2fc}} library.' } },
+  },
+  {
+    name: 'target_based_repurposing', category: 'Drug repurposing',
+    description: 'Guilt-by-association repurposing: rank a library by ECFP4 Tanimoto to a query drug; echoes each hit\'s known indication/target (never invents them). Requires RDKit. Validated: self-match Tanimoto=1.0 ranks first; dissimilar molecules excluded.',
+    handler: (i) => runPythonScript('server/drug_repurposing.py', { ...i, task: 'target_based_repurposing' }),
+    parameters: { querySmiles: { type: 'string', required: true, description: 'Query drug SMILES.' }, library: { type: 'array', required: true, description: '[{name, smiles, indication?, target?}] reference drugs.' }, threshold: { type: 'number', description: 'Min Tanimoto (default 0.3).' }, topN: { type: 'number', description: 'Max hits (default 10).' } },
+  },
+  // --- Ligand-based virtual screening (RDKit; real fingerprints/scaffolds) ---
+  {
+    name: 'similarity_screen', category: 'Drug discovery',
+    description: 'Ligand-based virtual screen: ECFP Morgan Tanimoto of a query vs a compound library → ranked hits above threshold (RDKit). Validated: aspirin self-match Tanimoto=1.0; dissimilar decane excluded at 0.3.',
+    handler: (i) => runPythonScript('server/chem_screening.py', { ...i, task: 'similarity_screen' }),
+    parameters: { querySmiles: { type: 'string', required: true, description: 'Query SMILES.' }, library: { type: 'array', required: true, description: '[{name, smiles}] compound library.' }, threshold: { type: 'number', description: 'Min Tanimoto (default 0.3).' }, topN: { type: 'number', description: 'Max hits (default 20).' }, radius: { type: 'number', description: 'Morgan radius (default 2).' }, nBits: { type: 'number', description: 'Fingerprint bits (default 2048).' } },
+  },
+  {
+    name: 'pharmacophore_profile', category: 'Drug discovery',
+    description: 'RDKit pharmacophore feature profile (Donor/Acceptor/Aromatic/Hydrophobe/PosIonizable/NegIonizable counts + feature list). Validated: phenol → ≥1 aromatic and ≥1 donor.',
+    handler: (i) => runPythonScript('server/chem_screening.py', { ...i, task: 'pharmacophore_profile' }),
+    parameters: { smiles: { type: 'string', description: 'Single molecule SMILES.' }, smilesList: { type: 'array', description: 'Batch of SMILES (alt to smiles).' } },
+  },
+  {
+    name: 'scaffold_clustering', category: 'Drug discovery',
+    description: 'Cluster a compound library by shared Bemis–Murcko scaffold (RDKit) → scaffold groups sorted by size. Validated: benzene/toluene/phenol collapse to one c1ccccc1 cluster of size 3.',
+    handler: (i) => runPythonScript('server/chem_screening.py', { ...i, task: 'scaffold_clustering' }),
+    parameters: { molecules: { type: 'array', required: true, description: '[{name, smiles}] library.' } },
+  },
+  {
+    name: 'diversity_selection', category: 'Drug discovery',
+    description: 'MaxMin diversity picker over Morgan fingerprints → a maximally diverse subset + mean pairwise Tanimoto (RDKit, seeded/deterministic). Validated: fixed seed reproduces the same selection.',
+    handler: (i) => runPythonScript('server/chem_screening.py', { ...i, task: 'diversity_selection' }),
+    parameters: { molecules: { type: 'array', required: true, description: '[{name, smiles}] library.' }, nPick: { type: 'number', description: 'How many to select (default 5).' }, seed: { type: 'number', description: 'RNG seed (default 42).' } },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));

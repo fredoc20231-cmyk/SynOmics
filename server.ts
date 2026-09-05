@@ -939,6 +939,30 @@ app.post(['/api/synomics/spatial-neighborhood', '/api/biomni/spatial-neighborhoo
   } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
 });
 
+// Drug discovery — ADMET / med-chem (RDKit descriptors, filters, SA score, structural alerts) — dispatch route.
+app.post(['/api/synomics/admet', '/api/biomni/admet'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/admet_tools.py', req.body, 120000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
+// Drug repurposing — CMap connectivity, signature reversal, chemical-similarity — dispatch route.
+app.post(['/api/synomics/drug-repurposing', '/api/biomni/drug-repurposing'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/drug_repurposing.py', req.body, 120000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
+// Ligand-based virtual screening — Tanimoto screen, pharmacophore, scaffold clustering, diversity — dispatch route.
+app.post(['/api/synomics/chem-screening', '/api/biomni/chem-screening'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/chem_screening.py', req.body, 120000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
 // Skills System — curated multi-tool workflows (Skills layer).
 app.get(['/api/synomics/skills', '/api/biomni/skills'], (_req, res) => {
   try {

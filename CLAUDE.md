@@ -108,11 +108,19 @@ Bridges omics findings into molecular design + rigorous in-silico validation.
 - **Chemistry constraints (zero hallucination):** all molecules valid,
   RDKit-sanitizable SMILES/InChI; 3D conformers energy-minimized; never report a
   binding affinity or ADMET value without executing a real scoring/ML script.
-- Status: **not implemented.** Requires RDKit/OpenMM/torch-geometric/DeepChem,
-  GPUs, external model weights, and open network — none available in the current
-  build. Until then, `DrugDiscoveryMode` shows honest "requires backend" states
-  and fabricates nothing. Do not ship any E-module output that is not the product
-  of a real executed pipeline.
+- Status: **partial — a real, RDKit-grounded ligand-based + repurposing tier is
+  now live and CI-gated (see §5 "Drug discovery & repurposing wave"); the
+  structure-based / physics tier (E1 folding, E2 3D generative, E3 docking / MD /
+  FEP / PBPK) remains honestly gated.** The live tier computes only real values
+  from RDKit/numpy on provided molecules/signatures — descriptors, drug-likeness
+  rules, Ertl SA score, PAINS/BRENK/NIH alerts, ECFP Tanimoto screening,
+  pharmacophore/scaffold analysis, and CMap/signature-reversal repurposing. It
+  NEVER emits a binding affinity, IC50, docking pose, or ΔG — those need
+  OpenMM/torch-geometric/DeepChem, GPUs, external weights and open network, none
+  available in this build, so `DrugDiscoveryMode`/structure-based routes still
+  show honest "requires backend" states and fabricate nothing. Do not ship any
+  affinity/ADMET-prediction output that is not the product of a real executed
+  scoring/ML pipeline.
 
 ## 4. Operational Rules
 
@@ -380,7 +388,27 @@ Bridges omics findings into molecular design + rigorous in-silico validation.
   cross-type z>0; same-type co-occurrence ratio>1 at short distance; infiltration
   recovers a known 5/10=0.5 fraction; segregated field → neighbor self-fraction
   ≈1.0). The permutation null is seeded and reproducible.
-- 248 real agent tools in `server/tool_registry.ts`; 74 test suites in CI, plus a
+- **Drug discovery & repurposing wave (real, RDKit-grounded, CI-gated; the live
+  Module-E ligand-based tier):** ADMET / med-chem (`admet_tools.py`:
+  `admet_profile` 13-descriptor RDKit panel — MW/logP/TPSA/HBD/HBA/rotatable
+  bonds/aromatic rings/FractionCsp3/molar refractivity/heavy atoms/formal
+  charge/rings/QED; `druglikeness_rules` Lipinski/Veber/Ghose/Egan/Muegge pass-fail
+  with violated criteria; `synthetic_accessibility` Ertl SA score via the RDKit
+  SA_Score contrib; `structural_alerts` PAINS+BRENK+NIH via FilterCatalog),
+  ligand-based screening (`chem_screening.py`: `similarity_screen` ECFP Morgan
+  Tanimoto virtual screen, `pharmacophore_profile` RDKit feature-factory families,
+  `scaffold_clustering` Bemis–Murcko grouping, `diversity_selection` MaxMin picker),
+  and repurposing (`drug_repurposing.py`: `connectivity_score` CMap weighted-KS
+  score (Lamb 2006) — negative = drug reverses the disease signature;
+  `signature_reversal_screen` Spearman-reversal ranking of a drug-signature library;
+  `target_based_repurposing` ECFP-Tanimoto guilt-by-association that only ECHOES
+  known indications/targets, never invents them). ZERO fabrication — no binding
+  affinity/IC50/pose/ΔG is ever produced (that tier stays honestly gated).
+  Validated against known ground truth (aspirin QED=0.55 / TPSA=63.6; ethanol
+  SA≈1.98; catechol flags ≥1 structural alert; aspirin self-Tanimoto=1.0; benzene/
+  toluene/phenol collapse to one Murcko scaffold; CMap score flips +0.965/−0.965
+  on mimic vs reversed signatures; exact-negation drug tops the reversal screen).
+- 259 real agent tools in `server/tool_registry.ts`; 77 test suites in CI, plus a
   `tsc --noEmit` type-check gate. See `BIOMNI_COMPARISON.md` for the per-domain
   Biomni↔SynOmics coverage table.
 - Everything marked "to build" / "not implemented" above must not be faked.

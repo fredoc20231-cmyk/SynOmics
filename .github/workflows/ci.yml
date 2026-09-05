@@ -436,3 +436,18 @@ jobs:
         run: |
           python -m pip install --quiet numpy scipy
           python tests/spatial_neighborhood_smoke.py
+
+      - name: ADMET / med-chem gate (descriptors / druglikeness rules / SA score / structural alerts)
+        run: |
+          python -m pip install --quiet numpy rdkit
+          python tests/admet_tools_smoke.py
+
+      - name: Drug repurposing gate (CMap connectivity / signature reversal / chemical similarity)
+        run: |
+          python -m pip install --quiet numpy scipy rdkit
+          python tests/drug_repurposing_smoke.py
+
+      - name: Ligand screening gate (Tanimoto screen / pharmacophore / scaffold clustering / diversity)
+        run: |
+          python -m pip install --quiet numpy rdkit
+          python tests/chem_screening_smoke.py
