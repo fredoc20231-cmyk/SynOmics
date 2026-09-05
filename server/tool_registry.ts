@@ -1810,6 +1810,31 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     handler: (i) => runPythonScript('server/proteomics_tools.py', { ...i, task: 'tmt_protein_rollup' }),
     parameters: { psms: { type: 'object', required: true, description: '{proteinId: [[ch1, ch2, ...], ...]} reporter intensities (PSMs×channels).' }, method: { type: 'string', description: "'median' or 'sum' (default median)." }, normalizeChannels: { type: 'boolean', description: 'Median-normalize channels (default true).' }, channelNames: { type: 'array', description: 'Channel/tag names.' } },
   },
+  // --- Spatial-transcriptomics neighborhood analysis (numpy/scipy; squidpy-style) ---
+  {
+    name: 'neighborhood_enrichment', category: 'Spatial transcriptomics',
+    description: 'Cell-type neighborhood enrichment: kNN spatial graph + seeded label-permutation z-scores per type pair (squidpy-style). Requires numpy+scipy. Validated: segregated single-type blobs → within-type z≫0, cross-type z<0; checkerboard → cross-type z>0.',
+    handler: (i) => runPythonScript('server/spatial_neighborhood.py', { ...i, task: 'neighborhood_enrichment' }),
+    parameters: { coordinates: { type: 'array', required: true, description: 'N×2 or N×3 cell positions.' }, labels: { type: 'array', required: true, description: 'Cell-type label per cell (length N).' }, k: { type: 'number', description: 'kNN neighbors (default 6).' }, nPermutations: { type: 'number', description: 'Null permutations (default 1000).' }, seed: { type: 'number', description: 'RNG seed (default 0).' } },
+  },
+  {
+    name: 'cooccurrence', category: 'Spatial transcriptomics',
+    description: 'Cell-type co-occurrence across distance bins: P(type=t within distance d of a center type) / P(type=t). Requires numpy+scipy. Validated: clustered same-type ratio>1 at short distance; segregated cross-type ratio<1.',
+    handler: (i) => runPythonScript('server/spatial_neighborhood.py', { ...i, task: 'cooccurrence' }),
+    parameters: { coordinates: { type: 'array', required: true, description: 'N×2 or N×3 cell positions.' }, labels: { type: 'array', required: true, description: 'Cell-type label per cell.' }, nBins: { type: 'number', description: 'Distance bins (default 10).' }, maxDistance: { type: 'number', description: 'Max distance (default half the coordinate diagonal).' }, distanceBins: { type: 'array', description: 'Explicit strictly-increasing bin edges (alt to nBins).' } },
+  },
+  {
+    name: 'infiltration_score', category: 'Spatial transcriptomics',
+    description: 'Fraction of target cells within a radius of any source cell (e.g. immune infiltration into tumor) + mean source contacts per target. Requires numpy+scipy. Validated: recovers a known 5/10 = 0.5 fraction.',
+    handler: (i) => runPythonScript('server/spatial_neighborhood.py', { ...i, task: 'infiltration_score' }),
+    parameters: { coordinates: { type: 'array', required: true, description: 'N×2 or N×3 cell positions.' }, labels: { type: 'array', required: true, description: 'Cell-type label per cell.' }, source: { type: 'string', required: true, description: 'Source cell-type label.' }, target: { type: 'string', required: true, description: 'Target cell-type label.' }, radius: { type: 'number', required: true, description: 'Infiltration/contact radius.' } },
+  },
+  {
+    name: 'neighbor_composition', category: 'Spatial transcriptomics',
+    description: 'Per-cell-type average neighbor-type composition over each cell\'s k nearest neighbors (homotypic vs heterotypic neighborhoods). Requires numpy+scipy. Validated: segregated field → self-fraction ~1.0.',
+    handler: (i) => runPythonScript('server/spatial_neighborhood.py', { ...i, task: 'neighbor_composition' }),
+    parameters: { coordinates: { type: 'array', required: true, description: 'N×2 or N×3 cell positions.' }, labels: { type: 'array', required: true, description: 'Cell-type label per cell.' }, k: { type: 'number', description: 'kNN neighbors (default 6).' } },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));

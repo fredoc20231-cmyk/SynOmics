@@ -367,7 +367,20 @@ Bridges omics findings into molecular design + rigorous in-silico validation.
   equalizes sample medians; quantile-norm makes all samples share one distribution;
   Welch recovers a spiked 4× up-regulated protein at padj<0.05 while a flat protein
   stays non-significant; TMT rollup recovers known per-channel medians).
-- 244 real agent tools in `server/tool_registry.ts`; 73 test suites in CI, plus a
+- **Spatial-transcriptomics neighborhood wave (real, CI-gated; numpy/scipy,
+  squidpy-style):** `spatial_neighborhood.py` — `neighborhood_enrichment`
+  (kNN spatial graph + seeded label-permutation z-score per cell-type pair;
+  positive z = neighbors more than chance, negative = spatial segregation),
+  `cooccurrence` (P(type=t within distance d of a center type) / P(type=t) across
+  distance bins), `infiltration_score` (fraction of target cells within a radius
+  of any source cell + mean source contacts — e.g. immune infiltration into
+  tumor), `neighbor_composition` (per-cell-type average neighbor-type composition
+  over k nearest neighbors). Validated against known geometry (two segregated
+  single-type blobs → within-type z≫0 and cross-type z<0; a checkerboard field →
+  cross-type z>0; same-type co-occurrence ratio>1 at short distance; infiltration
+  recovers a known 5/10=0.5 fraction; segregated field → neighbor self-fraction
+  ≈1.0). The permutation null is seeded and reproducible.
+- 248 real agent tools in `server/tool_registry.ts`; 74 test suites in CI, plus a
   `tsc --noEmit` type-check gate. See `BIOMNI_COMPARISON.md` for the per-domain
   Biomni↔SynOmics coverage table.
 - Everything marked "to build" / "not implemented" above must not be faked.

@@ -931,6 +931,14 @@ app.post(['/api/synomics/proteomics', '/api/biomni/proteomics'], async (req, res
   } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
 });
 
+// Spatial-transcriptomics neighborhood analysis (enrichment / co-occurrence / infiltration / composition) — dispatch route.
+app.post(['/api/synomics/spatial-neighborhood', '/api/biomni/spatial-neighborhood'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/spatial_neighborhood.py', req.body, 120000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
 // Skills System — curated multi-tool workflows (Skills layer).
 app.get(['/api/synomics/skills', '/api/biomni/skills'], (_req, res) => {
   try {
