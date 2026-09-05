@@ -1518,6 +1518,71 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     handler: (i) => runPythonScript('server/spatial_deconvolution.py', { ...i, task: 'ot_map_cells_to_spots' }),
     parameters: { cells: { type: 'array', required: true, description: 'cells×genes expression matrix.' }, spots: { type: 'array', required: true, description: 'spots×genes expression matrix (shared genes).' }, reg: { type: 'number', description: 'Sinkhorn entropic regularization (default 0.05).' }, spotIds: { type: 'array', description: 'Spot IDs aligned to rows.' } },
   },
+  // --- Trajectory inference / pseudotime (numpy/scipy) ---
+  {
+    name: 'diffusion_pseudotime', category: 'Trajectory inference',
+    description: 'Diffusion-map pseudotime: Markov transition eigendecomposition → per-cell pseudotime distance from a root cell. numpy/scipy. Recovers a linear trajectory ordering (validated).',
+    handler: (i) => runPythonScript('server/trajectory.py', { ...i, task: 'diffusion_pseudotime' }),
+    parameters: { expression: { type: 'array', required: true, description: 'cells×genes matrix.' }, rootCell: { type: 'number', description: 'Root cell index (default 0).' }, sigma: { type: 'number', description: 'Gaussian kernel bandwidth (default = median distance).' }, nComps: { type: 'number', description: 'Diffusion components (default 10).' } },
+  },
+  {
+    name: 'mst_pseudotime', category: 'Trajectory inference',
+    description: 'Minimum-spanning-tree pseudotime: shortest-path distance along the MST of a cell graph from a root. numpy/scipy.',
+    handler: (i) => runPythonScript('server/trajectory.py', { ...i, task: 'mst_pseudotime' }),
+    parameters: { expression: { type: 'array', required: true, description: 'cells×genes matrix.' }, rootCell: { type: 'number', description: 'Root cell index (default 0).' }, nNeighbors: { type: 'number', description: 'kNN graph size; omit for a complete graph.' } },
+  },
+  // --- Gene regulatory network inference (scikit-learn) ---
+  {
+    name: 'genie3', category: 'Gene regulatory networks',
+    description: 'GENIE3 tree-based GRN inference: per-target Random-Forest feature importance ranks candidate regulators. Requires scikit-learn. Validated: recovers the true regulator.',
+    handler: (i) => runPythonScript('server/grn_inference.py', { ...i, task: 'genie3' }),
+    parameters: { expression: { type: 'array', required: true, description: 'samples×genes matrix.' }, geneNames: { type: 'array', required: true, description: 'Gene names (one per column).' }, regulators: { type: 'array', description: 'Candidate regulator subset (default all).' }, topEdges: { type: 'number', description: 'Top edges to return (default 20).' }, nEstimators: { type: 'number', description: 'RF trees per target (default 100).' }, seed: { type: 'number', description: 'RNG seed.' } },
+  },
+  {
+    name: 'aracne_mi', category: 'Gene regulatory networks',
+    description: 'ARACNe mutual-information network with Data-Processing-Inequality pruning of indirect edges. Requires scikit-learn. Validated: prunes the X–Z indirect edge in an X→Y→Z chain.',
+    handler: (i) => runPythonScript('server/grn_inference.py', { ...i, task: 'aracne_mi' }),
+    parameters: { expression: { type: 'array', required: true, description: 'samples×genes matrix.' }, geneNames: { type: 'array', required: true, description: 'Gene names (one per column).' }, miThreshold: { type: 'number', description: 'Minimum MI to keep an edge (default 0).' }, seed: { type: 'number', description: 'RNG seed.' } },
+  },
+  // --- Multi-omics integration (numpy/scipy/scikit-learn) ---
+  {
+    name: 'snf', category: 'Multi-omics integration',
+    description: 'Similarity Network Fusion (Wang 2014): fuse per-view sample-similarity networks + spectral clustering. Validated: recovers true clusters (ARI=1) from complementary noisy views.',
+    handler: (i) => runPythonScript('server/multiomics_integration.py', { ...i, task: 'snf' }),
+    parameters: { views: { type: 'array', required: true, description: 'List of sample×feature matrices (same samples).' }, nClusters: { type: 'number', required: true, description: 'Number of clusters.' }, K: { type: 'number', description: 'KNN neighbors (default min(20,n/2)).' }, t: { type: 'number', description: 'Fusion iterations (default 20).' }, mu: { type: 'number', description: 'Affinity scale (default 0.5).' } },
+  },
+  {
+    name: 'cca', category: 'Multi-omics integration',
+    description: 'Canonical Correlation Analysis between two omics views → canonical correlations. Requires scikit-learn.',
+    handler: (i) => runPythonScript('server/multiomics_integration.py', { ...i, task: 'cca' }),
+    parameters: { X: { type: 'array', required: true, description: 'First view n×p.' }, Y: { type: 'array', required: true, description: 'Second view n×q (same n).' }, nComponents: { type: 'number', description: 'Canonical components.' } },
+  },
+  {
+    name: 'joint_nmf', category: 'Multi-omics integration',
+    description: 'Integrative NMF across feature-concatenated non-negative omics views → shared sample factors. Requires scikit-learn.',
+    handler: (i) => runPythonScript('server/multiomics_integration.py', { ...i, task: 'joint_nmf' }),
+    parameters: { views: { type: 'array', required: true, description: 'List of non-negative sample×feature matrices.' }, nComponents: { type: 'number', description: 'Factorization rank (default 2).' } },
+  },
+  // --- Statistical genetics: Mendelian randomization (numpy/scipy) ---
+  {
+    name: 'mr_ivw', category: 'Statistical genetics',
+    description: 'Two-sample Mendelian randomization, inverse-variance weighted (fixed-effect, through origin) + Cochran Q heterogeneity. Validated: recovers a known causal effect from GWAS summary stats.',
+    handler: (i) => runPythonScript('server/mendelian_randomization.py', { ...i, task: 'mr_ivw' }),
+    parameters: { betaExposure: { type: 'array', required: true, description: 'Per-SNP SNP→exposure effects.' }, betaOutcome: { type: 'array', required: true, description: 'Per-SNP SNP→outcome effects.' }, seOutcome: { type: 'array', required: true, description: 'SEs of betaOutcome (weights=1/se²).' }, seExposure: { type: 'array', description: 'SEs of betaExposure (optional).' } },
+  },
+  {
+    name: 'mr_egger', category: 'Statistical genetics',
+    description: 'MR-Egger regression: pleiotropy-robust causal slope + Egger intercept (directional-pleiotropy test). Validated: detects an injected pleiotropic intercept IVW misses.',
+    handler: (i) => runPythonScript('server/mendelian_randomization.py', { ...i, task: 'mr_egger' }),
+    parameters: { betaExposure: { type: 'array', required: true, description: 'Per-SNP SNP→exposure effects.' }, betaOutcome: { type: 'array', required: true, description: 'Per-SNP SNP→outcome effects.' }, seOutcome: { type: 'array', required: true, description: 'SEs of betaOutcome (weights=1/se²).' }, seExposure: { type: 'array', description: 'SEs of betaExposure (optional).' } },
+  },
+  // --- RNA secondary structure (stdlib) ---
+  {
+    name: 'analyze_rna_secondary_structure_features', category: 'RNA structure',
+    description: 'Parse RNA dot-bracket notation into base pairs and derive topological features (base pairs, stems, longest/average stem, paired %). Deterministic; the fabricated free-energy add-on from the source was dropped.',
+    handler: (i) => runPythonScript('server/rna_structure_tools.py', { ...i, task: 'analyze_rna_secondary_structure_features' }),
+    parameters: { dot_bracket_structure: { type: 'string', required: true, description: "Dot-bracket structure, e.g. '(((...)))'; supports (), [], {} and '.'." } },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));
