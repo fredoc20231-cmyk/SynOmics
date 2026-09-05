@@ -335,7 +335,15 @@ Bridges omics findings into molecular design + rigorous in-silico validation.
   truth (e.g. SNF ARI=1; MR-IVW recovers causal 0.5 while Egger flags pleiotropy;
   GENIE3 ranks the true regulator; ARACNe DPI prunes the indirect edge; pseudotime
   Spearman ρ=1.0; dissolution t50=2.5 h; Michaelis-Menten recovers Vmax=100/Km=10).
-- 222 real agent tools in `server/tool_registry.ts`; 67 test suites in CI, plus a
+- **Advanced wave C (real, CI-gated; Biomni ADOPT list):** CRISPR/cloning
+  (`crispr_cloning_tools.py`: Cas9 cut-site, indel spectrum, Golden Gate assembly,
+  verification-primer design), preclinical pharmacology/tox (`pharmacology_assay_tools.py`:
+  xenograft TGI, ATP-luminescence viability, VCOG-CTCAE grading, MIRD α-dosimetry),
+  omics association (`omics_assoc_tools.py`: methylome-wide association, Kabsch RMSD
+  structure comparison, barcode-seq demultiplex). Validated (TGI=75%; MIRD dose=0.801 Gy;
+  Golden Gate assembles known fragments; MWAS recovers the spiked site; Kabsch RMSD≈0
+  after a rigid transform).
+- 233 real agent tools in `server/tool_registry.ts`; 70 test suites in CI, plus a
   `tsc --noEmit` type-check gate. See `BIOMNI_COMPARISON.md` for the per-domain
   Biomni↔SynOmics coverage table.
 - Everything marked "to build" / "not implemented" above must not be faked.

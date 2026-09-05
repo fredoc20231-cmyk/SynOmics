@@ -403,3 +403,16 @@ jobs:
 
       - name: Molecular biology gate (in-silico PCR / digest / mutations / primer design / binding scan)
         run: python tests/molbio_tools_smoke.py
+
+      - name: CRISPR / cloning gate (cut site / indel spectrum / Golden Gate / verification primers)
+        run: python tests/crispr_cloning_tools_smoke.py
+
+      - name: Preclinical pharmacology gate (xenograft TGI / ATP viability / VCOG grade / MIRD dosimetry)
+        run: |
+          python -m pip install --quiet numpy scipy
+          python tests/pharmacology_assay_tools_smoke.py
+
+      - name: Omics association gate (MWAS / Kabsch RMSD structure compare / barcode demux)
+        run: |
+          python -m pip install --quiet numpy scipy statsmodels
+          python tests/omics_assoc_tools_smoke.py

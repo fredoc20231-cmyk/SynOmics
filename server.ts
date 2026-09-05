@@ -889,6 +889,26 @@ app.post(['/api/synomics/molbio', '/api/biomni/molbio'], async (req, res) => {
   } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
 });
 
+// CRISPR/cloning · preclinical pharmacology · omics-association — dispatch routes.
+app.post(['/api/synomics/crispr-cloning', '/api/biomni/crispr-cloning'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/crispr_cloning_tools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/pharmacology-assay', '/api/biomni/pharmacology-assay'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/pharmacology_assay_tools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/omics-assoc', '/api/biomni/omics-assoc'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/omics_assoc_tools.py', req.body, 120000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
 // Skills System — curated multi-tool workflows (Skills layer).
 app.get(['/api/synomics/skills', '/api/biomni/skills'], (_req, res) => {
   try {

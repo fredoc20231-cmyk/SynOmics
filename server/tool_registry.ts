@@ -1672,6 +1672,75 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     handler: (i) => runPythonScript('server/molbio_tools.py', { ...i, task: 'primer_binding_scan' }),
     parameters: { template: { type: 'string', required: true, description: 'DNA template.' }, primer: { type: 'string', required: true, description: 'Primer sequence.' }, maxMismatches: { type: 'number', description: 'Allowed mismatches (default 0).' } },
   },
+  // --- CRISPR / cloning (stdlib) ---
+  {
+    name: 'crispr_cut_site', category: 'CRISPR / cloning',
+    description: 'Locate a Cas9 protospacer + PAM on either strand and predict the blunt cut site (3 bp 5′ of the PAM). Honest error if no PAM-adjacent match.',
+    handler: (i) => runPythonScript('server/crispr_cloning_tools.py', { ...i, task: 'crispr_cut_site' }),
+    parameters: { sequence: { type: 'string', required: true, description: 'Target DNA.' }, guide: { type: 'string', required: true, description: '20-nt spacer/guide.' }, pam: { type: 'string', description: "PAM IUPAC pattern (default 'NGG')." } },
+  },
+  {
+    name: 'cas9_indel_spectrum', category: 'CRISPR / cloning',
+    description: 'Classify edited amplicon reads vs reference (WT/insertion/deletion/substitution) → frameshift & editing fractions.',
+    handler: (i) => runPythonScript('server/crispr_cloning_tools.py', { ...i, task: 'cas9_indel_spectrum' }),
+    parameters: { reference: { type: 'string', required: true, description: 'Reference amplicon.' }, editedSequences: { type: 'array', required: true, description: 'List of edited read sequences.' } },
+  },
+  {
+    name: 'golden_gate_assembly', category: 'CRISPR / cloning',
+    description: 'Order and join overhang-compatible fragments (Golden Gate) → assembled construct + topology. Honest error on ambiguous/disconnected overhangs.',
+    handler: (i) => runPythonScript('server/crispr_cloning_tools.py', { ...i, task: 'golden_gate_assembly' }),
+    parameters: { fragments: { type: 'array', required: true, description: 'List of fragment DNA strings.' }, overhangLength: { type: 'number', description: 'Overhang length (default 4).' } },
+  },
+  {
+    name: 'design_verification_primers', category: 'CRISPR / cloning',
+    description: 'Design genotyping primers flanking an edit position so the amplicon spans it (Tm + amplicon coordinates).',
+    handler: (i) => runPythonScript('server/crispr_cloning_tools.py', { ...i, task: 'design_verification_primers' }),
+    parameters: { sequence: { type: 'string', required: true, description: 'Locus DNA.' }, editPosition: { type: 'number', required: true, description: '0-based edit index.' }, flank: { type: 'number', description: 'Flank size (default 200).' }, primerLen: { type: 'number', description: 'Primer length (default 20).' } },
+  },
+  // --- Preclinical pharmacology / toxicology assays (numpy/scipy) ---
+  {
+    name: 'xenograft_tgi', category: 'Preclinical pharmacology',
+    description: 'Tumor Growth Inhibition (TGI%) from treated vs control volumes + fold-changes and a Welch t-test on final volumes (2D). Requires numpy/scipy.',
+    handler: (i) => runPythonScript('server/pharmacology_assay_tools.py', { ...i, task: 'xenograft_tgi' }),
+    parameters: { treatedVolumes: { type: 'array', required: true, description: '1D means or 2D animals×timepoints.' }, controlVolumes: { type: 'array', required: true, description: 'Same shape as treated.' }, days: { type: 'array', description: 'Timepoint labels.' } },
+  },
+  {
+    name: 'atp_luminescence_viability', category: 'Preclinical pharmacology',
+    description: 'Cell-viability % from ATP luminescence, normalized to vehicle control (blank-corrected). Requires numpy.',
+    handler: (i) => runPythonScript('server/pharmacology_assay_tools.py', { ...i, task: 'atp_luminescence_viability' }),
+    parameters: { luminescence: { type: 'array', required: true, description: 'Treated-well RLU readings.' }, vehicleControl: { type: 'number', required: true, description: 'Vehicle RLU (number or array).' }, blank: { type: 'number', description: 'Background blank (default 0).' } },
+  },
+  {
+    name: 'vcog_ctcae_grade', category: 'Preclinical pharmacology',
+    description: 'Map a lab value to a VCOG-CTCAE v1.1 adverse-event grade (neutropenia/thrombocytopenia/anemia/ALT). Honest error on unknown parameter.',
+    handler: (i) => runPythonScript('server/pharmacology_assay_tools.py', { ...i, task: 'vcog_ctcae_grade' }),
+    parameters: { parameter: { type: 'string', required: true, description: 'neutropenia|thrombocytopenia|anemia|alt_increase.' }, value: { type: 'number', required: true, description: 'Measured value.' }, lowerLimitNormal: { type: 'number', description: 'Override LLN.' }, upperLimitNormal: { type: 'number', description: 'Override ULN.' } },
+  },
+  {
+    name: 'alpha_particle_dosimetry', category: 'Preclinical pharmacology',
+    description: 'MIRD absorbed dose (Gy) from cumulated activity, energy per decay, organ mass and absorbed fraction. Requires numpy.',
+    handler: (i) => runPythonScript('server/pharmacology_assay_tools.py', { ...i, task: 'alpha_particle_dosimetry' }),
+    parameters: { cumulatedActivity_Bq_s: { type: 'number', required: true, description: 'Time-integrated activity (Bq·s).' }, energyPerDecay_MeV: { type: 'number', required: true, description: 'Energy per decay (MeV).' }, organMass_kg: { type: 'number', required: true, description: 'Organ mass (kg).' }, absorbedFraction: { type: 'number', description: 'Absorbed fraction (default 1.0).' } },
+  },
+  // --- Omics association / structure / barcoding (numpy/scipy/statsmodels) ---
+  {
+    name: 'methylome_wide_association', category: 'Epigenomics',
+    description: 'Methylome-wide association: per-CpG OLS of methylation ~ phenotype (+covariates) with BH FDR. Requires statsmodels. Validated: recovers a spiked associated site.',
+    handler: (i) => runPythonScript('server/omics_assoc_tools.py', { ...i, task: 'methylome_wide_association' }),
+    parameters: { methylation: { type: 'array', required: true, description: 'samples×sites beta/M-values.' }, phenotype: { type: 'array', required: true, description: 'Phenotype per sample.' }, siteIds: { type: 'array', description: 'CpG site IDs.' }, covariates: { type: 'array', description: 'samples×k covariate matrix.' } },
+  },
+  {
+    name: 'compare_protein_structures', category: 'Structural biology',
+    description: 'RMSD between two structures with Kabsch superposition (numpy). Accepts matched CA coordinate arrays or PDB text (biopython). Validated: rigid transform → RMSD≈0 after superposition.',
+    handler: (i) => runPythonScript('server/omics_assoc_tools.py', { ...i, task: 'compare_protein_structures' }),
+    parameters: { coordsA: { type: 'array', description: 'N×3 CA coordinates.' }, coordsB: { type: 'array', description: 'N×3 CA coordinates (matched order).' }, pdbA: { type: 'string', description: 'PDB text (alt to coordsA).' }, pdbB: { type: 'string', description: 'PDB text (alt to coordsB).' } },
+  },
+  {
+    name: 'barcode_sequencing', category: 'Sequencing utilities',
+    description: 'Demultiplex reads to barcodes (best match within maxMismatches) → per-barcode counts, unassigned, Shannon diversity.',
+    handler: (i) => runPythonScript('server/omics_assoc_tools.py', { ...i, task: 'barcode_sequencing' }),
+    parameters: { reads: { type: 'array', required: true, description: 'DNA read strings.' }, barcodes: { type: 'object', required: true, description: '{name: sequence} or list of sequences.' }, maxMismatches: { type: 'number', description: 'Allowed mismatches (default 0).' }, barcodeStart: { type: 'number', description: 'Barcode start offset (default 0).' } },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));
