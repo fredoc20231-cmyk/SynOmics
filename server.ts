@@ -909,6 +909,20 @@ app.post(['/api/synomics/omics-assoc', '/api/biomni/omics-assoc'], async (req, r
   } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
 });
 
+// Bioimage analysis (OpenCV) + cell motility — dispatch routes.
+app.post(['/api/synomics/image', '/api/biomni/image'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/image_tools.py', req.body, 120000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+app.post(['/api/synomics/cell-motility', '/api/biomni/cell-motility'], async (req, res) => {
+  try {
+    const result = await runPythonScript('server/cell_motility_tools.py', req.body, 60000);
+    res.status(result?.status === 'success' ? 200 : result?.status === 'unavailable' ? 501 : 400).json(result);
+  } catch (err: any) { res.status(500).json({ status: 'error', message: err.message }); }
+});
+
 // Skills System — curated multi-tool workflows (Skills layer).
 app.get(['/api/synomics/skills', '/api/biomni/skills'], (_req, res) => {
   try {

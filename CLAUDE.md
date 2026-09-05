@@ -343,7 +343,17 @@ Bridges omics findings into molecular design + rigorous in-silico validation.
   structure comparison, barcode-seq demultiplex). Validated (TGI=75%; MIRD dose=0.801 Gy;
   Golden Gate assembles known fragments; MWAS recovers the spiked site; Kabsch RMSD≈0
   after a rigid transform).
-- 233 real agent tools in `server/tool_registry.ts`; 70 test suites in CI, plus a
+- **Bioimage + cell-motility wave (real, CI-gated; deterministic OpenCV/numpy, no
+  LLM eyeballing):** bioimage analysis (`image_tools.py`: `pixel_distribution`
+  intensity histogram/stats, `count_colonies` connected-component blob counting,
+  `optical_flow_deformation` Farnebäck dense-flow displacement fields,
+  `ciliary_beat_frequency` per-pixel FFT dominant-frequency), cell motility
+  (`cell_motility_tools.py`: `cell_motility_metrics` track speed/displacement/
+  directionality-ratio/MSD, `cluster_motility_patterns` KMeans track-feature
+  clustering). Validated against known ground truth (optical flow recovers a 3-px
+  shift → meanFlowX≈2.92; 5 Hz synthetic signal → beatFreq=4.6875 Hz; straight-line
+  track → directionalityRatio=1.0; KMeans ARI=1 on separated motility classes).
+- 239 real agent tools in `server/tool_registry.ts`; 72 test suites in CI, plus a
   `tsc --noEmit` type-check gate. See `BIOMNI_COMPARISON.md` for the per-domain
   Biomni↔SynOmics coverage table.
 - Everything marked "to build" / "not implemented" above must not be faked.

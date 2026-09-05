@@ -416,3 +416,13 @@ jobs:
         run: |
           python -m pip install --quiet numpy scipy statsmodels
           python tests/omics_assoc_tools_smoke.py
+
+      - name: Bioimage analysis gate (pixel stats / colony count / optical flow / ciliary FFT)
+        run: |
+          python -m pip install --quiet numpy opencv-python-headless
+          python tests/image_tools_smoke.py
+
+      - name: Cell motility gate (track metrics + KMeans motility clustering)
+        run: |
+          python -m pip install --quiet numpy scikit-learn
+          python tests/cell_motility_tools_smoke.py

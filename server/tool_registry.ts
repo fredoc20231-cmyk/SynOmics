@@ -1741,6 +1741,44 @@ export const TOOL_REGISTRY: ToolSpec[] = [
     handler: (i) => runPythonScript('server/omics_assoc_tools.py', { ...i, task: 'barcode_sequencing' }),
     parameters: { reads: { type: 'array', required: true, description: 'DNA read strings.' }, barcodes: { type: 'object', required: true, description: '{name: sequence} or list of sequences.' }, maxMismatches: { type: 'number', description: 'Allowed mismatches (default 0).' }, barcodeStart: { type: 'number', description: 'Barcode start offset (default 0).' } },
   },
+  // --- Bioimage analysis (OpenCV) ---
+  {
+    name: 'pixel_distribution', category: 'Bioimage analysis',
+    description: 'Grayscale intensity statistics + histogram (mean/std/median/percentiles). Requires numpy.',
+    handler: (i) => runPythonScript('server/image_tools.py', { ...i, task: 'pixel_distribution' }),
+    parameters: { image: { type: 'array', required: true, description: '2D grayscale image (or path).' }, bins: { type: 'number', description: 'Histogram bins (default 256).' } },
+  },
+  {
+    name: 'count_colonies', category: 'Bioimage analysis',
+    description: 'Count bacterial colonies / blobs via Otsu threshold + connected components (area-filtered). Requires OpenCV. Validated: 5 drawn circles → 5.',
+    handler: (i) => runPythonScript('server/image_tools.py', { ...i, task: 'count_colonies' }),
+    parameters: { image: { type: 'array', required: true, description: '2D grayscale (bright blobs on dark bg).' }, invert: { type: 'boolean', description: 'Invert dark-on-light input.' }, minArea: { type: 'number', description: 'Min component area px (default 5).' } },
+  },
+  {
+    name: 'optical_flow_deformation', category: 'Bioimage analysis',
+    description: 'Dense Farneback optical flow between two frames → mean flow (x,y), magnitude, divergence, curl. Requires OpenCV. Validated: 3-px shift recovered.',
+    handler: (i) => runPythonScript('server/image_tools.py', { ...i, task: 'optical_flow_deformation' }),
+    parameters: { frame1: { type: 'array', required: true, description: 'First frame (2D).' }, frame2: { type: 'array', required: true, description: 'Second frame (2D, same shape).' } },
+  },
+  {
+    name: 'ciliary_beat_frequency', category: 'Bioimage analysis',
+    description: 'Ciliary/oscillation beat frequency: FFT of the per-frame mean intensity time series. Requires numpy. Validated: recovers 5 Hz.',
+    handler: (i) => runPythonScript('server/image_tools.py', { ...i, task: 'ciliary_beat_frequency' }),
+    parameters: { frames: { type: 'array', required: true, description: '3D image sequence [t][h][w].' }, samplingRateHz: { type: 'number', required: true, description: 'Acquisition rate (fps).' } },
+  },
+  // --- Cell motility (trajectory-based; numpy/scikit-learn) ---
+  {
+    name: 'cell_motility_metrics', category: 'Cell motility',
+    description: 'Per-track motility: path length, net displacement, mean speed, directionality ratio, MSD(lag1) + population means. numpy.',
+    handler: (i) => runPythonScript('server/cell_motility_tools.py', { ...i, task: 'cell_motility_metrics' }),
+    parameters: { tracks: { type: 'array', required: true, description: 'List of trajectories (each a list of [x,y]).' }, dt: { type: 'number', description: 'Time per step (default 1).' }, pixelSize: { type: 'number', description: 'Units per pixel (default 1).' } },
+  },
+  {
+    name: 'cluster_motility_patterns', category: 'Cell motility',
+    description: 'Cluster cell tracks by [speed, directionality, displacement] with standardized KMeans. Requires scikit-learn. Validated: separates fast-straight vs slow-random (ARI=1).',
+    handler: (i) => runPythonScript('server/cell_motility_tools.py', { ...i, task: 'cluster_motility_patterns' }),
+    parameters: { tracks: { type: 'array', required: true, description: 'List of trajectories.' }, nClusters: { type: 'number', description: 'KMeans clusters (default 2).' }, dt: { type: 'number', description: 'Time per step (default 1).' }, pixelSize: { type: 'number', description: 'Units per pixel (default 1).' } },
+  },
 ];
 
 const BY_NAME = new Map(TOOL_REGISTRY.map((t) => [t.name, t]));
